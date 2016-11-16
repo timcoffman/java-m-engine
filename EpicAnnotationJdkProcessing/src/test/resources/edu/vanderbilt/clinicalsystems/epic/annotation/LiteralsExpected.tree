@@ -1,0 +1,11 @@
+{
+TAG: Literals
+CMD: QUIT | (-)
+
+TAG: returnTrue
+CMD: QUIT | 1
+
+TAG: returnFalse
+CMD: QUIT | 0
+
+}

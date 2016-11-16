@@ -1,0 +1,30 @@
+{
+TAG: IfThenElse
+CMD: QUIT | (-)
+
+TAG: loopBody( i )
+CMD: QUIT | (-)
+
+TAG: sometimes
+CMD: QUIT | 1
+
+TAG: ifThenElseAssign( a )
+CMD: NEW | z
+CMD: IF | a>7 {
+  CMD: SET | z := ">7"
+}
+CMD: ELSE | (-) {
+  CMD: SET | z := "<=7"
+}
+CMD: QUIT | z
+
+TAG: ifThenElseReturn( a )
+CMD: IF | a>7 {
+  CMD: QUIT | ">7"
+}
+CMD: ELSE | (-) {
+  CMD: QUIT | "<=7"
+}
+
+
+}

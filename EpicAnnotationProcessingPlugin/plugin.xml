@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.jdt.apt.core.annotationProcessorFactory">
+   	<java6processors enableDefault="true">
+   		<java6processor class="edu.vanderbilt.clinicalsystems.epic.annotation.Processor"/>
+   	</java6processors>
+   </extension>
+   <extension
+	    point="org.eclipse.core.resources.markers"
+	    id="edu.vanderbilt.clinicalsystems.epic.annotation.marker"
+	    name="Epic Annotation Problem"
+   	>
+    <super type="org.eclipse.jdt.core.problem"/>
+    <super type="org.eclipse.core.resources.problemmarker"/>
+    <super type="org.eclipse.core.resources.textmarker"/>
+   	<persistent value="true"/>
+   </extension>
+
+</plugin>

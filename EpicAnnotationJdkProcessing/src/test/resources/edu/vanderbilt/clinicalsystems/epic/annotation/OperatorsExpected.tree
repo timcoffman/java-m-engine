@@ -1,0 +1,36 @@
+{
+TAG: Operators
+CMD: QUIT | (-)
+
+TAG: prefixPlus( x )
+CMD: QUIT | +x
+
+TAG: prefixMinus( x )
+CMD: QUIT | -x
+
+TAG: postfixIncrement( x )
+CMD: QUIT | x
+
+CMD: SET | x := x+1
+TAG: prefixIncrement( x )
+
+CMD: SET | x := x+1
+CMD: QUIT | x
+
+TAG: postfixDecrement( x )
+CMD: QUIT | x
+CMD: SET | x := x-1
+
+TAG: prefixDecrement( x )
+CMD: SET | x := x-1
+CMD: QUIT | x
+
+TAG: assignmentPlus( x )
+CMD: SET | x := x+7
+CMD: QUIT | x
+
+TAG: assignmentMinus( x )
+CMD: SET | x := x-7
+CMD: QUIT | x
+
+}
