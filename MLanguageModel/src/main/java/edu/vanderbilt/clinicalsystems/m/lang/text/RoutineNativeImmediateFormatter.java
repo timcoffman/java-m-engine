@@ -3,6 +3,8 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 import java.io.IOException;
 import java.io.Writer;
 
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
@@ -40,6 +42,7 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	public static class OptionsImpl implements RoutineNativeFormatter.Options {
 		private boolean m_abbreviateCommands = false ;
 		private boolean m_abbreviateBuiltinFunctions = false ;
+		private boolean m_abbreviateBuiltinVariables = false ;
 		private boolean m_indentWithTabs = false ;
 		private String m_spaceIndentation = "  " ;
 		private String m_blockSpaceIndentation = " " ;
@@ -53,6 +56,9 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 		
 		@Override public boolean getWriteAbbreviatedBuiltinFunctionSymbols() { return m_abbreviateBuiltinFunctions ; }
 		@Override public void setWriteAbbreviatedBuiltinFunctionSymbols( boolean abbreviateBuiltinFunctions ) { m_abbreviateBuiltinFunctions = abbreviateBuiltinFunctions ; }
+		
+		@Override public boolean getWriteAbbreviatedBuiltinVariableSymbols() { return m_abbreviateBuiltinVariables ; }
+		@Override public void setWriteAbbreviatedBuiltinVariableSymbols( boolean abbreviateBuiltinVariables ) { m_abbreviateBuiltinVariables = abbreviateBuiltinVariables ; }
 		
 		@Override public boolean getUseTabsForIndentation() { return m_indentWithTabs ; }
 		@Override public void setUseTabsForIndentation( boolean indentWithTabs ) { m_indentWithTabs = indentWithTabs ; }
@@ -462,6 +468,15 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	}
 	
 	@Override
+	public void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException {
+		writer.append( "$" ) ;
+		if ( m_options.m_abbreviateBuiltinFunctions )
+			writer.append( builtinFunction.canoncialAbbreviation() ) ;
+		else
+			writer.append( builtinFunction.canonicalSymbol() ) ;
+	}
+	
+	@Override
 	public void writeCommentText(String comment, Writer writer) throws IOException {
 		useFormatter( m_commentFormatter, writer ).prepareToWriteComment( writer ) ;
 //		System.out.println("# " + comment ) ;
@@ -509,10 +524,7 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	}
 	
 	@Override
-	public void writeIndirectVariable( Scope scope, String indirectVariableName, Writer writer ) throws IOException {
-		writer.append( "@" ) ;
-		writeScopeMarker( scope, writer ) ;
-		writer.append( indirectVariableName ) ;
+	public void writeIndirectionOperator( Writer writer ) throws IOException {
 		writer.append( "@" ) ;
 	}
 	
@@ -520,6 +532,15 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	public void writeDirectVariable( Scope scope, String variableName, Writer writer ) throws IOException {
 		writeScopeMarker( scope, writer ) ;
 		writer.append( variableName ) ;
+	}
+	
+	@Override
+	public void writeBuiltinVariable( BuiltinVariable builtinVariable, Writer writer ) throws IOException {
+		writer.append( "$" ) ;
+		if ( m_options.m_abbreviateBuiltinFunctions )
+			writer.append( builtinVariable.canoncialAbbreviation() ) ;
+		else
+			writer.append( builtinVariable.canonicalSymbol() ) ;
 	}
 	
 	@Override

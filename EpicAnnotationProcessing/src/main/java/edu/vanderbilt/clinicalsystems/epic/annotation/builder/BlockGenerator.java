@@ -14,7 +14,6 @@ import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.Metho
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
-import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
@@ -24,6 +23,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
@@ -31,7 +31,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
@@ -106,7 +106,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		@Override
 		public Void visitUnary(Ast.Unary unaryNode, Block block) {
 			try ( BlockManager blockManager = new BlockManager(block) ) {
-				VariableReference variableReference = (VariableReference)tools().expressions().generate( unaryNode.expression(), blockManager ) ;
+				DirectVariableReference variableReference = (DirectVariableReference)tools().expressions().generate( unaryNode.expression(), blockManager ) ;
 				Expression source ;
 				switch ( unaryNode.operationType() ) {
 				case PREFIX_INCREMENT:
@@ -120,7 +120,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				default:
 					return unsupportedNodeTypeResult(unaryNode, block) ;
 				}
-				blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment(variableReference, source)) ) );
+				blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableReference), source)) ) );
 			}
 			return null ;
 		}
@@ -129,7 +129,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		@Override
 		public Void visitBinary(Ast.Binary binaryNode, Block block) {
 			try ( BlockManager blockManager = new BlockManager(block) ) {
-				VariableReference variableReference = (VariableReference)tools().expressions().generate( binaryNode.leftOperand(), blockManager ) ;
+				DirectVariableReference variableReference = (DirectVariableReference)tools().expressions().generate( binaryNode.leftOperand(), blockManager ) ;
 				Expression operand = tools().expressions().generate( binaryNode.leftOperand(), blockManager ) ;
 				Expression source ;
 				switch ( binaryNode.operationType() ) {
@@ -142,7 +142,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				default:
 					return unsupportedNodeTypeResult(binaryNode, block) ;
 				}
-				blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment(variableReference, source)) ) );
+				blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableReference), source)) ) );
 			}
 			return null ;
 		}
@@ -165,7 +165,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 						try ( BlockManager blockManager = new BlockManager(block) ) {
 							FunctionCall functionCall = (FunctionCall)tools().expressions().generate( methodInvocationNode, blockManager ) ;
 							if ( FunctionCall.Returning.SOME_VALUE == functionCall.returning() ) {
-								blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment(VariableReference.DEFAULT_TEMP_VARIABLE, functionCall)) ) );
+								blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(DirectVariableReference.DEFAULT_TEMP_VARIABLE), functionCall)) ) );
 							} else {
 								RoutineFunctionCall rfc = (RoutineFunctionCall)functionCall ;
 								TagReference tagRef = rfc.tagReference() ;
@@ -204,15 +204,15 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 
 			try ( BlockManager blockManager = new BlockManager(block) ) {
 				String variableName = variableNode.name().toString();
-				VariableReference variableRef = new VariableReference(Scope.LOCAL, ReferenceStyle.DIRECT, variableName );
-				VariableReference[] variables = new VariableReference[] { variableRef } ;
+				DirectVariableReference variableRef = new DirectVariableReference(Scope.LOCAL, variableName );
+				DirectVariableReference[] variables = new DirectVariableReference[] { variableRef } ;
 				blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(variables) ) ) ;
 				if ( null != variableNode.initializer() ) {
 					Expression initialExpression = tools().expressions().generate(variableNode.initializer(),blockManager);
 					if ( initialExpression instanceof Constant && ((Constant)initialExpression).equals("") ) {
 						/* initialization to literal empty string can be suppressed in the Epic environment */
 					} else {
-						blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment(variableRef, initialExpression ) ) ) ) ;
+						blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), initialExpression ) ) ) ) ;
 					}
 				}
 			}
@@ -293,14 +293,14 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		try ( BlockManager blockManager = new BlockManager(block) ) {
 			Expression source = tools().expressions().generate( methodInvocationNode.arguments().get(0), blockManager );
 			
-			VariableReference variableRef = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<VariableReference, Listener>(tools()) {
+			DirectVariableReference variableRef = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
 				@Override
-				public VariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() ) ;
+				public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
+					return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() ) ;
 				}
 				
 			}, blockManager) ;
-			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( variableRef, source) ) ) );
+			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), source) ) ) );
 		}
 	}
 
@@ -309,17 +309,17 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 			List<Expression> keys = StreamSupport.stream(methodInvocationNode.arguments().spliterator(),false).map(e->tools().expressions().generate(e,blockManager)).collect(Collectors.toList());
 			Expression source = keys.remove(0) ;
 					
-			VariableReference variableRef = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<VariableReference, Listener>(tools()) {
+			DirectVariableReference variableRef = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
 				@Override
-				public VariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString(), keys ) ;
+				public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
+					return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString(), keys ) ;
 				}
 				@Override
-				public VariableReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
+				public DirectVariableReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 					return memberSelectNode.expression().accept(this, listener) ;
 				}
 			}, blockManager) ;
-			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment(variableRef, source) ) ) );
+			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), source) ) ) );
 		}
 	}
 

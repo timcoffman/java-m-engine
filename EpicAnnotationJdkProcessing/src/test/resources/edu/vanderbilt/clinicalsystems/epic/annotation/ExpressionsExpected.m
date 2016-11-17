@@ -16,7 +16,7 @@ helper2(a,b,c);helper2 function, expecting "Q b*c+a"
 helper3(a,b,c);helper3 function, expecting "N z S z=$$helper2(1.0,2.0,3.0) Q b*z+a"
 	;Generated-From: java.lang.Float helper3(java.lang.Float,java.lang.Float,java.lang.Float)
 	NEW z
-	SET z=$$helper2^Expressions("1.0","2.0","3.0")
+	SET z=$$helper2("1.0","2.0","3.0")
 	NEW k
 	SET k=99
 	NEW t

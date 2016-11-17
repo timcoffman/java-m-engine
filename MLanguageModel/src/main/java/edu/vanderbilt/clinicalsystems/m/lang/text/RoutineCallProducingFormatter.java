@@ -3,6 +3,8 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 import java.io.IOException;
 import java.io.Writer;
 
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
@@ -69,6 +71,8 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 
 	@Override public void writeFunction(String functionName, String routineName, RoutineAccess routineAccess, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeFunction(functionName, routineName, routineAccess, writer) ) ; }
 
+	@Override public void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeBuiltinFunction(builtinFunction, writer) ) ; }
+
 	@Override public void openComment( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.openComment(writer) ) ; }
 
 	@Override public void writeCommentText(String comment, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeCommentText(comment, writer) ) ; }
@@ -91,9 +95,11 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 
 	@Override public void writeVariablePassedByReference(Scope scope, String variableName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeVariablePassedByReference(scope, variableName, writer) ) ; }
 
-	@Override public void writeIndirectVariable(Scope scope, String indirectVariableName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeIndirectVariable(scope, indirectVariableName, writer) ) ; }
+	@Override public void writeIndirectionOperator(Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeIndirectionOperator(writer) ) ; }
 
 	@Override public void writeDirectVariable(Scope scope, String variableName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeDirectVariable(scope, variableName, writer) ) ; }
+	
+	@Override public void writeBuiltinVariable(BuiltinVariable builtinVariable, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeBuiltinVariable(builtinVariable, writer) ) ; }
 
 	@Override public void openVariableKeys( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.openVariableKeys(writer) ) ; }
 

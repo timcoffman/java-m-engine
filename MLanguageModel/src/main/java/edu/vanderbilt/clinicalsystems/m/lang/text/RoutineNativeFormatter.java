@@ -15,6 +15,9 @@ public class RoutineNativeFormatter extends RoutineCallProducingFormatter {
 		boolean getWriteAbbreviatedBuiltinFunctionSymbols() ;
 		void setWriteAbbreviatedBuiltinFunctionSymbols( boolean abbreviateBuiltinFunctions ) ;
 		
+		boolean getWriteAbbreviatedBuiltinVariableSymbols() ;
+		void setWriteAbbreviatedBuiltinVariableSymbols( boolean abbreviateBuiltinFunctions ) ;
+		
 		boolean getUseTabsForIndentation() ;
 		void setUseTabsForIndentation( boolean indentWithTabs ) ;
 		

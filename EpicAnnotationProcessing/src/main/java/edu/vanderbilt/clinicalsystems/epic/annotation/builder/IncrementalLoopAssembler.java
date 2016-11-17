@@ -6,7 +6,6 @@ import java.util.Optional;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Binary;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Unary;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
-import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
@@ -17,7 +16,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	
@@ -29,7 +28,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	
 			ForLoopConfiguration config = extractForLoopConfiguration( forLoopNode ) ;
 			if ( config.complete() ) {
-				VariableReference loopVar = new VariableReference(Scope.LOCAL, ReferenceStyle.DIRECT, config.loopVariable().toString() ) ;
+				DirectVariableReference loopVar = new DirectVariableReference(Scope.LOCAL, config.loopVariable().toString() ) ;
 				
 				if ( config.requiresLoopVariableDeclaration() )
 					blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(loopVar) ) ) ;

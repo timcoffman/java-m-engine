@@ -2,29 +2,33 @@ package edu.vanderbilt.clinicalsystems.m.lang;
 
 public enum OperatorType {
 	/* String */
-	CONCAT("_"),
-	CONTAINS("]"),
-	SORTS_AFTER("]]"),
-	MATCH("?"),
+	CONCAT      ("_"),
+	CONTAINS    ("]"),
+	SORTS_AFTER ("]]"),
+	MATCH       ("?"),
 	/* Math */
-	ADD("+",true),
-	SUBTRACT("-"),
-	MULTIPLY("*",true),
-	DIVIDE("/"),
-	DIVIDE_INT("\\"),
-	MODULO("#"),
-	POWER("**"),
+	ADD         ("+",true),
+	SUBTRACT    ("-"),
+	MULTIPLY    ("*",true),
+	DIVIDE      ("/"),
+	DIVIDE_INT  ("\\"),
+	MODULO      ("#"),
+	POWER       ("**"),
 	/* Comparisons */
-	EQUALS("="),
-	LESS_THAN("<"),
+	EQUALS      ("="),
+	LESS_THAN   ("<"),
 	GREATER_THAN(">"),
-	FOLLOWS("]"),
+	FOLLOWS     ("]"),
+	NOT_EQUALS      ("'="),
+	NOT_LESS_THAN   ("'<"),
+	NOT_GREATER_THAN("'>"),
+	NOT_FOLLOWS     ("']"),
 	/* Logic */
-	NOT("'"),
-	AND("&"),
-	OR("!"),
+	NOT         ("'"),
+	AND         ("&"),
+	OR          ("!"),
 	/* Reference */
-	INDIRECTION("@")
+	INDIRECTION ("@")
 	;
 	
 	OperatorType( String canonicalSymbol ) { this(canonicalSymbol,false) ; }

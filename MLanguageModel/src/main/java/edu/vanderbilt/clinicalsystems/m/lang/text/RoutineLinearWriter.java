@@ -18,18 +18,26 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.FormatCommand;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.OutputExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConditionalExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Operation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public class RoutineLinearWriter implements RoutineWriter {
 
@@ -195,7 +203,7 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@Override
 	public void write( LoopDefinition loopDefinition ) throws RoutineWriterException {
 		try {
-			VariableReference destination = loopDefinition.destination();
+			DirectVariableReference destination = loopDefinition.destination();
 			Expression start = loopDefinition.start() ;
 			Expression stop = loopDefinition.stop() ;
 			Expression step = null != loopDefinition.step() ? loopDefinition.step() : Constant.from("1") ;
@@ -273,11 +281,70 @@ public class RoutineLinearWriter implements RoutineWriter {
 		}
 	}
 
+	@Override
+	public void write( VariableList variableList ) throws RoutineWriterException {
+		try {
+			Iterator<? extends Element> i = variableList.elements().iterator() ;
+			if ( i.hasNext() )
+				i.next().write(this) ;
+			while ( i.hasNext() ) {
+				m_routineFormatter.writeDeclarationDelimiter(m_writer);
+				i.next().write(this) ;
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
+	@Override
+	public void write( InputOutputList inputOutputList ) throws RoutineWriterException {
+		try {
+			Iterator<? extends Element> i = inputOutputList.elements().iterator() ;
+			if ( i.hasNext() )
+				i.next().write(this) ;
+			while ( i.hasNext() ) {
+				m_routineFormatter.writeDeclarationDelimiter(m_writer);
+				i.next().write(this) ;
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
+	@Override
+	public void write( FormatCommand formatCommand ) throws RoutineWriterException {
+		try {
+			m_writer.append( formatCommand.text() ) ;
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
+	@Override
+	public void write( InputOutputVariable variable ) throws RoutineWriterException {
+		variable.variable().write(this);
+	}
+	
+	@Override
+	public void write( OutputExpression expression ) throws RoutineWriterException {
+		expression.expression().write(this);
+	}
 	
 	@Override
 	public void write(InvalidExpression invalidExpression) throws RoutineWriterException {
 		try {
 			m_routineFormatter.writeInvalidExpression( invalidExpression.reason(), m_writer);
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
+	@Override
+	public void write(ConditionalExpression conditionalExpression) throws RoutineWriterException {
+		try {
+			conditionalExpression.condition().write(this);
+			m_routineFormatter.writeConditionDelimiter(m_writer);
+			conditionalExpression.expression().write(this);
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;
 		}
@@ -296,8 +363,12 @@ public class RoutineLinearWriter implements RoutineWriter {
 
 	@Override
 	public void write(BuiltinFunctionCall builtinFunctionCall) throws RoutineWriterException {
-		// TODO Auto-generated method stub
-		
+		try {
+			m_routineFormatter.writeBuiltinFunction( builtinFunctionCall.builtinFunction(), m_writer);
+			writeFunctionParameterList( builtinFunctionCall.arguments() );
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
 	}
 
 	@Override
@@ -334,28 +405,15 @@ public class RoutineLinearWriter implements RoutineWriter {
 	}
 
 	@Override
-	public void write(VariableReference variable) throws RoutineWriterException {
+	public void write(DirectVariableReference variable) throws RoutineWriterException {
 		try {
 
 			switch ( variable.parameterPassMethod() ) {
 			case BY_REFERENCE:
-				switch ( variable.referenceStyle() ) {
-				case DIRECT:
-					m_routineFormatter.writeVariablePassedByReference(variable.scope(), variable.variableName(), m_writer);
-					break ;
-				case INDIRECT:
-					throw new RoutineWriterException("cannot pass an indirect variable by reference");
-				}
+				m_routineFormatter.writeVariablePassedByReference(variable.scope(), variable.variableName(), m_writer);
 				break;
 			case BY_VALUE:
-				switch ( variable.referenceStyle() ) {
-				case DIRECT:
-					m_routineFormatter.writeDirectVariable( variable.scope(), variable.variableName(), m_writer);
-					break ;
-				case INDIRECT:
-					m_routineFormatter.writeIndirectVariable( variable.scope(), variable.variableName(), m_writer);
-					break;
-				}
+				m_routineFormatter.writeDirectVariable( variable.scope(), variable.variableName(), m_writer);
 				break;
 			}
 			Iterator<Expression> i = variable.keys().iterator() ;
@@ -373,7 +431,54 @@ public class RoutineLinearWriter implements RoutineWriter {
 		}
 		
 	}
+	
+	@Override
+	public void write(IndirectVariableReference variable) throws RoutineWriterException {
+		try {
+			
+			m_routineFormatter.writeIndirectionOperator( m_writer);
+			
+			variable.variableNameProducer().write(this);
+			
+			Iterator<Expression> i = variable.keys().iterator() ;
+			if ( i.hasNext() ) {
+				m_routineFormatter.writeIndirectionOperator( m_writer);
+				m_routineFormatter.openVariableKeys(m_writer);
+				i.next().write(this);
+				while ( i.hasNext() ) {
+					m_routineFormatter.writeVariableKeysDelimiter(m_writer);
+					i.next().write(this);
+				}
+				m_routineFormatter.closeVariableKeys(m_writer);
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+		
+	}
 
+	@Override
+	public void write(BuiltinVariableReference variable) throws RoutineWriterException {
+		try {
+			m_routineFormatter.writeBuiltinVariable( variable.builtinVariable(), m_writer ) ;
+			
+			Iterator<Expression> i = variable.keys().iterator() ;
+			if ( i.hasNext() ) {
+				m_routineFormatter.writeIndirectionOperator( m_writer);
+				m_routineFormatter.openVariableKeys(m_writer);
+				i.next().write(this);
+				while ( i.hasNext() ) {
+					m_routineFormatter.writeVariableKeysDelimiter(m_writer);
+					i.next().write(this);
+				}
+				m_routineFormatter.closeVariableKeys(m_writer);
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+		
+	}
+	
 	@Override
 	public void write(TagReference tag) throws RoutineWriterException {
 		try {

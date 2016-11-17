@@ -21,6 +21,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
@@ -28,7 +29,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		
@@ -71,7 +72,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			if ( null == resolvedIdentifier ) {
 
 				report( RoutineTools.ReportType.ERROR, "cannot resolve identifier", identifierNode ) ;
-				return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
+				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
 
 			}
 			
@@ -84,19 +85,19 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 						return new Constant( constantValue.toString() );
 					
 					else
-						return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
+						return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
 					
 				}
 				
 				@Override
-				public VariableReference visit( MethodResolution methodResolution, Listener listener ) {
+				public DirectVariableReference visit( MethodResolution methodResolution, Listener listener ) {
 					
-					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
+					return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
 					
 				}
 				
 				@Override
-				public VariableReference visit( TypeResolution typeResolution, Listener listener ) {
+				public DirectVariableReference visit( TypeResolution typeResolution, Listener listener ) {
 
 					throw new IllegalArgumentException("what the heck") ;
 					
@@ -205,11 +206,11 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		@Override
 		public Expression visitAssignment(Ast.Assignment assignment, Listener listener) {
 			Expression operand = tools().expressions().generate( assignment.variable(), listener ) ;
-			if ( operand instanceof VariableReference ) {
-				VariableReference variable = (VariableReference)operand ;
+			if ( operand instanceof DirectVariableReference ) {
+				DirectVariableReference variable = (DirectVariableReference)operand ;
 				Expression expression = tools().expressions().generate( assignment.expression(), listener ) ;
 				
-				Command assignmentCommand = new Command( CommandType.SET, new AssignmentList( new Assignment( variable, expression) ) );
+				Command assignmentCommand = new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variable), expression) ) );
 				listener.generateSideEffect(Listener.Location.BEFORE_EXPRESSION, assignmentCommand ) ;
 			} else {
 				report( ReportType.ERROR, "assignment does not identify a variable", assignment.variable());
@@ -221,11 +222,11 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		@Override
 		public Expression visitCompoundAssignment( Ast.CompoundAssignment compoundAssignment, Listener listener) {
 			Expression operand = tools().expressions().generate( compoundAssignment.variable(), listener);
-			if ( operand instanceof VariableReference ) {
-				VariableReference variable = (VariableReference)operand ;
+			if ( operand instanceof DirectVariableReference ) {
+				DirectVariableReference variable = (DirectVariableReference)operand ;
 				Expression operation = buildOperation( compoundAssignment, listener ) ;
 				
-				Command assignmentCommand = new Command( CommandType.SET, new AssignmentList( new Assignment( variable, operation) ) ) ;
+				Command assignmentCommand = new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variable), operation) ) ) ;
 				listener.generateSideEffect( Listener.Location.BEFORE_EXPRESSION, assignmentCommand);
 			} else {
 				report( ReportType.ERROR, "assignment does not identify a variable", compoundAssignment.variable());
@@ -264,7 +265,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		public Expression visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 			TagReference tagRef ;
 			Expression instance = tools().expressions().generate( memberSelectNode.expression(), listener );
-			tagRef = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, memberSelectNode.identifier().toString(), ((VariableReference)instance).variableName(), RoutineAccess.EXPLICIT ) ;
+			tagRef = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName(), RoutineAccess.EXPLICIT ) ;
 			return tagRef;
 		}
 		
@@ -350,15 +351,15 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 	private Expression buildValueIndex( Ast.MethodInvocation methodInvocationNode, Listener listener ) {
 		List<Expression> keys = StreamSupport.stream(methodInvocationNode.arguments().spliterator(),false).map(e->tools().expressions().generate(e,listener)).collect(Collectors.toList());
 		
-		return methodInvocationNode.methodSelect().accept( new Ast.Interpreter<VariableReference, Listener>(tools()) {
+		return methodInvocationNode.methodSelect().accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
 			@Override
-			public VariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-				return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString(), keys ) ;
+			public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
+				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString(), keys ) ;
 			}
 			@Override
-			public VariableReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
+			public DirectVariableReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 				Ast.Identifier identifierNode = ((Ast.Identifier)memberSelectNode.expression()) ;
-				return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString(), keys ) ;
+				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString(), keys ) ;
 			}
 		}, listener) ;
 	}
@@ -383,14 +384,14 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 	}
 	
 	private void generateVariableSideEffect( Expression operand, OperatorType operatorType, Ast.Unary.OperationType operationType, Listener listener, Generator.Listener.Location location, Ast.Node node ) {
-		if ( operand instanceof VariableReference )
-			generateVariableSideEffect( (VariableReference)operand, operatorType, listener, location, node);
+		if ( operand instanceof DirectVariableReference )
+			generateVariableSideEffect( (DirectVariableReference)operand, operatorType, listener, location, node);
 		else
-			report( RoutineTools.ReportType.ERROR, "target of operation " + operationType + " must be a " + VariableReference.class.getSimpleName() + ", not a " + operand.getClass().getSimpleName(), node ) ;
+			report( RoutineTools.ReportType.ERROR, "target of operation " + operationType + " must be a " + DirectVariableReference.class.getSimpleName() + ", not a " + operand.getClass().getSimpleName(), node ) ;
 	}
 	
-	private void generateVariableSideEffect( VariableReference variable, OperatorType operatorType, Listener listener, Generator.Listener.Location location, Ast.Node node ) {
-		generateSideEffect( listener, location, new Command( CommandType.SET, new AssignmentList( new Assignment( variable, new BinaryOperation(variable, operatorType, Constant.from(1)) ) ) ) ) ;
+	private void generateVariableSideEffect( DirectVariableReference variable, OperatorType operatorType, Listener listener, Generator.Listener.Location location, Ast.Node node ) {
+		generateSideEffect( listener, location, new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variable), new BinaryOperation(variable, operatorType, Constant.from(1)) ) ) ) ) ;
 	}
 	
 	private Expression buildOperation(Ast.Unary unaryNode, Listener listener) {
@@ -467,11 +468,11 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			return new BinaryOperation(lhs, OperatorType.GREATER_THAN, rhs) ;
 			
 		case NOT_EQUAL_TO:
-			return new UnaryOperation(OperatorType.NOT, new BinaryOperation(lhs, OperatorType.EQUALS, rhs) ) ;
-		case GREATER_THAN_EQUAL:
-			return new UnaryOperation(OperatorType.NOT, new BinaryOperation(lhs, OperatorType.LESS_THAN, rhs) ) ;
+			return new BinaryOperation(lhs, OperatorType.NOT_EQUALS, rhs) ;
 		case LESS_THAN_EQUAL:
-			return new UnaryOperation(OperatorType.NOT, new BinaryOperation(lhs, OperatorType.GREATER_THAN, rhs) ) ;
+			return new BinaryOperation(lhs, OperatorType.NOT_GREATER_THAN, rhs) ;
+		case GREATER_THAN_EQUAL:
+			return new BinaryOperation(lhs, OperatorType.NOT_LESS_THAN, rhs) ;
 			
 		case MODULO:
 			return new UnaryOperation(OperatorType.NOT, new BinaryOperation(lhs, OperatorType.MODULO, rhs) ) ;

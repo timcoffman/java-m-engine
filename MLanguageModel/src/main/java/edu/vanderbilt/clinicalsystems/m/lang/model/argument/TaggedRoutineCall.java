@@ -43,9 +43,8 @@ public class TaggedRoutineCall extends Argument {
 	
 	@Override
 	protected String unformattedRepresentation() {
-		return (m_routineName != null ? m_routineName : "" )
-				+ (m_tagName != null && m_routineName != null ? "." : "")
-				+ (m_tagName != null ? m_tagName : "" )
+		return m_routineName
+				+ (m_tagName != null ? "."+m_tagName : "")
 				+ "(" + m_arguments.stream().map((e)->e.toString()).collect( Collectors.joining(", ") ) + ")";
 	}
 

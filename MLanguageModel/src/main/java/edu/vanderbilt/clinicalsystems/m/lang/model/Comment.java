@@ -1,5 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model;
 
+import java.util.Objects;
+
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
@@ -7,7 +9,10 @@ public class Comment implements RoutineElement {
 
 	private final String m_text ;
 	
-	public Comment(String text) { m_text = text; }
+	public Comment(String text) {
+		Objects.requireNonNull(text) ;
+		m_text = text;
+	}
 
 	@Override
 	public Object hint( String hintName ) { return null ; }

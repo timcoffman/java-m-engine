@@ -78,6 +78,50 @@ Equals
 	: '='
 	;
 
+CloseSquareBracket
+	: ']'
+	;
+
+OpenSquareBracket
+	: '['
+	;
+
+GreaterThan
+	: '>'
+	;
+
+LessThan
+	: '<'
+	;
+
+Apostrophe
+	: '\''
+	;
+
+Ampersand
+	: '&'
+	;
+
+Exclamation
+	: '!'
+	;
+
+Asterisk
+	: '*'
+	;
+
+ForwardSlash
+	: '/'
+	;
+
+QuestionMark
+	: '?'
+	;
+
+PoundSign
+	: '#'
+	;
+
 Quote
 	: '"' -> pushMode(QUOTED)
 	;

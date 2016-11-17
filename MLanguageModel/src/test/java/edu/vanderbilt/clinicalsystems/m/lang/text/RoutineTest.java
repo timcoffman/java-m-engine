@@ -22,13 +22,14 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class RoutineTest {
 
@@ -101,10 +102,10 @@ public class RoutineTest {
 	public void canWriteMulitpleVariableDeclarationsInRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference(Scope.LOCAL, ReferenceStyle.DIRECT, "a")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "a")) ) );
 		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("lorem")) ) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference(Scope.LOCAL, ReferenceStyle.DIRECT, "b")) ) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference(Scope.LOCAL, ReferenceStyle.DIRECT, "c")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "b")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "c")) ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN a W \"lorem\" N b,c\n\n") );
 	}
@@ -125,9 +126,9 @@ public class RoutineTest {
 	public void canWriteSimpleRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, "message" ) ) ) );
-		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, "message" ), new Constant("Hello, world!") ) ) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, "message" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
+		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap( new DirectVariableReference( Scope.LOCAL, "message" ) ), new Constant("Hello, world!") ) ) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN message S message=\"Hello, world!\" W message Q \n\n") );
@@ -169,12 +170,12 @@ public class RoutineTest {
 	public void canWriteMultiplyTaggedRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, "abc" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
 		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference(Scope.LOCAL, ReferenceStyle.DIRECT, "MYFUNCTION", null, RoutineAccess.LOCAL ), FunctionCall.Returning.UNKNOWN, Expression.list( new Constant("123"), new Constant("456") ) )) ) );
 		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCall("MYFUNCTION", null, RoutineAccess.LOCAL, Expression.list( new Constant("123"), new Constant("456") ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		routine.appendElement( new Tag( "MYFUNCTION", Arrays.asList( new ParameterName("x"), new ParameterName("y") )) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, "abc" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN abc W $$MYFUNCTION(123,456) D MYFUNCTION(123,456) Q \nMYFUNCTION(x,y)\tN abc Q \n\n") );

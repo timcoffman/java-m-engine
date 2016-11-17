@@ -53,15 +53,17 @@ public enum CommandType {
 			.filter( ct->ct.m_canonicalSymbol.equalsIgnoreCase(symbolOrAbbreviation) )
 			.findFirst()
 			;
+		if ( matchingSymbol.isPresent() )
+			return matchingSymbol.get() ;
+		
 		Optional<CommandType> matchingAbbreviation =
 			Arrays.stream(CommandType.values())
 			.filter( ct->ct.m_canoncialAbbreviation.equalsIgnoreCase(symbolOrAbbreviation) )
 			.findFirst()
 			;
 		
-		return matchingSymbol
-				.orElse(matchingAbbreviation
-						.orElseThrow( ()->new IllegalArgumentException("\"" + symbolOrAbbreviation + "\" not recognized as a command type") )
-						);
+		return matchingAbbreviation
+				.orElseThrow( ()->new IllegalArgumentException("\"" + symbolOrAbbreviation + "\" not recognized as a command type") )
+				;
 	}
 }

@@ -3,6 +3,8 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 import java.io.IOException;
 import java.io.Writer;
 
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
@@ -90,6 +92,12 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	}
 	
 	@Override
+	public void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException {
+		writer.append( "$" ) ;
+		writer.append( builtinFunction.canonicalSymbol() );
+	}
+	
+	@Override
 	public void writeCommentText(String comment, Writer writer) throws IOException {
 		startNewLine(writer);
 		indent(writer);
@@ -135,10 +143,7 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	}
 	
 	@Override
-	public void writeIndirectVariable( Scope scope, String indirectVariableName, Writer writer ) throws IOException {
-		writer.append( "@" ) ;
-		writeScopeMarker( scope, writer ) ;
-		writer.append( indirectVariableName ) ;
+	public void writeIndirectionOperator( Writer writer ) throws IOException {
 		writer.append( "@" ) ;
 	}
 	
@@ -146,6 +151,12 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	public void writeDirectVariable( Scope scope, String variableName, Writer writer ) throws IOException {
 		writeScopeMarker( scope, writer ) ;
 		writer.append( variableName ) ;
+	}
+	
+	@Override
+	public void writeBuiltinVariable( BuiltinVariable variable, Writer writer ) throws IOException {
+		writer.append( "$" ) ;
+		writer.append( variable.canonicalSymbol() ) ;
 	}
 	
 	@Override

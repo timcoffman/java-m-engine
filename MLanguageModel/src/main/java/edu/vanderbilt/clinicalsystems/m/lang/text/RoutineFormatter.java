@@ -3,6 +3,8 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 import java.io.IOException;
 import java.io.Writer;
 
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
@@ -33,6 +35,7 @@ public interface RoutineFormatter {
 	void writeTaggedRoutine( String functionName, String routineName, RoutineAccess routineAccess, Writer writer ) throws IOException ;
 	
 	void writeFunction( String functionName, String routineName, RoutineAccess routineAccess, Writer writer ) throws IOException ;
+	void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException ;
 
 	void openComment( Writer writer ) throws IOException ;
 	void writeCommentText( String comment, Writer writer ) throws IOException ;
@@ -49,8 +52,9 @@ public interface RoutineFormatter {
 	void writeStringConstant( String value, Writer writer ) throws IOException ;
 	
 	void writeVariablePassedByReference( Scope scope, String variableName, Writer writer ) throws IOException ;
-	void writeIndirectVariable( Scope scope, String indirectVariableName, Writer writer ) throws IOException ;
+	void writeIndirectionOperator( Writer writer ) throws IOException ;
 	void writeDirectVariable( Scope scope, String variableName, Writer writer ) throws IOException ;
+	void writeBuiltinVariable( BuiltinVariable variable, Writer writer ) throws IOException ;
 	void openVariableKeys( Writer writer ) throws IOException ;
 	void writeVariableKeysDelimiter( Writer writer ) throws IOException ;
 	void closeVariableKeys( Writer writer ) throws IOException ;
