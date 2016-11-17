@@ -73,7 +73,9 @@ comment
 	;
 
 command
+	returns [ Command result ]
 	locals [ CommandType _commandType, Expression _condition, Argument _argument, Block _block ]
+	@after { requireNonNull($result); }
 	: cmd=Name { $_commandType = CommandType.valueOfSymbol($cmd.text); }
             ( Colon c=expression { $_condition = $c.result; } )?
             ( EndOfLine { $_argument = Argument.NOTHING; }
@@ -81,7 +83,7 @@ command
             )
             b=block[ $_commandType, $_argument ] { $_block = $b.result; }
         {
-        	_append( new Command( $_condition, $_commandType, $_argument, $_block ) ) ;	
+        	_append( $result = new Command( $_condition, $_commandType, $_argument, $_block ) ) ;	
         }
 	;
 
@@ -95,6 +97,7 @@ argument [ CommandType _commandType ]
 	| { $_commandType == CommandType.GOTO  }? trc=taggedRoutineCall { $result = _converter.argumentFrom($trc.ctx); }
 	| { $_commandType == CommandType.IF    }?  el=expressionList    { $result = _converter.argumentFrom( $el.ctx); }
 	| { $_commandType == CommandType.WRITE }? iol=inputOutputList   { $result = _converter.argumentFrom($iol.ctx); }
+	| { $_commandType == CommandType.READ  }? iol=inputOutputList   { $result = _converter.argumentFrom($iol.ctx); }
 	|                                           e=expression        { $result = _converter.argumentFrom(  $e.ctx); }
 	| /* nothing */                                                 { $result = Argument.NOTHING; }
 	;
@@ -208,7 +211,6 @@ expression
 	| Plus       e=expression { $result = new UnaryOperation( OperatorType.ADD,      $e.result ); }
 	| Apostrophe e=expression { $result = new UnaryOperation( OperatorType.NOT,      $e.result ); }
 	/* binary operations */
-	| lhs=expression          Colon         rhs=expression { $result = new ConditionalExpression( $lhs.result, $rhs.result ); }
 	| lhs=expression        Underscore      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.CONCAT          , $rhs.result); }
 	| lhs=expression           Plus         rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.ADD             , $rhs.result); }
 	| lhs=expression          Minus         rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.SUBTRACT        , $rhs.result); }
@@ -226,6 +228,8 @@ expression
 	| lhs=expression        Ampersand       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.AND             , $rhs.result); }
 	| lhs=expression       Exclamation      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.OR              , $rhs.result); }
 	| lhs=expression   CloseSquareBracket   rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.FOLLOWS         , $rhs.result); }
+	/* $SELECT(...) only */
+	| lhs=expression Colon rhs=expression { $result = new ConditionalExpression( $lhs.result, $rhs.result ); }
 	;
 
 quotedSequence

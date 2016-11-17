@@ -186,19 +186,29 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	}
 
 	@Override
-	public void appendLoopDefinitionDelimiter( Writer writer ) throws IOException {
+	public void writeLoopDefinitionDelimiter( Writer writer ) throws IOException {
 		writer.append( ":" ) ;
 	}
 
 	@Override
 	public void openExpressionGroup( Writer writer ) throws IOException {
-		writer.append( "(" ) ;
+		writer.append( "( " ) ;
 	}
 	@Override
 	public void closeExpressionGroup( Writer writer ) throws IOException {
-		writer.append( ")" ) ;
+		writer.append( " )" ) ;
 	}
 
+	@Override
+	public void openExpressionPrecondition( Writer writer ) throws IOException {
+		writer.append( "( " ) ;
+	}
+	@Override
+	public void closeExpressionPrecondition( Writer writer ) throws IOException {
+		writer.append( " )? " ) ;
+	}
+	
+	
 	@Override
 	public void openInlineBlock(Writer writer) throws IOException {
 		writer.append(" {") ;

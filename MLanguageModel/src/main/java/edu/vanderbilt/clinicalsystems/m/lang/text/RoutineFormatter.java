@@ -62,9 +62,12 @@ public interface RoutineFormatter {
 	void openExpressionGroup( Writer writer ) throws IOException ;
 	void closeExpressionGroup( Writer writer ) throws IOException ;
 	
+	void openExpressionPrecondition( Writer writer ) throws IOException ;
+	void closeExpressionPrecondition( Writer writer ) throws IOException ;
+	
 	void writeOperator( OperatorType operator, Writer writer ) throws IOException ;
 	
-	void appendLoopDefinitionDelimiter( Writer writer ) throws IOException ;
+	void writeLoopDefinitionDelimiter( Writer writer ) throws IOException ;
 	
 	void openInlineBlock( Writer writer ) throws IOException ;
 	void closeInlineBlock( Writer writer ) throws IOException ;

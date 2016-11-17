@@ -11,6 +11,7 @@
 		<module>MLanguageCore</module>
 		<module>MLanguageModel</module>
 		<module>MLanguageParser</module>
+		<module>MLanguageANTLRParser</module>
 		<module>EpicAnnotations</module>
 		<module>EpicAnnotationProcessing</module>
 		<module>EpicAnnotationJdkProcessing</module>

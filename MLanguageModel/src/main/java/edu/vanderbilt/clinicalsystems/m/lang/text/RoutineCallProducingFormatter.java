@@ -111,9 +111,13 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 
 	@Override public void closeExpressionGroup( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.closeExpressionGroup(writer) ) ; }
 
+	@Override public void openExpressionPrecondition( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.openExpressionPrecondition(writer) ) ; }
+	
+	@Override public void closeExpressionPrecondition( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.closeExpressionPrecondition(writer) ) ; }
+	
 	@Override public void writeOperator(OperatorType operator, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeOperator(operator, writer) ) ; }
 
-	@Override public void appendLoopDefinitionDelimiter(Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.appendLoopDefinitionDelimiter(writer) ) ; }
+	@Override public void writeLoopDefinitionDelimiter(Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeLoopDefinitionDelimiter(writer) ) ; }
 
 	@Override public void openInlineBlock(Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.openInlineBlock(writer) ) ; }
 

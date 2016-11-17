@@ -570,7 +570,7 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	}
 
 	@Override
-	public void appendLoopDefinitionDelimiter( Writer writer ) throws IOException {
+	public void writeLoopDefinitionDelimiter( Writer writer ) throws IOException {
 		writer.append( ":" ) ;
 	}
 
@@ -582,6 +582,17 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	public void closeExpressionGroup( Writer writer ) throws IOException {
 		writer.append( ")" ) ;
 	}
+
+	@Override
+	public void openExpressionPrecondition( Writer writer ) throws IOException {
+		/* nothing */
+	}
+	
+	@Override
+	public void closeExpressionPrecondition( Writer writer ) throws IOException {
+		writer.append( ":" ) ;
+	}
+	
 
 	@Override
 	public void openInlineBlock(Writer writer) throws IOException {

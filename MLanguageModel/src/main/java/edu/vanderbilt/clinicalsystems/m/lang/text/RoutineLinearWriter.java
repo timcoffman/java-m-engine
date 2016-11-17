@@ -53,7 +53,7 @@ public class RoutineLinearWriter implements RoutineWriter {
 	public void write( Routine routine ) throws RoutineWriterException {
 		try {
 			m_routineFormatter.openRoutine( m_writer ) ;
-			routine.block().write(this);
+			routine.root().write(this);
 			m_routineFormatter.closeRoutine( m_writer ) ;
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;
@@ -214,11 +214,11 @@ public class RoutineLinearWriter implements RoutineWriter {
 			
 			if ( null != stop || !isConstant(1,step) ) {
 				
-				m_routineFormatter.appendLoopDefinitionDelimiter(m_writer) ;
+				m_routineFormatter.writeLoopDefinitionDelimiter(m_writer) ;
 				loopDefinition.step().write(this) ;
 				
 				if ( stop != null ) {
-					m_routineFormatter.appendLoopDefinitionDelimiter(m_writer) ;
+					m_routineFormatter.writeLoopDefinitionDelimiter(m_writer) ;
 					loopDefinition.stop().write(this) ;
 				}
 			}
@@ -342,8 +342,9 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@Override
 	public void write(ConditionalExpression conditionalExpression) throws RoutineWriterException {
 		try {
+			m_routineFormatter.openExpressionPrecondition(m_writer);
 			conditionalExpression.condition().write(this);
-			m_routineFormatter.writeConditionDelimiter(m_writer);
+			m_routineFormatter.closeExpressionPrecondition(m_writer);
 			conditionalExpression.expression().write(this);
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;

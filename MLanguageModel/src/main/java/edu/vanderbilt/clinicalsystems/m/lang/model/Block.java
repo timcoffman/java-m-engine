@@ -2,9 +2,11 @@ package edu.vanderbilt.clinicalsystems.m.lang.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
@@ -32,12 +34,31 @@ public abstract class Block implements RoutineElement {
 
 	public Iterable<RoutineElement> elements() { return m_elements ; }
 
+	private final Map<String,Integer> m_tagPositions = new HashMap<String, Integer>() ;
+	private void clearTagPositionCache() { m_tagPositions.clear(); }
+	
+	public Iterator<RoutineElement> findTagByName( String name ) {
+		Integer position = m_tagPositions.get( name ) ;
+		if ( null == position ) {
+			position = 0 ; 
+			while ( position < m_elements.size() ) {
+				RoutineElement element = m_elements.get( position ) ;
+				if ( element instanceof Tag && name.equalsIgnoreCase( ((Tag)element).name() ) ) {
+					m_tagPositions.put( name, position ) ;
+					break ;
+				}
+			}
+		}
+		return m_elements.listIterator(position) ;
+	}
+
 	public boolean isEmpty() { return m_elements.isEmpty() ; }
 	
 	@Override
 	public String toString() { return "{ ... " + m_elements.size() + " ... }"; }
 
 	private void postProcess() {
+		clearTagPositionCache() ;
 		removeDeadCommands() ;
 		mergeAdjacentDeclarations() ;
 	}
