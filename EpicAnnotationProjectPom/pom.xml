@@ -161,6 +161,7 @@
 				<artifactId>EpicAnnotationProcessing</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>EpicAnnotationJdkProcessing</artifactId>
@@ -176,6 +177,7 @@
 				<artifactId>MLanguageModel</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>MLanguageParser</artifactId>
@@ -184,6 +186,22 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>MLanguageANTLRParser</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>MLanguageEngine</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>OpenMumpsEngine</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>JavaMumpsEngine</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		
