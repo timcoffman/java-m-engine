@@ -1,24 +1,14 @@
 package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
-import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.AssignmentHandler;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.CallHandler;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.ReturnHandler;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
-import edu.vanderbilt.clinicalsystems.m.lang.model.Element;
-import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
-import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
@@ -27,132 +17,55 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
-public class ExecutionFrame implements Executor, Evaluator {
+public class ExecutionFrame extends StandardExecutor implements Executor, Evaluator, AutoCloseable {
 	
 	private final NodeMap m_root ;
 	private final GlobalContext m_globalContext ;
 	private final Map<String,Node> m_locals = new HashMap<String, Node>(); 
-
-	private Constant m_result = null ;
-	private EngineException m_exception = null ; 
 
 	public ExecutionFrame( NodeMap root, GlobalContext globalContext ) {
 		m_root = root ;
 		m_globalContext = globalContext ;
 	}
 	
-	@Override public Constant result() { return m_result ; }
-
-	@Override public EngineException error() { return m_exception ; }
-	
-	protected ExecutionResult caughtException( EngineException ex ) {
-		m_exception = ex ;
-		return ExecutionResult.ERROR ;
+	@Override public void close() {
+		/* nothing yet */
 	}
 	
-	protected void throwException() throws EngineException {
-		if ( null == m_exception )
-			throw new RuntimeException( "cannot throw EngineException; none were caught" ) ;
-		throw m_exception ;
+	public ExecutionFrame createFrame() {
+		return new ExecutionFrame(m_root, m_globalContext) ;
 	}
-
+	
 	@Override
 	public ExecutionResult execute( Command command ) {
 		m_result = null ;
 		if ( null != m_exception )
 			return ExecutionResult.ERROR ;
 		
-		if ( null != command.condition() )
+		if ( null != command.condition() ) {
 			try {
 				if ( !evaluate( command.condition() ).toBoolean() )
 					return ExecutionResult.CONTINUE;
 			} catch ( EngineException ex ) {
 				return caughtException(ex);
 			}
+		}
 		
+		StandardExecutor handler ; 
 		switch ( command.commandType() ) {
-		case SET:
-			return command.argument().visit( new ArgumentInterpreter<ExecutionResult>() {
-				@Override public ExecutionResult visitAssignmentList(AssignmentList assignmentList) { return apply( assignmentList ) ; }
-			} );
-		case DO:
-			return command.argument().visit(  new ArgumentInterpreter<ExecutionResult>() {
-				@Override public ExecutionResult visitNothing(Nothing nothing) {
-					return super.visitNothing(nothing) ;
-				}
-				@Override public ExecutionResult visitTaggedRoutineCall(TaggedRoutineCall taggedRoutineCall) {
-					try { return execute( taggedRoutineCall ) ; } catch ( EngineException ex ) { return caughtException(ex); }
-				}
-			} );
-		case QUIT:
-			return command.argument().visit(  new ArgumentInterpreter<ExecutionResult>() {
-				@Override public ExecutionResult visitNothing(Nothing nothing) {
-					return ExecutionResult.QUIT ;
-				}
-				@Override public ExecutionResult visitExpressionList(ExpressionList expressionList) {
-					try { m_result = evaluate( expressionList.elements() ) ; return ExecutionResult.QUIT ; } catch ( EngineException ex ) { return caughtException(ex); }
-				}
-			} );
+		case SET:  handler = new AssignmentHandler(this) ; break ;
+		case DO:   handler = new CallHandler      (this) ; break ;
+		case QUIT: handler = new ReturnHandler    (this) ; break ;
 		default:
 			throw new UnsupportedOperationException("command type \"" + command.commandType() + "\" not supported") ;
 		}
-	}
-
-	private static class ArgumentInterpreter<R> implements Argument.Visitor<R> {
-		@Override public R visitArgument(Argument argument) {
-			throw new UnsupportedOperationException( "argument type \"" + argument.getClass().getSimpleName() + "\" not supported" );
-		}
-	}
-	
-	private ExecutionResult execute( TaggedRoutineCall taggedRoutineCall ) throws EngineException {
-		String tagName = taggedRoutineCall.tagName();
-		String routineName = taggedRoutineCall.routineName();
 		
-		Routine routine = m_globalContext.compiledRoutine( routineName ) ;
-		if ( null == routine )
-			throw new EngineException(ErrorCode.MISSING_ROUTINE,"routine",routineName) ;
-		
-		Iterator<RoutineElement> elementIterator = routine.findTagByName( tagName == null ? routineName : tagName ) ;
-		if ( !elementIterator.hasNext() )
-			throw new EngineException(ErrorCode.MISSING_TAG,"tag",tagName,"routine",routineName) ;
-		
-		ExecutionResult result = ExecutionResult.CONTINUE ;
-		while ( ExecutionResult.CONTINUE == result && elementIterator.hasNext() ) {
-			RoutineElement element = elementIterator.next() ;
-			if ( element instanceof Command)
-				result = execute( (Command)element );
-		}
-		return result ;
+		return delegateExecutionTo( command, handler ) ;
 	}
 	
-	private ExecutionResult apply( AssignmentList assignments ) {
-		ExecutionResult result = ExecutionResult.CONTINUE ; 
-		for (Assignment assignment : assignments.elements())
-			if ( (result=apply( assignment )) != ExecutionResult.CONTINUE )
-				break ;
-		return result ;
-	}
+	public GlobalContext globalContext() { return m_globalContext ; }
 	
-	private ExecutionResult apply( Assignment assignment ) {
-		return assignment.destination().visit( new Destination.Visitor<ExecutionResult>() {
-			
-			@Override public ExecutionResult visitElement(Element element) {
-				throw new UnsupportedOperationException(element.getClass().getSimpleName() + " not supported for assignment") ;
-			}
-			
-			@Override public ExecutionResult visitVariableReference(VariableReference variable) {
-				try { findNode( variable ).assign( evaluate( assignment.source() ).value() ) ; return ExecutionResult.CONTINUE ; }
-				catch ( EngineException ex ) { return caughtException(ex) ; }
-			}
-
-			@Override public ExecutionResult visitBuiltinFunctionCall(BuiltinFunctionCall builtinFunctionCall) {
-				throw new UnsupportedOperationException(builtinFunctionCall.getClass().getSimpleName() + " not supported for assignment") ;
-			}
-			
-		});
-	}
-	
-	private Node findNode( VariableReference variable ) throws EngineException {
+	public Node findNode( VariableReference variable ) throws EngineException {
 		Node node = variable.visit( new VariableReference.Visitor<Node>() {
 			
 			@Override public Node visitVariableReference(VariableReference variable) {
@@ -183,13 +96,6 @@ public class ExecutionFrame implements Executor, Evaluator {
 		for ( Expression key : variable.keys() )
 			node = node.get( evaluate(key).value() ) ;
 		return node ;
-	}
-	
-	public Constant evaluate( Iterable<Expression> expressions ) throws EngineException {
-		Constant result = null ;
-		for ( Expression expression : expressions )
-			result = evaluate(expression) ;
-		return result ;
 	}
 	
 	private Constant resultOrException( Constant result ) throws EngineException {
