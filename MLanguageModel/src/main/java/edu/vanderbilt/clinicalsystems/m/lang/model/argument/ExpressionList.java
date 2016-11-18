@@ -23,6 +23,11 @@ public class ExpressionList extends ElementListArgument<Expression> {
 	}
 
 	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitExpressionList(this) ;
+	}
+	
+	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);
 	}

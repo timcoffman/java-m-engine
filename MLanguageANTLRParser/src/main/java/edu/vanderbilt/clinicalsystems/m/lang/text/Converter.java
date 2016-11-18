@@ -8,6 +8,7 @@ import java.util.stream.StreamSupport;
 import org.antlr.v4.runtime.Token;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
@@ -26,7 +27,9 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReferenceBase;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
@@ -131,9 +134,14 @@ public class Converter {
 		return new DirectVariableReference( parameterPassMethod, scope, nameToken.getText(), asList(expressionListCtx) );
 	}
 	
-	public BuiltinVariableReference createBuiltinVariableReference( Token nameToken ) {
-	  	BuiltinVariable builtinVariable = BuiltinVariable.valueOfSymbol( nameToken.getText(), Compatibility.EXTENSION ) ;
-		return new BuiltinVariableReference( builtinVariable, EMPTY_EXPRESSION_LIST );
+	public BuiltinVariableReferenceBase createBuiltinVariableReference( Scope scope, Token nameToken ) {
+		if ( Scope.GLOBAL == scope ) {
+			BuiltinSystemVariable builtinVariable = BuiltinSystemVariable.valueOfSymbol( nameToken.getText(), Compatibility.EXTENSION ) ;
+			return new BuiltinSystemVariableReference( builtinVariable, EMPTY_EXPRESSION_LIST ) ;
+		} else {
+			BuiltinVariable builtinVariable = BuiltinVariable.valueOfSymbol( nameToken.getText(), Compatibility.EXTENSION ) ;
+			return new BuiltinVariableReference( builtinVariable, EMPTY_EXPRESSION_LIST ) ;
+		}
 	}
 	
 	public IndirectVariableReference createIndirectVariableReference( Expression nameProducer, ExpressionListContext expressionListCtx ) {

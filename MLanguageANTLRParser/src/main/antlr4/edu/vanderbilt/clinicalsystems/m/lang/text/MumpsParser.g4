@@ -177,8 +177,9 @@ destination
 	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference(  LOCAL, $n, $el.ctx ) ); }
 	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference( GLOBAL, $n, $el.ctx ) ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createIndirectVariableReference( $e.result, $el.ctx ) ); }
-	| Dollar n=Name OpenParenthesis pl=parameterList? CloseParenthesis { $result = Destination.wrap( _converter.createBuiltinFunctionCall( $n, $pl.ctx) ); }
-	| Dollar n=Name                                                    { $result = Destination.wrap( _converter.createBuiltinVariableReference( $n ) ); }
+	|       Dollar n=Name OpenParenthesis pl=parameterList? CloseParenthesis { $result = Destination.wrap( _converter.createBuiltinFunctionCall( $n, $pl.ctx) ); }
+	|       Dollar n=Name                                                    { $result = Destination.wrap( _converter.createBuiltinVariableReference( LOCAL,  $n ) ); }
+	| Caret Dollar n=Name                                                    { $result = Destination.wrap( _converter.createBuiltinVariableReference( GLOBAL, $n ) ); }
 	;
 
 block [ CommandType _commandType, Argument _argument ]
@@ -205,7 +206,8 @@ expression
 	/* function calls */
 	| Dollar Dollar n=Name ( Caret r=Name )? OpenParenthesis pl=parameterList? CloseParenthesis { $result = _converter.createRoutineFunctionCall( LOCAL, DIRECT, $n, $r, $pl.ctx); }
 	|        Dollar n=Name                   OpenParenthesis pl=parameterList? CloseParenthesis { $result = _converter.createBuiltinFunctionCall( $n, $pl.ctx); }
-	|        Dollar n=Name                                                                      { $result = _converter.createBuiltinVariableReference( $n ); }
+	|        Dollar n=Name                                                                      { $result = _converter.createBuiltinVariableReference( LOCAL,  $n ); }
+	|  Caret Dollar n=Name                                                                      { $result = _converter.createBuiltinVariableReference( GLOBAL, $n ); }
 	/* unary operations */
 	| Minus      e=expression { $result = new UnaryOperation( OperatorType.SUBTRACT, $e.result ); }
 	| Plus       e=expression { $result = new UnaryOperation( OperatorType.ADD,      $e.result ); }

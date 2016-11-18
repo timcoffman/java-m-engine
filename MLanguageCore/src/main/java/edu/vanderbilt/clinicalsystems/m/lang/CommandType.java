@@ -1,9 +1,8 @@
 package edu.vanderbilt.clinicalsystems.m.lang;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.EnumSet;
 
-public enum CommandType {
+public enum CommandType implements BuiltinSymbol {
 	BREAK("BREAK","B"),
 	CLOSE("CLOSE","C"),
 	DO("DO","D",true, true),
@@ -42,28 +41,15 @@ public enum CommandType {
 	private final boolean m_allowsCondition ;
 	private final boolean m_allowsBlock ;
 	
-	public String canonicalSymbol() { return m_canonicalSymbol ; }
-	public String canoncialAbbreviation() { return m_canoncialAbbreviation ; }
+	@Override public String canonicalSymbol() { return m_canonicalSymbol ; }
+	@Override public String canonicalAbbreviation() { return m_canoncialAbbreviation ; }
+	@Override public EnumSet<Compatibility> compatibility() { return EnumSet.of(Compatibility.ANSI_1995_X11_1) ; }
+	
 	public boolean allowsCondition() { return m_allowsCondition ; }
 	public boolean allowsBlock() { return m_allowsBlock ; }
-	
-	public static CommandType valueOfSymbol(String symbolOrAbbreviation) {
-		Optional<CommandType> matchingSymbol =
-			Arrays.stream(CommandType.values())
-			.filter( ct->ct.m_canonicalSymbol.equalsIgnoreCase(symbolOrAbbreviation) )
-			.findFirst()
-			;
-		if ( matchingSymbol.isPresent() )
-			return matchingSymbol.get() ;
-		
-		Optional<CommandType> matchingAbbreviation =
-			Arrays.stream(CommandType.values())
-			.filter( ct->ct.m_canoncialAbbreviation.equalsIgnoreCase(symbolOrAbbreviation) )
-			.findFirst()
-			;
-		
-		return matchingAbbreviation
-				.orElseThrow( ()->new IllegalArgumentException("\"" + symbolOrAbbreviation + "\" not recognized as a command type") )
-				;
+
+	public static CommandType valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
+		return BuiltinSymbolSupport.valueOfSymbol(CommandType.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}
+
 }

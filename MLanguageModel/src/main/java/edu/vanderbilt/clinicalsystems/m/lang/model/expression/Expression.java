@@ -19,4 +19,13 @@ public abstract class Expression implements Element {
 	public Expression inverted() { return new UnaryOperation( OperatorType.NOT, this ) ; }
 
 	public Expression simplified() { return this ; } // by default, this expression is as simple as possible
+	
+	public interface Visitor<R> extends VariableReference.Visitor<R> {
+		R visitExpression( Expression expression ) ;
+		default R visitConstant         ( Constant          constant ) { return visitExpression(constant) ; }
+		@Override
+		default R visitVariableReference( VariableReference variable ) { return visitExpression(variable) ; }
+	}
+	
+	public <R> R visit( Visitor<R> visitor ) { return visitor.visitExpression(this) ; }
 }

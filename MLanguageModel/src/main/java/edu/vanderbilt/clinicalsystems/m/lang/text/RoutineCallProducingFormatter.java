@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
@@ -101,6 +102,8 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 	
 	@Override public void writeBuiltinVariable(BuiltinVariable builtinVariable, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeBuiltinVariable(builtinVariable, writer) ) ; }
 
+	@Override public void writeBuiltinSystemVariable(BuiltinSystemVariable builtinSystemVariable, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeBuiltinSystemVariable(builtinSystemVariable, writer) ) ; }
+	
 	@Override public void openVariableKeys( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.openVariableKeys(writer) ) ; }
 
 	@Override public void writeVariableKeysDelimiter( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeVariableKeysDelimiter(writer) ) ; }

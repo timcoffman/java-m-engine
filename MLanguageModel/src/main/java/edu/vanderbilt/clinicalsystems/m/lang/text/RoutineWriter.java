@@ -22,6 +22,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConditionalExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
@@ -71,6 +72,7 @@ public interface RoutineWriter {
 	void write( DirectVariableReference variable) throws RoutineWriterException ;
 	void write( IndirectVariableReference variable) throws RoutineWriterException ;
 	void write( BuiltinVariableReference variable) throws RoutineWriterException ;
+	void write( BuiltinSystemVariableReference variable) throws RoutineWriterException ;
 	void write( Constant constant ) throws RoutineWriterException ;
 
 	void write(TagReference tag) throws RoutineWriterException ;

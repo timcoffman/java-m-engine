@@ -58,6 +58,10 @@ public class Constant extends Expression {
 	@Override
 	protected String unformattedRepresentation() { return "\"" + m_value + "\"" ; } 
 
+	@Override public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitConstant(this) ;
+	}
+	
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write( this ) ;

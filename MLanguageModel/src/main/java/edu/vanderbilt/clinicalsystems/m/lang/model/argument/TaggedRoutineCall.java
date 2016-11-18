@@ -37,6 +37,11 @@ public class TaggedRoutineCall extends Argument {
 	public Iterable<Expression> arguments() { return m_arguments ; }
 	
 	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitTaggedRoutineCall(this) ;
+	}
+	
+	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);
 	} ;	

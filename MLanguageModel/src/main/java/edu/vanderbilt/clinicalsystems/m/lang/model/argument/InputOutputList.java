@@ -11,7 +11,12 @@ public class InputOutputList extends ElementListArgument<InputOutput> {
 	public InputOutputList( InputOutput ... inputOutputs ) { super( Arrays.asList(inputOutputs) ) ; }
 
 	public InputOutputList( List<? extends InputOutput> inputOutputs ) { super(inputOutputs) ; }
-	
+
+	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitInputOutputList(this) ;
+	}
+
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);

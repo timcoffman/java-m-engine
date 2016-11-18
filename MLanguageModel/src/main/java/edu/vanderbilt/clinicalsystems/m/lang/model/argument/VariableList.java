@@ -14,6 +14,11 @@ public class VariableList extends ElementListArgument<VariableReference> {
 	public VariableList( List<? extends VariableReference> variables ) { super(variables) ; }
 	
 	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitVariableList(this) ;
+	}
+
+	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);
 	} ;

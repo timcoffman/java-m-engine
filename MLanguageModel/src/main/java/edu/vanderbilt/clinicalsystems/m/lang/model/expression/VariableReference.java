@@ -27,6 +27,17 @@ public abstract class VariableReference extends Expression {
 	
 	public ReferenceStyle referenceStyle() { return m_referenceStyle; }
 	public Iterable<Expression> keys() { return m_keys; }
+
+	@Override public <R> R visit( Expression.Visitor<R> visitor ) { return visit( (Visitor<R>)visitor ); }
+	public <R> R visit( Visitor<R> visitor ) { return visitor.visitVariableReference(this); }
+	
+	public interface Visitor<R> {
+		R visitVariableReference ( VariableReference variable ) ;
+		default R visitDirectVariableReference       ( DirectVariableReference        variable ) { return visitVariableReference(variable); }
+		default R visitIndirectVariableReference     ( IndirectVariableReference      variable ) { return visitVariableReference(variable); }
+		default R visitBuiltinVariableReference      ( BuiltinVariableReference       variable ) { return visitVariableReference(variable); }
+		default R visitBuiltinSystemVariableReference( BuiltinSystemVariableReference variable ) { return visitVariableReference(variable); }
+	}
 	
 	protected abstract String unformattedVariableNameRepresentation() ;
 

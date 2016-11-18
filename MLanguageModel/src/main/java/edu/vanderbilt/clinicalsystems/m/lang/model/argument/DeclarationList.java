@@ -15,6 +15,7 @@ public class DeclarationList extends ElementListArgument<DirectVariableReference
 
 	public DeclarationList( List<? extends DirectVariableReference> declarations ) { super(declarations) ; }
 
+
 	@Override
 	protected void check(DirectVariableReference variable) throws IllegalArgumentException {
 		super.check(variable);
@@ -24,6 +25,11 @@ public class DeclarationList extends ElementListArgument<DirectVariableReference
 			throw new IllegalArgumentException("variable reference provided for declaration must be a plain (not indirect) reference") ;
 	}
 
+	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitDeclarationList(this) ;
+	}
+	
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);

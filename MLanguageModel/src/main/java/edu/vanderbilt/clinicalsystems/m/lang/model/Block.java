@@ -47,6 +47,7 @@ public abstract class Block implements RoutineElement {
 					m_tagPositions.put( name, position ) ;
 					break ;
 				}
+				++position ;
 			}
 		}
 		return m_elements.listIterator(position) ;

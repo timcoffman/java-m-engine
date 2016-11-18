@@ -14,6 +14,11 @@ public class AssignmentList extends ElementListArgument<Assignment> {
 	public AssignmentList( List<? extends Assignment> assignments ) { super(assignments) ; }
 
 	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitAssignmentList(this) ;
+	}
+
+	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);
 	} ;	

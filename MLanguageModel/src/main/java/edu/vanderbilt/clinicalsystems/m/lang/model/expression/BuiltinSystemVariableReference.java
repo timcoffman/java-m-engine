@@ -2,30 +2,30 @@ package edu.vanderbilt.clinicalsystems.m.lang.model.expression;
 
 import java.util.List;
 
-import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
-public class BuiltinVariableReference extends BuiltinVariableReferenceBase {
+public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase {
 
-	private final BuiltinVariable m_builtinVariable ;
+	private final BuiltinSystemVariable m_builtinVariable ;
 
-	public BuiltinVariableReference( BuiltinVariable builtinVariable ) {
+	public BuiltinSystemVariableReference( BuiltinSystemVariable builtinVariable ) {
 		super( ReferenceStyle.DIRECT ) ;
 		m_builtinVariable = builtinVariable ;
 	}
 
-	public BuiltinVariableReference( BuiltinVariable builtinVariable, List<Expression> keys ) {
+	public BuiltinSystemVariableReference( BuiltinSystemVariable builtinVariable, List<Expression> keys ) {
 		super( ReferenceStyle.DIRECT, keys ) ;
 		m_builtinVariable = builtinVariable ;
 	}
 	
-	@Override public Scope scope() { return Scope.LOCAL ; }
-	public BuiltinVariable builtinVariable() { return m_builtinVariable; }
+	@Override public Scope scope() { return Scope.GLOBAL ; }
+	public BuiltinSystemVariable builtinSystemVariable() { return m_builtinVariable; }
 
-	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinVariableReference(this); }
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinSystemVariableReference(this); }
 
 	@Override protected String unformattedVariableNameRepresentation() {
 		return m_builtinVariable.canonicalSymbol() ;

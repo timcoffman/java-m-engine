@@ -1,6 +1,8 @@
 package edu.vanderbilt.clinicalsystems.m.lang;
 
-public enum OperatorType {
+import java.util.EnumSet;
+
+public enum OperatorType implements BuiltinSymbol {
 	/* String */
 	CONCAT      ("_"),
 	CONTAINS    ("]"),
@@ -35,6 +37,14 @@ public enum OperatorType {
 	OperatorType( String canonicalSymbol, boolean commutative ) { m_canonicalSymbol = canonicalSymbol ; m_commutative = commutative ; }
 	private final String m_canonicalSymbol ;
 	private final boolean m_commutative ;
-	public String canonicalSymbol() { return m_canonicalSymbol ; }
+	
+	@Override public String canonicalSymbol() { return m_canonicalSymbol ; }
+	@Override public String canonicalAbbreviation() { return m_canonicalSymbol ; }
+	@Override public EnumSet<Compatibility> compatibility() { return EnumSet.of(Compatibility.ANSI_1995_X11_1) ; }
+	
 	public boolean commutative() { return m_commutative ; }
+
+	public static OperatorType valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
+		return BuiltinSymbolSupport.valueOfSymbol(OperatorType.class, symbolOrAbbreviation, additionalCompatibilities) ;
+	}
 }

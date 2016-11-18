@@ -22,6 +22,8 @@ public class IndirectVariableReference extends VariableReference {
 	
 	public Expression variableNameProducer() { return m_variableNameProducer; }
 
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitIndirectVariableReference(this); }
+
 	@Override protected String unformattedVariableNameRepresentation() {
 		return m_variableNameProducer.unformattedRepresentation() ;
 	}

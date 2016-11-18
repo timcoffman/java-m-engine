@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
@@ -155,6 +156,13 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	
 	@Override
 	public void writeBuiltinVariable( BuiltinVariable variable, Writer writer ) throws IOException {
+		writer.append( "$" ) ;
+		writer.append( variable.canonicalSymbol() ) ;
+	}
+	
+	@Override
+	public void writeBuiltinSystemVariable( BuiltinSystemVariable variable, Writer writer ) throws IOException {
+		writer.append( "^" ) ;
 		writer.append( "$" ) ;
 		writer.append( variable.canonicalSymbol() ) ;
 	}

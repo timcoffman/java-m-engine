@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
@@ -55,6 +56,7 @@ public interface RoutineFormatter {
 	void writeIndirectionOperator( Writer writer ) throws IOException ;
 	void writeDirectVariable( Scope scope, String variableName, Writer writer ) throws IOException ;
 	void writeBuiltinVariable( BuiltinVariable variable, Writer writer ) throws IOException ;
+	void writeBuiltinSystemVariable( BuiltinSystemVariable variable, Writer writer ) throws IOException ;
 	void openVariableKeys( Writer writer ) throws IOException ;
 	void writeVariableKeysDelimiter( Writer writer ) throws IOException ;
 	void closeVariableKeys( Writer writer ) throws IOException ;

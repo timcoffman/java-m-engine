@@ -1,7 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model.argument;
 
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
@@ -24,7 +24,12 @@ public class LoopDefinition extends Argument {
 	public Expression start() { return m_start ; }
 	public Expression step() { return m_step ; }
 	public Expression stop() { return m_stop ; }
-	
+
+	@Override
+	public <R> R visit( Visitor<R> visitor ) {
+		return visitor.visitLoopDefinition(this) ;
+	}
+
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);

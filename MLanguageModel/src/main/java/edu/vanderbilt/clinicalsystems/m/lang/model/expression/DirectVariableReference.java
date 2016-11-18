@@ -40,6 +40,8 @@ public class DirectVariableReference extends VariableReference {
 	public Scope scope() { return m_scope; }
 	public String variableName() { return m_variableName; }
 
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitDirectVariableReference(this); }
+
 	@Override protected String unformattedVariableNameRepresentation() {
 		return
 				m_parameterPassMethod.unformattedRepresentation()

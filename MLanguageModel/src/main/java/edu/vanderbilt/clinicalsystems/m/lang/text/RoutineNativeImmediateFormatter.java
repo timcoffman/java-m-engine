@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
@@ -404,7 +405,7 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 		
 //		System.out.println("> command (" + command + ")") ;
 		if ( m_options.m_abbreviateCommands )
-			writer.append( command.canoncialAbbreviation() ) ;
+			writer.append( command.canonicalAbbreviation() ) ;
 		else
 			writer.append( command.canonicalSymbol() ) ;
 	}
@@ -471,7 +472,7 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	public void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException {
 		writer.append( "$" ) ;
 		if ( m_options.m_abbreviateBuiltinFunctions )
-			writer.append( builtinFunction.canoncialAbbreviation() ) ;
+			writer.append( builtinFunction.canonicalAbbreviation() ) ;
 		else
 			writer.append( builtinFunction.canonicalSymbol() ) ;
 	}
@@ -538,9 +539,19 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 	public void writeBuiltinVariable( BuiltinVariable builtinVariable, Writer writer ) throws IOException {
 		writer.append( "$" ) ;
 		if ( m_options.m_abbreviateBuiltinFunctions )
-			writer.append( builtinVariable.canoncialAbbreviation() ) ;
+			writer.append( builtinVariable.canonicalAbbreviation() ) ;
 		else
 			writer.append( builtinVariable.canonicalSymbol() ) ;
+	}
+	
+	@Override
+	public void writeBuiltinSystemVariable( BuiltinSystemVariable builtinSystemVariable, Writer writer ) throws IOException {
+		writer.append( "^" ) ;
+		writer.append( "$" ) ;
+		if ( m_options.m_abbreviateBuiltinFunctions )
+			writer.append( builtinSystemVariable.canonicalAbbreviation() ) ;
+		else
+			writer.append( builtinSystemVariable.canonicalSymbol() ) ;
 	}
 	
 	@Override

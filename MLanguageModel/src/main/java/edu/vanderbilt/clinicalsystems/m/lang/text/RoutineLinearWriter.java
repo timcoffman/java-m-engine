@@ -28,6 +28,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConditionalExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
@@ -462,6 +463,28 @@ public class RoutineLinearWriter implements RoutineWriter {
 	public void write(BuiltinVariableReference variable) throws RoutineWriterException {
 		try {
 			m_routineFormatter.writeBuiltinVariable( variable.builtinVariable(), m_writer ) ;
+			
+			Iterator<Expression> i = variable.keys().iterator() ;
+			if ( i.hasNext() ) {
+				m_routineFormatter.writeIndirectionOperator( m_writer);
+				m_routineFormatter.openVariableKeys(m_writer);
+				i.next().write(this);
+				while ( i.hasNext() ) {
+					m_routineFormatter.writeVariableKeysDelimiter(m_writer);
+					i.next().write(this);
+				}
+				m_routineFormatter.closeVariableKeys(m_writer);
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+		
+	}
+	
+	@Override
+	public void write(BuiltinSystemVariableReference variable) throws RoutineWriterException {
+		try {
+			m_routineFormatter.writeBuiltinSystemVariable( variable.builtinSystemVariable(), m_writer ) ;
 			
 			Iterator<Expression> i = variable.keys().iterator() ;
 			if ( i.hasNext() ) {

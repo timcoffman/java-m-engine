@@ -2,9 +2,8 @@ package edu.vanderbilt.clinicalsystems.m.lang;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Optional;
 
-public enum BuiltinVariable {
+public enum BuiltinVariable implements BuiltinSymbol {
 	DEVICE("DEVICE","D"),
 	ECODE("ECODE","EC"),
 	ESTACK("ESTACK","ES"),
@@ -20,8 +19,8 @@ public enum BuiltinVariable {
 	STORAGE("STORAGE","S"),
 	SYSTEM("SYSTEM","SY"),
 	TEST("TEST","T"),
-	$X("X","X"),
-	$Y("Y","Y");
+	X("X","X"),
+	Y("Y","Y");
 	
 	BuiltinVariable( String canonicalSymbol, String canoncialAbbreviation ) {
 		this( canonicalSymbol, canoncialAbbreviation, Compatibility.ANSI_1995_X11_1 );
@@ -40,31 +39,13 @@ public enum BuiltinVariable {
 	private final String m_canonicalSymbol ;
 	private final String m_canoncialAbbreviation ;
 	private final EnumSet<Compatibility> m_compatibility ;
-	public String canonicalSymbol() { return m_canonicalSymbol ; }
-	public String canoncialAbbreviation() { return m_canoncialAbbreviation ; }
+	
+	@Override public String canonicalSymbol() { return m_canonicalSymbol ; }
+	@Override public String canonicalAbbreviation() { return m_canoncialAbbreviation ; }
+	@Override public EnumSet<Compatibility> compatibility() { return EnumSet.copyOf(m_compatibility) ; }
 
 	public static BuiltinVariable valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
-		EnumSet<Compatibility> compatibility = EnumSet.of(Compatibility.ANSI_1995_X11_1);
-		compatibility.addAll( Arrays.asList(additionalCompatibilities) ) ;
-		
-		Optional<BuiltinVariable> matchingSymbol =
-			Arrays.stream(BuiltinVariable.values())
-			.filter( bf->compatibility.containsAll( bf.m_compatibility ) )
-			.filter( bf->bf.m_canonicalSymbol.equalsIgnoreCase(symbolOrAbbreviation) )
-			.findFirst()
-			;
-		if ( matchingSymbol.isPresent() )
-			return matchingSymbol.get() ;
-		
-		Optional<BuiltinVariable> matchingAbbreviation =
-			Arrays.stream(BuiltinVariable.values())
-			.filter( bf->compatibility.containsAll( bf.m_compatibility ) )
-			.filter( bf->bf.m_canoncialAbbreviation.equalsIgnoreCase(symbolOrAbbreviation) )
-			.findFirst()
-			;
-		
-		return matchingAbbreviation
-				.orElseThrow( ()->new IllegalArgumentException("\"" + symbolOrAbbreviation + "\" not recognized as a builtin variable") )
-				;
+		return BuiltinSymbolSupport.valueOfSymbol(BuiltinVariable.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}
+
 }
