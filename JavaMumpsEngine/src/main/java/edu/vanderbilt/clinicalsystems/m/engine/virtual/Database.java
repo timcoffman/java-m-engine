@@ -4,32 +4,21 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
-import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineLinearWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineNativeFormatter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
-public class Database extends TreeNodeMap implements Installer, Executor, Evaluator {
+public class Database extends TreeNodeMap implements Installer {
 
 	private RoutineNativeFormatter m_routineFormatter ;
 	
 	private final Map<String,Routine> m_compiledRoutines = new HashMap<String, Routine>(); 
 
-	private Constant m_result = null ;
-	@Override public Constant result() { return m_result ; }
-	
-	private EngineException m_exception = null ;
-	@Override public EngineException error() { return m_exception ; }
-	
 	private GlobalContext m_globalContext = new GlobalContext() {
 
-		@Override
-		public Routine compiledRoutine(String routineName) {
+		@Override public Routine compiledRoutine(String routineName) {
 			return m_compiledRoutines.get( routineName );
 		}
 		
@@ -72,34 +61,12 @@ public class Database extends TreeNodeMap implements Installer, Executor, Evalua
 				routineNode.get( Integer.toString(i+1) ).assign( lines[i] );
 		}
 	}
-	
-	@Override
-	public ExecutionResult execute( Command command ) {
-		if ( null != m_exception )
-			return ExecutionResult.ERROR ;
-		
-		ExecutionFrame frame = new ExecutionFrame(this,m_globalContext) ;
-		m_exception = null ;
-		m_result = null ;
-		ExecutionResult result = frame.execute( command );
-		switch ( result ) {
-		case ERROR:
-			m_exception = frame.error() ;
-			break;
-		case QUIT:
-			m_result = frame.result();
-			break ;
-		default:
-			/* nothing to propagate */
-			break ;
-		}
-		return result;
-	}
-	
-	@Override
-	public Constant evaluate( Expression expression ) throws EngineException {
-		ExecutionFrame frame = new ExecutionFrame(this,m_globalContext) ;
-		return frame.evaluate( expression );
-	}
 
+	public Connection openConnection() {
+		return new Connection(this, m_globalContext) ;
+	}
+	
+	public Connection openConnection( InputOutputDevice inputOutputDevice ) {
+		return new Connection(this, m_globalContext, inputOutputDevice) ;
+	}
 }

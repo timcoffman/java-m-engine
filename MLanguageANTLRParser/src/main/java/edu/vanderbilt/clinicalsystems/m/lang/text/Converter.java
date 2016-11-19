@@ -50,10 +50,15 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.VariableListContex
 
 public class Converter {
 
-	private final String m_routineName ;
+	private String m_routineName ;
 	
-	public Converter(String routineName) {
+	public Converter() { }
+	
+	public String routineName() { return m_routineName ; }
+	public String routineName( String routineName ) {
+		String overwrittenRoutineName = m_routineName ;
 		m_routineName = routineName ;
+		return overwrittenRoutineName ;
 	}
 	
 	public static final List<Expression> EMPTY_EXPRESSION_LIST = Collections.emptyList() ;
@@ -149,7 +154,14 @@ public class Converter {
 	}
 	
 	public RoutineFunctionCall createRoutineFunctionCall( Scope scope, ReferenceStyle referenceStyle, Token tagNameToken, Token routineNameToken, ParameterListContext parameterListCtx ) {
-		String routineName = routineNameToken == null ? m_routineName : routineNameToken.getText();
+		String routineName ;
+		if ( routineNameToken != null ) {
+			routineName = routineNameToken.getText();
+		} else {
+			if ( null == m_routineName )
+				throw new IllegalStateException("while outside of a routine, cannot parse function call with implicit routine name") ;
+			routineName = m_routineName;
+		}
 		RoutineAccess routineAccess = routineName.equals(m_routineName) ? RoutineAccess.IMPLICIT : RoutineAccess.EXPLICIT ;
 	  	TagReference tagReference = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, tagNameToken.getText(), routineName, routineAccess ) ;
 	  	return new RoutineFunctionCall( tagReference, FunctionCall.Returning.SOME_VALUE, asList(parameterListCtx) );

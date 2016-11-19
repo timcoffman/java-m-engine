@@ -26,10 +26,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class RoutineTest {
 
@@ -91,9 +91,9 @@ public class RoutineTest {
 	public void canWriteMulitpleCommandsInRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("lorem")) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("ipsum")) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("dolor")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("lorem")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("ipsum")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("dolor")) ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tW \"lorem\" W \"ipsum\" W \"dolor\"\n\n") );
 	}
@@ -103,7 +103,7 @@ public class RoutineTest {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "a")) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("lorem")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("lorem")) ) );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "b")) ) );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "c")) ) );
 		m_routineWriter.write(routine);
@@ -114,9 +114,9 @@ public class RoutineTest {
 	public void canWriteMulitpleCommandsInRoutineOnMultipleLines() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("lorem")) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("ipsum")) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new Constant("dolor")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("lorem")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("ipsum")) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("dolor")) ) );
 		m_routineFormatter.options().setCommandsPerLineLimit(1);
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tW \"lorem\"\n\tW \"ipsum\"\n\tW \"dolor\"\n\n") );
@@ -127,7 +127,7 @@ public class RoutineTest {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
-		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap( new DirectVariableReference( Scope.LOCAL, "message" ) ), new Constant("Hello, world!") ) ) ) );
+		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap( new DirectVariableReference( Scope.LOCAL, "message" ) ), Constant.from("Hello, world!") ) ) ) );
 		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
@@ -171,8 +171,8 @@ public class RoutineTest {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference(Scope.LOCAL, ReferenceStyle.DIRECT, "MYFUNCTION", null, RoutineAccess.LOCAL ), FunctionCall.Returning.UNKNOWN, Expression.list( new Constant("123"), new Constant("456") ) )) ) );
-		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCall("MYFUNCTION", null, RoutineAccess.LOCAL, Expression.list( new Constant("123"), new Constant("456") ) ) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference(Scope.LOCAL, ReferenceStyle.DIRECT, "MYFUNCTION", null, RoutineAccess.LOCAL ), FunctionCall.Returning.UNKNOWN, Expression.list( Constant.from("123"), Constant.from("456") ) )) ) );
+		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCall("MYFUNCTION", null, RoutineAccess.LOCAL, Expression.list( Constant.from("123"), Constant.from("456") ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		routine.appendElement( new Tag( "MYFUNCTION", Arrays.asList( new ParameterName("x"), new ParameterName("y") )) );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );

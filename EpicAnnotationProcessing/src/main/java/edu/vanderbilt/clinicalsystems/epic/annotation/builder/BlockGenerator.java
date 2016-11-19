@@ -28,10 +28,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
@@ -111,7 +111,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				switch ( unaryNode.operationType() ) {
 				case PREFIX_INCREMENT:
 				case POSTFIX_INCREMENT:
-					source = new BinaryOperation(variableReference, OperatorType.ADD, new Constant("1") );
+					source = new BinaryOperation(variableReference, OperatorType.ADD, Constant.from("1") );
 					break ;
 				case PREFIX_DECREMENT:
 				case POSTFIX_DECREMENT:

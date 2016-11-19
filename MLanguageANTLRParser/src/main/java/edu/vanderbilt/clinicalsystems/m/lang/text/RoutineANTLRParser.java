@@ -5,13 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
+import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 
 public class RoutineANTLRParser implements RoutineParser, CommandParser, ExpressionParser {
@@ -50,17 +54,17 @@ public class RoutineANTLRParser implements RoutineParser, CommandParser, Express
 	}
 	
 	@Override
-	public Command parseCommand(InputStream source) throws IOException {
-		return parseCommand( new ANTLRInputStream(source) ) ;
+	public List<? extends Command> parseCommandSequence(InputStream source) throws IOException {
+		return parseCommandSequence( new ANTLRInputStream(source) ) ;
 	}
 	@Override
-	public Command parseCommand(Reader reader) throws IOException {
-		return parseCommand( new ANTLRInputStream(reader) ) ;
+	public List<? extends Command> parseCommandSequence(Reader reader) throws IOException {
+		return parseCommandSequence( new ANTLRInputStream(reader) ) ;
 	}
 
 	@Override
-	public Command parseCommand(String text)  {
-		return parseCommand( new ANTLRInputStream(text) ) ;
+	public List<? extends Command> parseCommandSequence(String text)  {
+		return parseCommandSequence( new ANTLRInputStream(text) ) ;
 	}
 
 	@Override
@@ -89,9 +93,15 @@ public class RoutineANTLRParser implements RoutineParser, CommandParser, Express
 		return  parser.routine().result ;
 	}
 	
-	private Command parseCommand( ANTLRInputStream source ) {
+	private List<? extends Command> parseCommandSequence( ANTLRInputStream source ) {
+		List<Command> commands = new ArrayList<Command>() ;
+		
 		MumpsParser parser = makeMumpsParser(source) ;
-		return  parser.command().result ;
+		Block block = parser.commandSequence().result ;
+		if ( null != block )
+			for ( RoutineElement routineElement : block.elements() )
+				commands.add( (Command)routineElement ) ;
+		return commands ;
 	}
 	
 	private Expression parseExpression( ANTLRInputStream source ) {

@@ -17,7 +17,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.* ;
 }
 
 @members {
-	Converter _converter ;
+	Converter _converter = new Converter();
 	java.util.Stack<Block> _stack = new java.util.Stack<Block>();
 	void _append( RoutineElement routineElement ) {
 		_stack.peek().appendElement(routineElement);
@@ -29,7 +29,15 @@ routine
 	returns [ Routine result ]
 	@init { $result = new Routine(); _stack.push( new MultilineBlock() ); }
 	@after { $result.appendElements( (MultilineBlock)_stack.pop() ); }
-	: tag routineElement* EOF
+	: t=tag { _converter.routineName( $t.result.name() ); } routineElement* EOF
+	;
+
+commandSequence
+	returns [ InlineBlock result ]
+	@init { _stack.push( new InlineBlock() ); }
+	@after { $result =  (InlineBlock)_stack.pop() ; }
+	: command ( ( Space | OtherWhitespace )+ command )*
+	| /* nothing */
 	;
 
 inlineBlock
@@ -51,12 +59,9 @@ blockIndent
 	;
 
 tag
-	: n=Name ( OpenParenthesis a=formalArgumentList? CloseParenthesis )?
-	  {
-	  	if ( null == _converter )
-			_converter = new Converter($n.text); 
-		_append( new Tag( $n.text, _converter.asList($a.ctx) ) );
-	  }
+	returns [ Tag result ] @after { requireNonNull($result); }
+	: n=Name ( OpenParenthesis fal=formalArgumentList? CloseParenthesis )?
+	  { _append( $result = new Tag( $n.text, _converter.asList($fal.ctx) ) ); }
 	;
 
 formalArgumentList
@@ -195,8 +200,8 @@ expression
 	/* grouping */
 	: OpenParenthesis e=expression CloseParenthesis { $result = $e.result; }
 	/* literals */
-	| ( Plus | Minus )? Digit+ ( Dot Digit+ )? { $result = new Constant($text); }
-	| Quote s=quotedSequence EndQuote          { $result = new Constant($s.text); }
+	| ( Plus | Minus )? Digit+ ( Dot Digit+ )? { $result = Constant.from($text); }
+	| Quote s=quotedSequence EndQuote          { $result = Constant.from($s.text); }
 	/* variable references */
 	|     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     GLOBAL, $n, $el.ctx ); }
 	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     LOCAL, $n, $el.ctx ); }

@@ -73,7 +73,7 @@ public class MumpsConnectionFactoryTest {
 	@Test
 	public void canWrite() throws Exception {
 		try ( Connection cxn = m_factory.createConnection( connectionString("local") ) ) {
-			Command cmd = new Command( CommandType.WRITE, new ExpressionList( new Constant("Hello world!") ) ) ;
+			Command cmd = new Command( CommandType.WRITE, new ExpressionList( Constant.from("Hello world!") ) ) ;
 			
 			StringWriter writer = new StringWriter() ; 
 			

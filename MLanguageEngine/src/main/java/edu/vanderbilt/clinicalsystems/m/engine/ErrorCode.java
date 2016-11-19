@@ -4,7 +4,10 @@ public enum ErrorCode {
 
 	TAG_TOO_DEEP("M14","tag {tag}^{routine} level greater than 1"),
 	MISSING_ROUTINE("MISSING_ROUTINE","routine {routine} not found"),
-	MISSING_TAG("MISSING_TAG","tag {tag} in routine {routine} not found");
+	MISSING_TAG("MISSING_TAG","tag {tag} in routine {routine} not found"),
+	CANNOT_PARSE("CANNOT_PARSE","failed to parse code \"{code}\""),
+	INPUT_ERROR("INPUT_ERROR", "failed to receive input"),
+	OUTPUT_ERROR("OUTPUT_ERROR", "failed to send output \"{text}\"");
 	
 	private final String m_code;
 	private final String m_messageFormat;

@@ -23,7 +23,8 @@ public class Constant extends Expression {
 	}
 	
 	public Constant( String value ) {
-		if ( null == value ) throw new IllegalArgumentException( "Constant value cannot be null; use Constant.from(null)" ) ;
+		if ( null == value )
+			throw new IllegalArgumentException( "Constant value cannot be null; use Constant.from(null)" ) ;
 		m_value = value ;
 	}
 	

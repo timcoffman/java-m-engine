@@ -8,24 +8,26 @@ import java.util.Map;
 import edu.vanderbilt.clinicalsystems.m.engine.ConnectionError;
 import edu.vanderbilt.clinicalsystems.m.engine.ConnectionFactory;
 import edu.vanderbilt.clinicalsystems.m.engine.ConnectionStringBuilder;
+import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
+import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 
 public class VirtualConnectionFactory implements ConnectionFactory {
 
 	private class VirtualDatabaseInstance {
+		private final Database m_db = new Database() ;
 		private final String m_name ;
-		private boolean m_running = false ;
-		private boolean m_initialized = false ;
 		private Collection<VirtualConnection> m_connections = new ArrayList<VirtualConnection>();
-		private boolean m_autoStart = false ;
-		private boolean m_autoCreate = false ;
 		
 		public VirtualDatabaseInstance( String name ) {
 			m_name = name ;
 		}
 		
+		public Database database() { return m_db ; }
+		
 		public void addConnection( VirtualConnection cxn ) throws ConnectionError {
 			m_connections.add( cxn ) ;
-			requireRunning() ;
 		}
 		
 		public void dropConnection( VirtualConnection cxn ) {
@@ -33,69 +35,17 @@ public class VirtualConnectionFactory implements ConnectionFactory {
 			if ( m_connections.isEmpty() )
 				stop() ;
 		}
-		
-		private void requiredInitialized() throws ConnectionError {
-			if ( m_initialized )
-				return ;
 			
-			if ( m_autoCreate )
-				m_initialized = initializeDatabaseInstance( m_name ) ;
-			else
-				m_initialized = databaseInstanceInitialized( m_name ) ;
-			
-			if ( !m_initialized )
-				throw new ConnectionError("database instance not initialized") ;
-		}
-		
-		private void requireRunning() throws ConnectionError {
-			if ( m_running ) return ;
-			requiredInitialized() ;
-			
-			if ( m_autoStart )
-				m_running = startDatabaseInstance( m_name ) ;
-			else
-				m_running = databaseInstanceRunning( m_name ) ;
-		}
-		
 		public void stop() {
-			if ( !m_running ) return ;
-			m_running = !stopDatabaseInstance( m_name ) ;
+			/* nothing to stop */
 		}
 
-		public boolean autoStart(boolean autoStart) { return m_autoStart = autoStart ; }
-		public boolean autoStart() { return m_autoStart ; }
-		public boolean autoCreate(boolean autoCreate) { return m_autoCreate = autoCreate ; }
-		public boolean autoCreate() { return m_autoCreate ; }
 	}
 	
 	private Map<String,VirtualDatabaseInstance> m_instances = new HashMap<String, VirtualDatabaseInstance>();
 	private Map<VirtualConnection,String> m_connections = new HashMap<VirtualConnection, String>();
 
 	public VirtualConnectionFactory() {
-	}
-	
-	private boolean databaseInstanceInitialized( String name ) {
-		return false ;
-	}
-	
-	private boolean initializeDatabaseInstance( String name ) {
-		if ( databaseInstanceInitialized( name ) )
-			return true ;
-		
-		return false ;
-	}
-	
-	private boolean databaseInstanceRunning( String name ) {
-		return startDatabaseInstance( name ) ;
-	}
-	
-	private boolean startDatabaseInstance( String name ) {
-		initializeDatabaseInstance(name) ;
-		return false ;
-	}
-	
-	private boolean stopDatabaseInstance( String name ) {
-		return true ;
 	}
 	
 	private VirtualDatabaseInstance acquireDatabaseInstance(VirtualConnection cxn) {
@@ -114,11 +64,9 @@ public class VirtualConnectionFactory implements ConnectionFactory {
 	public VirtualConnection createConnection(String connectionString) throws ConnectionError {
 		ConnectionStringBuilder csb = ConnectionStringBuilder.parse(connectionString) ;
 		String name = csb.target() ;
-		VirtualDatabaseInstance instance = acquireDatabaseInstance(name) ;
-		instance.autoStart( "yes".equals( csb.option("auto-start") ) ) ;
-		instance.autoCreate( "yes".equals( csb.option("auto-create") ) ) ;
+		VirtualDatabaseInstance instance = acquireDatabaseInstance( csb.target() ) ;
 		String initialization = csb.option("init") ;
-		VirtualConnection cxn = new VirtualConnection( new VirtualConnection.LifecycleListener() {
+		VirtualConnection cxn = new VirtualConnection( instance.database(), new VirtualConnection.LifecycleListener() {
 			
 			@Override
 			public void created(VirtualConnection cxn) {
@@ -148,6 +96,7 @@ public class VirtualConnectionFactory implements ConnectionFactory {
 		if ( null != initialization )
 			try {
 				cxn.open() ;
+				cxn.submit( new Command( CommandType.EXECUTE, new ExpressionList( Constant.from(initialization) ) ));
 			} catch (ConnectionError ex) {
 				throw new ConnectionError("failed to initialize (\"" + initialization + "\")", ex) ;
 			}

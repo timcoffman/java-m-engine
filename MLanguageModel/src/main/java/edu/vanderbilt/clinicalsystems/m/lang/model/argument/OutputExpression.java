@@ -17,6 +17,8 @@ public class OutputExpression extends InputOutput {
 	
 	public Expression expression() { return m_expression ; }
 	
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitOutputExpression(this) ; }
+
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write(this);
@@ -24,4 +26,12 @@ public class OutputExpression extends InputOutput {
 
 	@Override public String toString() { return m_expression.toString() ; } 
 	
+	@Override public boolean equals( Object obj ) {
+		if ( null == obj ) return false ;
+		if ( this == obj ) return true ;
+		if ( !(obj instanceof OutputExpression) ) return false ;
+		OutputExpression outputExpression = (OutputExpression)obj ;
+		return m_expression.equals( outputExpression.m_expression ) ;
+	}
+
 }

@@ -24,12 +24,12 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 
 public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		
@@ -56,11 +56,11 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			case DOUBLE_LITERAL:
 			case CHAR_LITERAL:
 			case LONG_LITERAL:
-				return new Constant( literalNode.value().toString() ) ;
+				return Constant.from( literalNode.value().toString() ) ;
 			case BOOLEAN_LITERAL:
-				return new Constant( ((Boolean)literalNode.value()) ? "1" : "0" ) ;
+				return Constant.from( ((Boolean)literalNode.value())  ) ;
 			case NULL_LITERAL:
-				return new Constant( "" ) ;
+				return Constant.NULL ;
 			default:
 				return super.visitLiteral( literalNode, listener );
 			}
@@ -82,7 +82,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 				public Expression visit(VariableResolution variableResolution, Listener listener) {
 					Object constantValue = variableResolution.constantValue();
 					if ( null != constantValue )
-						return new Constant( constantValue.toString() );
+						return Constant.from( constantValue.toString() );
 					
 					else
 						return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );

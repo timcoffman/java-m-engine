@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,51 +34,21 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 public class DatabaseTest {
 
 	private Database m_db ;
+	private Connection m_cxn ;
+	private LineBufferInputOutputDevice m_io ;
 	
 	@Before
-	public void configureDatabase() {
+	public void openDatabaseConnection() {
 		m_db = new Database() ;
-	}
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void cannotRetrieveAbsentKey() {
-		m_db.at( "missing key" ) ;
-	}
-	
-	@Test(expected=IllegalArgumentException.class)
-	public void cannotAddKeyTwice() {
-		m_db.create( "present key" ) ;
-		m_db.create( "present key" ) ;
+		m_io = new LineBufferInputOutputDevice() ;
+		m_cxn = m_db.openConnection(m_io) ;
 	}
 
-	@Test(expected=IllegalArgumentException.class)
-	public void cannotDropAbsentKey() {
-		m_db.drop( "missing key" ) ;
+	@After
+	public void closeDatabaseConnection() {
+		m_cxn.close() ;
 	}
-	
-	@Test
-	public void canDropKey() {
-		m_db.create( "present key" ) ;
-		m_db.drop( "present key" ) ;
-		assertThat( m_db.isEmpty(), equalTo(true) ) ;
-	}
-	
-	@Test
-	public void canCreateAndRetrieveKey() {
-		Node node = m_db.create( "present key" ) ;
-		assertThat( m_db.at("present key"), equalTo(node) ) ;
-	}
-	
-	@Test
-	public void canCreateTree() {
-		Node node = m_db.create( "present key" ) ;
-		node.create("a").assign("value") ;
-		node.create("b").assign("value") ;
-		assertThat( m_db.at("present key"), equalTo(node) ) ;
-		assertThat( m_db.at("present key").at("a"), equalTo( node.at("a") ) ) ;
-		assertThat( m_db.at("present key").at("b"), equalTo( node.at("b") ) ) ;
-	}
-	
+
 	private Command makeAssignmentCommand( String variableName, Scope scope, Expression source ) {
 		DirectVariableReference variable = new DirectVariableReference(Scope.GLOBAL, "X");
 		Command command = new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variable), source) ) ) ;
@@ -87,6 +58,11 @@ public class DatabaseTest {
 	private Command makeTaggedRoutineCallCommand( String tagName, String routineName, Expression ... parameters ) {
 		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall(tagName, routineName, RoutineAccess.EXPLICIT ) ;
 		Command command = new Command( CommandType.DO, taggedRoutineCall ) ;
+		return command ;
+	}
+	
+	private Command makeExecuteCommand( String unparsedMumpsCode ) {
+		Command command = new Command( CommandType.EXECUTE, new ExpressionList( Constant.from(unparsedMumpsCode) ) );
 		return command ;
 	}
 	
@@ -105,30 +81,56 @@ public class DatabaseTest {
 	
 	@Test
 	public void canSetVariable() throws EngineException {
-		ExecutionResult result = m_db.execute( makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) ) );
+		ExecutionResult result = m_cxn.execute( makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("X").value(), equalTo("123") ) ;
 	}
 	
 	@Test
+	public void canExecuteArbitraryCode() throws EngineException {
+		ExecutionResult result = m_cxn.execute( makeExecuteCommand( "SET ^X=123 SET ^Y=456" ) );
+		
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
+		assertThat( m_db.at("X").value(), equalTo("123") ) ;
+		assertThat( m_db.at("Y").value(), equalTo("456") ) ;
+	}
+	
+	@Test
+	public void canReadInput() throws EngineException {
+		m_io.offer( "test line" );
+		ExecutionResult result = m_cxn.execute( makeExecuteCommand( "READ ^X" ) );
+		
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
+		assertThat( m_db.at("X").value(), equalTo("test line") ) ;
+	}
+	
+	@Test
+	public void canWriteOutput() throws EngineException {
+		ExecutionResult result = m_cxn.execute( makeExecuteCommand( "WRITE \"test line\",!" ) );
+		
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
+		assertThat( m_io.take(), equalTo("test line") ) ;
+	}
+	
+	@Test
 	public void cannotCallMissingRoutine() throws EngineException {
-		ExecutionResult result = m_db.execute( makeTaggedRoutineCallCommand( null, "missing routine" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "missing routine" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.ERROR) );
-		assertThat( m_db.error(), notNullValue() ) ;
-		assertThat( m_db.error().errorCode(), equalTo(ErrorCode.MISSING_ROUTINE) ) ;
+		assertThat( m_cxn.error(), notNullValue() ) ;
+		assertThat( m_cxn.error().errorCode(), equalTo(ErrorCode.MISSING_ROUTINE) ) ;
 	}
 	
 	@Test
 	public void cannotCallMissingTag() throws RoutineWriterException, EngineException {
 		m_db.install( makeSimpleRoutine( "TESTROUTINE" ) ) ;
 		
-		ExecutionResult result = m_db.execute( makeTaggedRoutineCallCommand( "missing tag", "TESTROUTINE" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( "missing tag", "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.ERROR) );
-		assertThat( m_db.error(), notNullValue() ) ;
-		assertThat( m_db.error().errorCode(), equalTo(ErrorCode.MISSING_TAG) ) ;
+		assertThat( m_cxn.error(), notNullValue() ) ;
+		assertThat( m_cxn.error().errorCode(), equalTo(ErrorCode.MISSING_TAG) ) ;
 	}
 	
 	@Test
@@ -144,7 +146,7 @@ public class DatabaseTest {
 		assertThat( routineNode.firstKey(), equalTo("0") ) ;
 		assertThat( routineNode.lastKey(),  equalTo("3") ) ; /* as formatted, three lines (1..3) */
 		
-		ExecutionResult result = m_db.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
 		assertThat( m_db.at("X").value(), equalTo("123") ) ;
@@ -165,7 +167,7 @@ public class DatabaseTest {
 		assertThat( routineNode.firstKey(), equalTo("0") ) ;
 		assertThat( routineNode.lastKey(),  equalTo("4") ) ; /* as formatted, three lines (1..3) */
 		
-		ExecutionResult result = m_db.execute( makeTaggedRoutineCallCommand( "testtag", "TESTROUTINE" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( "testtag", "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
 		assertThat( m_db.at("X").value(), equalTo("456") ) ;
@@ -180,10 +182,10 @@ public class DatabaseTest {
 				)
 			);
 		
-		ExecutionResult result = m_db.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
-		assertThat( m_db.result(), equalTo( Constant.from(123) ) ) ;
+		assertThat( m_cxn.result(), equalTo( Constant.from(123) ) ) ;
 	}
 	
 }
