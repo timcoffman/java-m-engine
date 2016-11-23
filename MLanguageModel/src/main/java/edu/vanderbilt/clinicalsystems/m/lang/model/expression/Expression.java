@@ -22,9 +22,12 @@ public abstract class Expression implements Element {
 	
 	public interface Visitor<R> extends VariableReference.Visitor<R> {
 		R visitExpression( Expression expression ) ;
-		default R visitConstant         ( Constant          constant ) { return visitExpression(constant) ; }
 		@Override
-		default R visitVariableReference( VariableReference variable ) { return visitExpression(variable) ; }
+		default R visitVariableReference  ( VariableReference       variable ) { return visitExpression(variable    ) ; }
+		default R visitConstant           ( Constant                constant ) { return visitExpression(constant    ) ; }
+		default R visitBinaryOperation    ( BinaryOperation        operation ) { return visitExpression(operation   ) ; }
+		
+		default R visitBuiltinFunctionCall( BuiltinFunctionCall functionCall ) { return visitExpression(functionCall) ; }
 	}
 	
 	public <R> R visit( Visitor<R> visitor ) { return visitor.visitExpression(this) ; }

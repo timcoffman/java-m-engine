@@ -7,7 +7,6 @@ import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.CommandHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.ExecutionFrame;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
-import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
@@ -43,16 +42,8 @@ public class CallHandler extends CommandHandler {
 	}
 
 	private ExecutionResult execute( Iterator<RoutineElement> elementIterator ) throws EngineException {
-		try ( ExecutionFrame frame = frame().createFrame() ) {
-		
-			ExecutionResult result = ExecutionResult.CONTINUE ;
-			while ( ExecutionResult.CONTINUE == result && elementIterator.hasNext() ) {
-				RoutineElement element = elementIterator.next() ;
-				if ( element instanceof Command )
-					result = delegateExecutionTo( (Command)element, frame ) ;
-			}
-			
-			return result ;
+		try ( ExecutionFrame frame = frame().createChildFrame() ) {
+			return executeElementsIn(elementIterator,frame) ;
 		}
 	}
 

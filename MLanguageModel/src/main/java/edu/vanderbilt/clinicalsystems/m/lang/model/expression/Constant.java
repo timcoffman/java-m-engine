@@ -1,25 +1,18 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model.expression;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Constant extends Expression {
 	
 	private final String m_value ;
-	
-	public static final String NULL_VALUE = "" ; 
-	public static final String FALSE_VALUE = "0" ; 
-	public static final String TRUE_VALUE = "1" ;
-	
+		
 	public static final Constant NULL = new Constant() ; 
-	public static final Constant FALSE = new Constant(FALSE_VALUE) ; 
-	public static final Constant TRUE = new Constant(TRUE_VALUE) ; 
+	public static final Constant FALSE = new Constant(ConstantSupport.FALSE_VALUE) ; 
+	public static final Constant TRUE = new Constant(ConstantSupport.TRUE_VALUE) ; 
 
 	public Constant() {
-		this(NULL_VALUE) ;
+		this(ConstantSupport.NULL_VALUE) ;
 	}
 	
 	public Constant( String value ) {
@@ -36,7 +29,7 @@ public class Constant extends Expression {
 	}
 	
 	public static Constant from( boolean value ) {
-		return from( value ? TRUE_VALUE : FALSE_VALUE ) ;
+		return from( value ? ConstantSupport.TRUE_VALUE : ConstantSupport.FALSE_VALUE ) ;
 	}
 	
 	public static Constant from( int value ) {
@@ -44,12 +37,16 @@ public class Constant extends Expression {
 	}
 
 	public static Constant from( double value ) {
-		return from( Double.toString(value) ) ;
+		return from( Double.toString(value).replaceAll("\\.0$", "") ) ; /* remove trailing zeros */
 	}
 	
 	public String value() { return m_value; }
 
-	public boolean toBoolean() { return !FALSE_VALUE.equals(m_value); }
+	public boolean toBoolean() { return ConstantSupport.toBoolean(m_value); }
+	
+	public long toLong() throws NumberFormatException { return ConstantSupport.toLong(m_value); }
+	
+	public double toDouble() throws NumberFormatException { return ConstantSupport.toDouble(m_value); }
 	
 	@Override
 	public Expression inverted() {
@@ -68,30 +65,20 @@ public class Constant extends Expression {
 		writer.write( this ) ;
 	}
 
-	private static final Pattern NUMBER_FORMAT = Pattern.compile("^[-+]?(?:[1-9][0-9]*|[0])(\\.[0-9]*[1-9])?$") ;
-
 	public boolean representsNull() {
-		return m_value.isEmpty() ;
+		return ConstantSupport.representsNull(m_value) ;
 	}
 	
 	public boolean representsNumber() {
-		return NUMBER_FORMAT.matcher(m_value).matches() ;
+		return ConstantSupport.representsNumber(m_value) ;
 	}
 	
 	public boolean representsNumber(long checkValue) {
-		Matcher m = NUMBER_FORMAT.matcher(m_value) ;
-		if ( !m.matches() )
-			return false ; // wrong format
-		if ( null != m.group(1) )
-			return false ; // not a whole number
-		return Long.parseLong( m_value ) == checkValue ;
+		return ConstantSupport.representsNumber(m_value,checkValue) ;
 	}
 	
 	public boolean representsNumber(double checkValue) {
-		Matcher m = NUMBER_FORMAT.matcher(m_value) ;
-		if ( !m.matches() )
-			return false ; // wrong format
-		return Double.parseDouble( m_value ) == checkValue ;
+		return ConstantSupport.representsNumber(m_value,checkValue) ;
 	}
 	
 	public Constant negated() {

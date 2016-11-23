@@ -36,6 +36,11 @@ public class DirectVariableReference extends VariableReference {
 		m_variableName = variableName ;
 	}
 
+	@Override
+	protected DirectVariableReference copyWithKeys( List<Expression> keys ) {
+		return new DirectVariableReference( m_parameterPassMethod, m_scope, m_variableName, keys ) ;
+	}
+	
 	public ParameterPassMethod parameterPassMethod() { return m_parameterPassMethod; }
 	public Scope scope() { return m_scope; }
 	public String variableName() { return m_variableName; }

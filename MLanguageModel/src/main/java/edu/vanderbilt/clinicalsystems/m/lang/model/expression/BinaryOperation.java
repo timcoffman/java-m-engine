@@ -24,6 +24,8 @@ public class BinaryOperation extends Operation {
 	@Override
 	protected String unformattedRepresentation() { return "( " + m_leftHandSide.unformattedRepresentation() + " " + operator().canonicalSymbol() + " " + m_rightHandSide.unformattedRepresentation() + " )" ; }
 
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBinaryOperation(this) ; }
+
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write( this ) ;

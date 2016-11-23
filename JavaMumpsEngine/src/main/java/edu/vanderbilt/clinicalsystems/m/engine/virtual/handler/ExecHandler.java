@@ -23,11 +23,11 @@ public class ExecHandler extends CommandHandler {
 	}
 
 	private ExecutionResult interpretAndExecute( String unparsedCode ) throws EngineException {
-		return interpretAndExecute( frame().interpret( unparsedCode ) ) ;
+		return interpretAndExecute( frame().interpretCommands( unparsedCode ) ) ;
 	}
 	
 	private ExecutionResult interpretAndExecute( List<? extends Command> commands ) throws EngineException {
-		try ( ExecutionFrame frame = frame().createFrame() ) {
+		try ( ExecutionFrame frame = frame().createChildFrame() ) {
 		
 			ExecutionResult result = ExecutionResult.CONTINUE ;
 			for ( Command command : commands ) {

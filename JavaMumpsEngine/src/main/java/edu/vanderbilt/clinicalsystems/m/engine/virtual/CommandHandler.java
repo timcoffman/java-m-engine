@@ -1,8 +1,11 @@
 package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
+import java.util.Iterator;
+
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
+import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
@@ -55,6 +58,17 @@ public abstract class CommandHandler extends StandardExecutor {
 	protected ExecutionResult handle( VariableList      variableList     , Block block ) throws EngineException { return handle( (Argument)variableList     , block ) ; }
 	protected ExecutionResult handle( ExpressionList    expressionList   , Block block ) throws EngineException { return handle( (Argument)expressionList   , block ) ; }
 	protected ExecutionResult handle( InputOutputList   inputOutputList  , Block block ) throws EngineException { return handle( (Argument)inputOutputList  , block ) ; }
+	
+	protected ExecutionResult executeElementsIn( Iterator<RoutineElement> elementIterator, ExecutionFrame frame ) throws EngineException {
+			ExecutionResult result = ExecutionResult.CONTINUE ;
+			while ( ExecutionResult.CONTINUE == result && elementIterator.hasNext() ) {
+				RoutineElement element = elementIterator.next() ;
+				if ( element instanceof Command )
+					result = delegateExecutionTo( (Command)element, frame ) ;
+			}
+			
+			return result ;
+	}
 	
 	protected Constant evaluate( Iterable<Expression> expressions ) throws EngineException {
 		Constant result = null ;

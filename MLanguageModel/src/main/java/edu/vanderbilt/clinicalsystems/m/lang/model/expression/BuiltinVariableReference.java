@@ -21,6 +21,11 @@ public class BuiltinVariableReference extends BuiltinVariableReferenceBase {
 		super( ReferenceStyle.DIRECT, keys ) ;
 		m_builtinVariable = builtinVariable ;
 	}
+
+	@Override
+	protected BuiltinVariableReference copyWithKeys( List<Expression> keys ) {
+		return new BuiltinVariableReference( m_builtinVariable, keys ) ;
+	}
 	
 	@Override public Scope scope() { return Scope.LOCAL ; }
 	public BuiltinVariable builtinVariable() { return m_builtinVariable; }

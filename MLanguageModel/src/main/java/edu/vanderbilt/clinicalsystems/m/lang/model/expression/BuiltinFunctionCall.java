@@ -19,6 +19,8 @@ public class BuiltinFunctionCall extends FunctionCall {
 	@Override
 	protected String unformattedFunctionName() { return "$" + m_builtinFunction.canonicalSymbol() ; }
 
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinFunctionCall(this) ; }
+
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write( this ) ;

@@ -19,8 +19,8 @@ public class ConstantTest {
 		assertThat( constant, not(equalTo("123")) ) ;
 		assertThat( constant, equalTo( new Constant() ) ) ;
 		assertThat( constant, equalTo( new Constant( "" ) ) ) ;
-		assertThat( constant, equalTo( new Constant( Constant.NULL_VALUE ) ) ) ;
-		assertThat( constant, equalTo( Constant.NULL_VALUE ) ) ;
+		assertThat( constant, equalTo( new Constant( ConstantSupport.NULL_VALUE ) ) ) ;
+		assertThat( constant, equalTo( ConstantSupport.NULL_VALUE ) ) ;
 	}
 
 	@Test

@@ -7,6 +7,12 @@ public class StandardNode extends TreeNodeMap implements Node {
 	@Override public String value() { return m_value ; }
 	@Override public void assign(String newValue) { m_value = newValue ; }
 	
+	@Override public void merge(NodeMap srcNodeMap) {
+		super.merge(srcNodeMap);
+		if ( srcNodeMap instanceof Node )
+			assign( ((Node)srcNodeMap).value() ) ;
+	}
+	
 	@Override public boolean equals( Object obj ) {
 		if ( null == obj ) return false ;
 		if ( this == obj ) return true ;

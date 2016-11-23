@@ -22,6 +22,11 @@ public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase
 		m_builtinVariable = builtinVariable ;
 	}
 	
+	@Override
+	protected BuiltinSystemVariableReference copyWithKeys( List<Expression> keys ) {
+		return new BuiltinSystemVariableReference( m_builtinVariable, keys ) ;
+	}
+
 	@Override public Scope scope() { return Scope.GLOBAL ; }
 	public BuiltinSystemVariable builtinSystemVariable() { return m_builtinVariable; }
 

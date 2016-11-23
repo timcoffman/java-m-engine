@@ -25,6 +25,21 @@ public abstract class VariableReference extends Expression {
 		m_keys.addAll( keys ) ;
 	}
 	
+	public Expression finalKey() {
+		if ( m_keys.isEmpty() )
+			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
+		return m_keys.get( m_keys.size()-1 ) ;
+	}
+	
+	public VariableReference parent() {
+		if ( m_keys.isEmpty() )
+			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
+		List<Expression> parentKeys = m_keys.subList(0, m_keys.size()-1 );
+		return copyWithKeys( parentKeys ) ;
+	}
+	
+	protected abstract VariableReference copyWithKeys(  List<Expression> keys ) ;
+	
 	public ReferenceStyle referenceStyle() { return m_referenceStyle; }
 	public Iterable<Expression> keys() { return m_keys; }
 

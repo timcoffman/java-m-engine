@@ -6,5 +6,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 public interface Installer {
 
 	void install( Routine routine ) throws RoutineWriterException ;
+	Routine lookup( String routineName );
 
 }

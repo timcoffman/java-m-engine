@@ -11,6 +11,8 @@ public interface NodeMap {
 
 	void merge( NodeMap nodeMap ) ;
 	
+	void insert(String key,Node node);
+	
 	boolean isEmpty();
 
 	String keyPreceding(String key);

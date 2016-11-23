@@ -20,6 +20,11 @@ public class IndirectVariableReference extends VariableReference {
 		m_variableNameProducer = variableNameProducer ;
 	}
 	
+	@Override
+	protected IndirectVariableReference copyWithKeys( List<Expression> keys ) {
+		return new IndirectVariableReference( m_variableNameProducer, keys ) ;
+	}
+	
 	public Expression variableNameProducer() { return m_variableNameProducer; }
 
 	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitIndirectVariableReference(this); }
