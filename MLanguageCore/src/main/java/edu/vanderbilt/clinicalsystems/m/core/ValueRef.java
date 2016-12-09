@@ -3,8 +3,8 @@ package edu.vanderbilt.clinicalsystems.m.core;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeType;
 
 @NativeType
-public final class ByRef<T> {
+public final class ValueRef {
 	
-	public native T dereference() ;
+	public native Value get() ;
 	
 }

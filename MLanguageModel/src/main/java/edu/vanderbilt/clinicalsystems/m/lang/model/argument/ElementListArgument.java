@@ -8,6 +8,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Element;
 
 public abstract class ElementListArgument<E extends Element> extends Argument {
 
+	private static final long serialVersionUID = 1L;
+	
 	protected final List<E> m_elements = new ArrayList<E>();
 
 	public ElementListArgument() { }
@@ -30,4 +32,12 @@ public abstract class ElementListArgument<E extends Element> extends Argument {
 		return m_elements.stream().map((e)->e.toString()).collect( Collectors.joining(", ") ) ;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof ElementListArgument) ) return false ;
+		ElementListArgument<?> elementListArgument = (ElementListArgument<?>)obj ;
+		return m_elements.equals( elementListArgument.m_elements ) ;
+	}
 }

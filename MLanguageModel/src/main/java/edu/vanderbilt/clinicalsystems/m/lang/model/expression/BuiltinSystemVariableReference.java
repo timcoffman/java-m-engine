@@ -10,6 +10,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase {
 
+	private static final long serialVersionUID = 1L;
 	private final BuiltinSystemVariable m_builtinVariable ;
 
 	public BuiltinSystemVariableReference( BuiltinSystemVariable builtinVariable ) {
@@ -41,4 +42,14 @@ public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase
 		writer.write( this ) ;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( !super.equals(this)) return false ;
+		if ( !(obj instanceof BuiltinSystemVariableReference) ) return false ;
+		BuiltinSystemVariableReference variable = (BuiltinSystemVariableReference)obj ;
+		return
+			m_builtinVariable.equals( variable.m_builtinVariable )
+			;
+	}
 }

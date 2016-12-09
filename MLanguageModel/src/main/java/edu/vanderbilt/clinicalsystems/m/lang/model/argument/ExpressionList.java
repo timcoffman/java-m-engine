@@ -10,6 +10,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class ExpressionList extends ElementListArgument<Expression> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public ExpressionList() {
 		super() ;
 	}

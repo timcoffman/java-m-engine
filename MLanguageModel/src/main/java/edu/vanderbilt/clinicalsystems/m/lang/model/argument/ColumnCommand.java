@@ -2,6 +2,10 @@ package edu.vanderbilt.clinicalsystems.m.lang.model.argument;
 
 public class ColumnCommand extends FormatCommand {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final int m_column ;
 	
 	public ColumnCommand(int column) { m_column = column ; }

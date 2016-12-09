@@ -5,10 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeCommandType;
+
 @Target( { ElementType.METHOD } )
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface NativeCommand {
 	
-	NativeCommandTypes value() ;
+	NativeCommandType value() ;
 	
 }

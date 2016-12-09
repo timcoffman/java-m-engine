@@ -11,6 +11,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class DeclarationList extends ElementListArgument<DirectVariableReference> {
 	
+	private static final long serialVersionUID = 1L;
+
 	public DeclarationList( DirectVariableReference ... variables ) { super( Arrays.asList(variables) ) ; }
 
 	public DeclarationList( List<? extends DirectVariableReference> declarations ) { super(declarations) ; }

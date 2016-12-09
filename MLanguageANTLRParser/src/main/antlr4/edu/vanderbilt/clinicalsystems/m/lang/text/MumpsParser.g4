@@ -10,6 +10,7 @@ import static edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle.DIRECT;
 import static edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle.INDIRECT;
 import static edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod.BY_VALUE;
 import static edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod.BY_REFERENCE;
+import static edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction.SELECT;
 import edu.vanderbilt.clinicalsystems.m.lang.* ;
 import edu.vanderbilt.clinicalsystems.m.lang.model.* ;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.* ;
@@ -19,8 +20,35 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.* ;
 @members {
 	Converter _converter = new Converter();
 	java.util.Stack<Block> _stack = new java.util.Stack<Block>();
+	MultilineBlock _expectedBlock = null ;
 	void _append( RoutineElement routineElement ) {
 		_stack.peek().appendElement(routineElement);
+	}
+	MultilineBlock expectBlock() {
+		if ( null == _expectedBlock )
+			_expectedBlock = new MultilineBlock() ;
+		return _expectedBlock ;
+	}
+	int _precedingBlockLevel = 0 ;
+	int _blockLevel = 0 ;
+	int incrementBlockLevel() { return ++_blockLevel ; }
+	int clearBlockLevel() { _precedingBlockLevel = _blockLevel ; return _blockLevel=0 ; }
+	void setupBlock() {
+		for ( int i = _precedingBlockLevel ; i < _blockLevel; ++i )
+			openBlock() ;
+		for ( int i = _precedingBlockLevel ; i > _blockLevel; --i )
+			closeBlock() ;
+		_expectedBlock = null ;
+	}
+	void openBlock() {
+		if ( null != _expectedBlock )
+			_stack.push( _expectedBlock );
+		else
+			_stack.push( new MultilineBlock() );
+		_expectedBlock = null ;
+	}
+	void closeBlock() {
+		_stack.pop();
 	}
 }
 
@@ -29,14 +57,16 @@ routine
 	returns [ Routine result ]
 	@init { $result = new Routine(); _stack.push( new MultilineBlock() ); }
 	@after { $result.appendElements( (MultilineBlock)_stack.pop() ); }
-	: t=tag { _converter.routineName( $t.result.name() ); } routineElement* EOF
+	: t=tag { _converter.routineName( $t.result.name() ); } ( ( Space | OtherWhitespace )+ command )* ( ( Space | OtherWhitespace )+ finalCommand )?
+	  ( endOfLine tag? routineCommands? )*
+	  EOF { setupBlock(); }
 	;
 
 commandSequence
 	returns [ InlineBlock result ]
 	@init { _stack.push( new InlineBlock() ); }
 	@after { $result =  (InlineBlock)_stack.pop() ; }
-	: command ( ( Space | OtherWhitespace )+ command )*
+	: command ( ( Space | OtherWhitespace )+ command )* ( ( Space | OtherWhitespace )+ finalCommand )?
 	| /* nothing */
 	;
 
@@ -44,18 +74,23 @@ inlineBlock
 	returns [ InlineBlock result ]
 	@init { _stack.push( new InlineBlock() ); }
 	@after { $result =  (InlineBlock)_stack.pop() ; }
-	: ( ( Space | OtherWhitespace )+ command )*
+	: ( ( Space | OtherWhitespace )+ command )* ( ( Space | OtherWhitespace )+ finalCommand )?
 	;
 
-routineElement
-	: tag
-	| ( Space | OtherWhitespace )+ blockIndent command
-	| ( Space | OtherWhitespace )* comment
-	| EndOfLine
+endOfLine
+	: ( Space | OtherWhitespace )* EndOfLine { clearBlockLevel(); }
+	| ( Space | OtherWhitespace )* comment { clearBlockLevel(); }
+	;
+
+routineCommands
+	: ( Space | OtherWhitespace )+ blockIndent? { setupBlock(); } (
+		command ( ( Space | OtherWhitespace )+ command )* ( ( Space | OtherWhitespace )+ finalCommand )?
+		| finalCommand
+		)
 	;
 
 blockIndent
-	: (Dot ( Space | OtherWhitespace ))*
+	: (Dot ( Space | OtherWhitespace ) { incrementBlockLevel(); } )+
 	;
 
 tag
@@ -82,29 +117,41 @@ command
 	locals [ CommandType _commandType, Expression _condition, Argument _argument, Block _block ]
 	@after { requireNonNull($result); }
 	: cmd=Name { $_commandType = CommandType.valueOfSymbol($cmd.text); }
-            ( Colon c=expression { $_condition = $c.result; } )?
-            ( EndOfLine { $_argument = Argument.NOTHING; }
-            | Space a=argument[ $_commandType ] { $_argument = $a.result; }
-            )
-            b=block[ $_commandType, $_argument ] { $_block = $b.result; }
-        {
-        	_append( $result = new Command( $_condition, $_commandType, $_argument, $_block ) ) ;	
-        }
+      ( Colon c=expression { $_condition = $c.result; } )?
+      Space a=argument[ $_commandType ] { $_argument = $a.result; }
+      b=block[ $_commandType, $_argument ] { $_block = $b.result; }
+    {
+    	_append( $result = new Command( $_condition, $_commandType, $_argument, $_block ) ) ;	
+    }
 	;
+
+finalCommand
+	returns [ Command result ]
+	locals [ CommandType _commandType, Expression _condition, Block _block ]
+	@after { requireNonNull($result); }
+	: cmd=Name { $_commandType = CommandType.valueOfSymbol($cmd.text); }
+      ( Colon c=expression { $_condition = $c.result; } )?
+      b=finalBlock[ $_commandType, Argument.NOTHING ] { $_block = $b.result; }
+    {
+    	_append( $result = new Command( $_condition, $_commandType, Argument.NOTHING, $_block ) ) ;	
+    }
+	;
+
 
 argument [ CommandType _commandType ]
 	returns [ Argument result ] @after { requireNonNull($result); }
-	: { $_commandType == CommandType.SET   }?  al=assignmentList    { $result = _converter.argumentFrom( $al.ctx); }
-	| { $_commandType == CommandType.NEW   }?  dl=declarationList   { $result = _converter.argumentFrom( $dl.ctx); }
-	| { $_commandType == CommandType.KILL  }?  vl=variableList      { $result = _converter.argumentFrom( $vl.ctx); }
-	| { $_commandType == CommandType.FOR   }?  ld=loopDefinition    { $result = _converter.argumentFrom( $ld.ctx); }
-	| { $_commandType == CommandType.DO    }? trc=taggedRoutineCall { $result = _converter.argumentFrom($trc.ctx); }
-	| { $_commandType == CommandType.GOTO  }? trc=taggedRoutineCall { $result = _converter.argumentFrom($trc.ctx); }
-	| { $_commandType == CommandType.IF    }?  el=expressionList    { $result = _converter.argumentFrom( $el.ctx); }
-	| { $_commandType == CommandType.WRITE }? iol=inputOutputList   { $result = _converter.argumentFrom($iol.ctx); }
-	| { $_commandType == CommandType.READ  }? iol=inputOutputList   { $result = _converter.argumentFrom($iol.ctx); }
-	|                                           e=expression        { $result = _converter.argumentFrom(  $e.ctx); }
-	| /* nothing */                                                 { $result = Argument.NOTHING; }
+	: { $_commandType == CommandType.SET   }?  al=assignmentList        { $result = _converter.argumentFrom( $al.ctx); }
+	| { $_commandType == CommandType.MERGE }?  al=assignmentList        { $result = _converter.argumentFrom( $al.ctx); }
+	| { $_commandType == CommandType.NEW   }?  dl=declarationList       { $result = _converter.argumentFrom( $dl.ctx); }
+	| { $_commandType == CommandType.KILL  }?  vl=variableList          { $result = _converter.argumentFrom( $vl.ctx); }
+	| { $_commandType == CommandType.FOR   }?  ld=loopDefinition        { $result = _converter.argumentFrom( $ld.ctx); }
+	| { $_commandType == CommandType.DO    }? trc=taggedRoutineCallList { $result = _converter.argumentFrom($trc.ctx); }
+	| { $_commandType == CommandType.GOTO  }? trc=taggedRoutineCallList { $result = _converter.argumentFrom($trc.ctx); }
+	| { $_commandType == CommandType.IF    }?  el=expressionList        { $result = _converter.argumentFrom( $el.ctx); }
+	| { $_commandType == CommandType.WRITE }? iol=inputOutputList       { $result = _converter.argumentFrom($iol.ctx); }
+	| { $_commandType == CommandType.READ  }? iol=inputOutputList       { $result = _converter.argumentFrom($iol.ctx); }
+	|                                           e=expression            { $result = _converter.argumentFrom(  $e.ctx); }
+	| /* nothing */                                                     { $result = Argument.NOTHING; }
 	;
 
 declarationList
@@ -143,7 +190,7 @@ inputOutput
 	| Exclamation           { $result = FormatCommand.carriageReturn() ; }
 	| PoundSign             { $result = FormatCommand.pageFeed() ; }
 	| QuestionMark c=Digit+ { $result = FormatCommand.column( Integer.parseInt($c.text) ) ; }
-	| ForwardSlash Name ( OpenParenthesis parameterList CloseParenthesis )?
+	| ForwardSlash n=Name ( OpenParenthesis parameterList[$n] CloseParenthesis )?
 	;
 
 expressionList
@@ -151,9 +198,18 @@ expressionList
 	: expression ( Comma expression )* { $result = _converter.asList($ctx); }
 	;
 
-parameterList
-	returns [ List<Expression> result ] @after { requireNonNull($result); }
-	: expression ( Comma expression? )* { $result = _converter.asList($ctx); }
+parameterList [ Token n ]
+	returns [ List<Expression> result ]
+	locals [ boolean _isConditional ]
+	@init { $_isConditional = SELECT.matchesSymbol($n.getText()) ; }
+	@after { requireNonNull($result); }
+	: parameter[$_isConditional] ( Comma parameter[$_isConditional]? )* { $result = _converter.asList($ctx); }
+	;
+
+parameter [ boolean _isConditional ]
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: { $_isConditional }? c=expression Colon e=expression { $result = new ConditionalExpression( $c.result, $e.result ); }
+	|                                         e=expression { $result = $e.result ; }
 	;
 
 loopDefinition
@@ -161,14 +217,20 @@ loopDefinition
 	: n=Name Equals i=expression ( Colon b=expression ( Colon l=expression )? )? { $result = _converter.createLoopDefinition( $n, $i.result, $b.ctx, $l.ctx ); }
 	;
 
+taggedRoutineCallList
+	returns [ List<TaggedRoutineCall> result ] @after { requireNonNull($result); }
+	: taggedRoutineCall ( Comma taggedRoutineCall )* { $result = _converter.asList($ctx); }
+	;
+
 taggedRoutineCall
 	returns [ TaggedRoutineCall result ] @after { requireNonNull($result); }
-	: n=Name Caret r=Name ( OpenParenthesis pl=parameterList? CloseParenthesis )? { $result = new TaggedRoutineCall( $n.text, $r.text, RoutineAccess.EXPLICIT, _converter.asList($pl.ctx) ); }
-	|        Caret r=Name ( OpenParenthesis pl=parameterList? CloseParenthesis )? { $result = new TaggedRoutineCall( null,    $r.text, RoutineAccess.EXPLICIT, _converter.asList($pl.ctx) ); }
+	: n=Name              ( OpenParenthesis pl=parameterList[ $n ]? CloseParenthesis )? { $result = new TaggedRoutineCall( _converter.createTagReference( DIRECT, $n,   null ), _converter.asList($pl.ctx) ); }
+	| n=Name Caret r=Name ( OpenParenthesis pl=parameterList[ $n ]? CloseParenthesis )? { $result = new TaggedRoutineCall( _converter.createTagReference( DIRECT, $n,   $r   ), _converter.asList($pl.ctx) ); }
+	|        Caret r=Name ( OpenParenthesis pl=parameterList[null]? CloseParenthesis )? { $result = new TaggedRoutineCall( _converter.createTagReference( DIRECT, null, $r   ), _converter.asList($pl.ctx) ); }
 	;
 
 assignmentList
-	returns [ List<Assignment> result ]
+	returns [ List<Assignment> result ] @after { requireNonNull($result); }
 	: assignment ( Comma assignment )* { $result = _converter.asList($ctx); }
 	;
 	
@@ -182,9 +244,9 @@ destination
 	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference(  LOCAL, $n, $el.ctx ) ); }
 	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference( GLOBAL, $n, $el.ctx ) ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createIndirectVariableReference( $e.result, $el.ctx ) ); }
-	|       Dollar n=Name OpenParenthesis pl=parameterList? CloseParenthesis { $result = Destination.wrap( _converter.createBuiltinFunctionCall( $n, $pl.ctx) ); }
-	|       Dollar n=Name                                                    { $result = Destination.wrap( _converter.createBuiltinVariableReference( LOCAL,  $n ) ); }
-	| Caret Dollar n=Name                                                    { $result = Destination.wrap( _converter.createBuiltinVariableReference( GLOBAL, $n ) ); }
+	|       Dollar n=Name OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = Destination.wrap( _converter.createBuiltinFunctionCall( $n, $pl.ctx) ); }
+	|       Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( LOCAL,  $n ) ); }
+	| Caret Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( GLOBAL, $n ) ); }
 	;
 
 block [ CommandType _commandType, Argument _argument ]
@@ -192,27 +254,51 @@ block [ CommandType _commandType, Argument _argument ]
 	: { $_commandType == CommandType.FOR  }? b=inlineBlock { $result = $b.result ; }
 	| { $_commandType == CommandType.IF   }? b=inlineBlock { $result = $b.result ; }
 	| { $_commandType == CommandType.ELSE }? b=inlineBlock { $result = $b.result ; }
-	| /* nothing */
+	| { $_commandType == CommandType.DO   && $_argument == Argument.NOTHING }? { $result = expectBlock() ; }
+	| /* nothing */ { $result = null ; }
+	;
+
+finalBlock [ CommandType _commandType, Argument _argument ]
+	returns [ Block result ]
+	: { $_commandType == CommandType.DO && $_argument == Argument.NOTHING }? { $result = expectBlock() ; }
+	| /* nothing */ { $result = null ; }
+	;
+
+group
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: OpenParenthesis e=expression CloseParenthesis { $result = $e.result; }
+	;
+
+literal
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: ( Plus | Minus )? Digit+ ( Dot Digit+ )? { $result = Constant.from($text); }
+	| Quote s=quotedSequence EndQuote          { $result = Constant.from($s.text); }
+	;
+
+variableReference
+	returns [ Expression result ] @after { requireNonNull($result); }
+	:     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     GLOBAL, $n, $el.ctx ); }
+	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     LOCAL, $n, $el.ctx ); }
+	| Dot Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, GLOBAL, $n, $el.ctx ); }
+	| Dot       n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, LOCAL, $n, $el.ctx ); }
+	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
+	;
+
+functionCall
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: Dollar Dollar n=Name ( Caret r=Name )? OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = _converter.createRoutineFunctionCall( LOCAL, DIRECT, $n, $r, $pl.ctx); }
+	|        Dollar n=Name                   OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = _converter.createBuiltinFunctionCall( $n,  $pl.ctx); }
+	|        Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( LOCAL,  $n ); }
+	|  Caret Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( GLOBAL, $n ); }
 	;
 
 expression
 	returns [ Expression result ] @after { requireNonNull($result); }
 	/* grouping */
-	: OpenParenthesis e=expression CloseParenthesis { $result = $e.result; }
-	/* literals */
-	| ( Plus | Minus )? Digit+ ( Dot Digit+ )? { $result = Constant.from($text); }
-	| Quote s=quotedSequence EndQuote          { $result = Constant.from($s.text); }
-	/* variable references */
-	|     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     GLOBAL, $n, $el.ctx ); }
-	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     LOCAL, $n, $el.ctx ); }
-	| Dot Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, GLOBAL, $n, $el.ctx ); }
-	| Dot       n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, LOCAL, $n, $el.ctx ); }
-	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
-	/* function calls */
-	| Dollar Dollar n=Name ( Caret r=Name )? OpenParenthesis pl=parameterList? CloseParenthesis { $result = _converter.createRoutineFunctionCall( LOCAL, DIRECT, $n, $r, $pl.ctx); }
-	|        Dollar n=Name                   OpenParenthesis pl=parameterList? CloseParenthesis { $result = _converter.createBuiltinFunctionCall( $n, $pl.ctx); }
-	|        Dollar n=Name                                                                      { $result = _converter.createBuiltinVariableReference( LOCAL,  $n ); }
-	|  Caret Dollar n=Name                                                                      { $result = _converter.createBuiltinVariableReference( GLOBAL, $n ); }
+	: grp=group             { $result = $grp.result; }
+	| lit=literal           { $result = $lit.result; }
+	| var=variableReference { $result = $var.result; }
+	| fun=functionCall      { $result = $fun.result; }
 	/* unary operations */
 	| Minus      e=expression { $result = new UnaryOperation( OperatorType.SUBTRACT, $e.result ); }
 	| Plus       e=expression { $result = new UnaryOperation( OperatorType.ADD,      $e.result ); }
@@ -235,8 +321,6 @@ expression
 	| lhs=expression        Ampersand       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.AND             , $rhs.result); }
 	| lhs=expression       Exclamation      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.OR              , $rhs.result); }
 	| lhs=expression   CloseSquareBracket   rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.FOLLOWS         , $rhs.result); }
-	/* $SELECT(...) only */
-	| lhs=expression Colon rhs=expression { $result = new ConditionalExpression( $lhs.result, $rhs.result ); }
 	;
 
 quotedSequence

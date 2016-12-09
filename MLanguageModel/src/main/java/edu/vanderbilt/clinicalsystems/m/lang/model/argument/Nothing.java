@@ -5,6 +5,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Nothing extends Argument {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public static final Nothing INSTANCE = new Nothing() ;
 	
 	private Nothing() { }

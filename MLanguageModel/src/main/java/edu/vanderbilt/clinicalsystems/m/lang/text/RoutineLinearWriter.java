@@ -25,6 +25,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.OutputExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
@@ -196,7 +197,7 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@SuppressWarnings("unused")
 	private boolean isConstant( String checkValue, Expression expr ) {
 		if ( expr instanceof Constant )
-			if ( ((Constant)expr).equals( checkValue ) )
+			if ( expr.equals( checkValue ) )
 				return true ;
 		return false ;
 	}
@@ -229,9 +230,25 @@ public class RoutineLinearWriter implements RoutineWriter {
 	}
 	
 	@Override
+	public void write( TaggedRoutineCallList taggedRoutineCallList ) throws RoutineWriterException {
+		try {
+			Iterator<? extends Element> i = taggedRoutineCallList.elements().iterator() ;
+			if ( i.hasNext() )
+				i.next().write(this) ;
+			while ( i.hasNext() ) {
+				m_routineFormatter.writeExpressionDelimiter(m_writer);
+				i.next().write(this) ;
+			}
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
+	@Override
 	public void write( TaggedRoutineCall taggedRoutineCall ) throws RoutineWriterException {
 		try {
-			m_routineFormatter.writeTaggedRoutine( taggedRoutineCall.tagName(), taggedRoutineCall.routineName(), taggedRoutineCall.routineAccess(), m_writer);
+			TagReference tagReference = taggedRoutineCall.tagReference();
+			m_routineFormatter.writeTaggedRoutine( tagReference.tagName(), tagReference.routineName(), m_writer);
 			writeFunctionParameterList( taggedRoutineCall.arguments() );
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;
@@ -356,7 +373,8 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@Override
 	public void write(RoutineFunctionCall routineFunctionCall) throws RoutineWriterException {
 		try {
-			m_routineFormatter.writeFunction( routineFunctionCall.tagReference().tagName(), routineFunctionCall.tagReference().routineName(), routineFunctionCall.tagReference().routineAccess(), m_writer);
+			TagReference tagReference = routineFunctionCall.tagReference();
+			m_routineFormatter.writeFunction( tagReference.tagName(), tagReference.routineName(), m_writer);
 			writeFunctionParameterList( routineFunctionCall.arguments() );
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;
@@ -506,15 +524,7 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@Override
 	public void write(TagReference tag) throws RoutineWriterException {
 		try {
-
-			switch ( tag.referenceStyle() ) {
-			case DIRECT:
-				m_routineFormatter.writeTaggedRoutine( tag.tagName(), tag.routineName(), tag.routineAccess(), m_writer);
-				break ;
-			case INDIRECT:
-				m_routineFormatter.writeTaggedRoutine( tag.tagName(), tag.routineName(), tag.routineAccess(), m_writer);
-				break;
-			}
+			m_routineFormatter.writeTaggedRoutine( tag.tagName(), tag.routineName(), m_writer);
 		} catch ( IOException ex ) {
 			throw new RoutineWriterException(ex) ;
 		}

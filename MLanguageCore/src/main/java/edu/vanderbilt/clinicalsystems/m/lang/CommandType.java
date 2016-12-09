@@ -48,6 +48,10 @@ public enum CommandType implements BuiltinSymbol {
 	public boolean allowsCondition() { return m_allowsCondition ; }
 	public boolean allowsBlock() { return m_allowsBlock ; }
 
+	@Override public boolean matchesSymbol( String symbolOrAbbreviation ) {
+		return BuiltinSymbolSupport.matchesSymbol( this, symbolOrAbbreviation ) ;
+	}
+	
 	public static CommandType valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
 		return BuiltinSymbolSupport.valueOfSymbol(CommandType.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}

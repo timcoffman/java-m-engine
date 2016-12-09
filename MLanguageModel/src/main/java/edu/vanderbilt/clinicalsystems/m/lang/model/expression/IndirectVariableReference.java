@@ -8,6 +8,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class IndirectVariableReference extends VariableReference {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final Expression m_variableNameProducer ;
 
 	public IndirectVariableReference( Expression variableNameProducer ) {
@@ -37,4 +41,16 @@ public class IndirectVariableReference extends VariableReference {
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write( this ) ;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( !super.equals(this)) return false ;
+		if ( !(obj instanceof IndirectVariableReference) ) return false ;
+		IndirectVariableReference variable = (IndirectVariableReference)obj ;
+		return
+			m_variableNameProducer.equals( variable.m_variableNameProducer )
+			;
+	}
+
 }

@@ -5,41 +5,32 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
+import edu.vanderbilt.clinicalsystems.m.lang.model.Element;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 
-public class TaggedRoutineCall extends Argument {
+public class TaggedRoutineCall implements Element {
 
-	private final String m_tagName ;
-	private final String m_routineName ;
-	private final RoutineAccess m_routineAccess ;
+	private static final long serialVersionUID = 1L;
+	
+	private final TagReference m_tagReference ;
 	private List<Expression> m_arguments = new ArrayList<Expression>() ;
 	
-	public TaggedRoutineCall( String tagName, String routineName, RoutineAccess routineAccess ) {
-		Objects.requireNonNull(routineName, "missing routine name") ;
-		Objects.requireNonNull(routineAccess, "missing routine access specifier") ;
-		m_tagName = tagName ;
-		m_routineName = routineName ;
-		m_routineAccess = routineAccess ;
+	public TaggedRoutineCall( TagReference tagReference ) {
+		Objects.requireNonNull(tagReference, "missing tag reference") ;
+		m_tagReference = tagReference ;
 	}
 
-	public TaggedRoutineCall( String tagName, String routineName, RoutineAccess routineAccess, List<Expression> arguments ) {
-		this(tagName,routineName,routineAccess) ;
+	public TaggedRoutineCall( TagReference tagReference, List<Expression> arguments ) {
+		this(tagReference) ;
 		m_arguments.addAll( arguments ) ;
 	}
 
-	public String tagName() { return m_tagName ; }
-	public RoutineAccess routineAccess() { return m_routineAccess ; }
-	public String routineName() { return m_routineName ; }
+	public TagReference tagReference() { return m_tagReference ; }
 	public Iterable<Expression> arguments() { return m_arguments ; }
-	
-	@Override
-	public <R> R visit( Visitor<R> visitor ) {
-		return visitor.visitTaggedRoutineCall(this) ;
-	}
 	
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {
@@ -47,10 +38,20 @@ public class TaggedRoutineCall extends Argument {
 	} ;	
 	
 	@Override
-	protected String unformattedRepresentation() {
-		return m_routineName
-				+ (m_tagName != null ? "."+m_tagName : "")
+	public String toString() {
+		return m_tagReference.toString()
 				+ "(" + m_arguments.stream().map((e)->e.toString()).collect( Collectors.joining(", ") ) + ")";
 	}
 
+	@Override
+	public boolean equals( Object obj ) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof TaggedRoutineCall) ) return false ;
+		TaggedRoutineCall taggedRoutineCall = (TaggedRoutineCall)obj ;
+		return
+			m_tagReference.equals( taggedRoutineCall.m_tagReference )
+			&& m_arguments.equals( taggedRoutineCall.m_arguments )
+			;
+	}
 }

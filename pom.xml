@@ -12,6 +12,7 @@
 		<module>MLanguageEngine</module>
 		<module>MLanguageCore</module>
 		<module>MLanguageModel</module>
+		<module>MLanguageJavaWriter</module>
 		<module>MLanguageParser</module>
 		<module>MLanguageANTLRParser</module>
 		<module>EpicAnnotations</module>

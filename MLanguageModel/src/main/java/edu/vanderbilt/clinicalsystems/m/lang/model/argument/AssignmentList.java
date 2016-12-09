@@ -9,6 +9,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class AssignmentList extends ElementListArgument<Assignment> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public AssignmentList( Assignment ... assignments ) { super( Arrays.asList(assignments) ) ; }
 
 	public AssignmentList( List<? extends Assignment> assignments ) { super(assignments) ; }

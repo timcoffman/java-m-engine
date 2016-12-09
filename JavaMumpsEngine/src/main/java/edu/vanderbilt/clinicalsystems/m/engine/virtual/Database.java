@@ -10,7 +10,9 @@ import java.util.ServiceLoader;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.node.builtin.BuiltinHorologNode;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineLinearWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineNativeFormatter;
@@ -72,13 +74,15 @@ public class Database extends TreeNodeMap implements Installer {
 					}
 		
 		//			@Override
-		//			public Node create(String key) { throw new UnsupportedOperationException("system variable " + BuiltinSystemVariable.ROUTINE.canonicalSymbol() + " does not support creating sub-variables") ; }
+		//			public Node create(String key) { throw new UnsupportedOperationException("system variable ^$" + BuiltinSystemVariable.ROUTINE.canonicalSymbol() + " does not support creating subscripts") ; }
 		//
 		//			@Override
-		//			public void insert(String key, Node node) { throw new UnsupportedOperationException("system variable " + BuiltinSystemVariable.ROUTINE.canonicalSymbol() + " does not support inserting sub-variables") ; }
+		//			public void insert(String key, Node node) { throw new UnsupportedOperationException("system variable ^$" + BuiltinSystemVariable.ROUTINE.canonicalSymbol() + " does not support inserting subscripts") ; }
 				} ;
 			}
 		});
+		
+		insert( makeKey( BuiltinVariable.HOROLOG ), new BuiltinHorologNode() );
 	}
 
 	public Routine interpretRoutine( String unparsedCode ) throws EngineException {
@@ -94,6 +98,10 @@ public class Database extends TreeNodeMap implements Installer {
 		}
 	}
 
+	private String makeKey(BuiltinVariable builtinVariable) {
+		return builtinVariable.canonicalSymbol() ;
+	}
+	
 	private String makeKey(BuiltinSystemVariable builtinSystemVariable) {
 		return builtinSystemVariable.canonicalSymbol() ;
 	}

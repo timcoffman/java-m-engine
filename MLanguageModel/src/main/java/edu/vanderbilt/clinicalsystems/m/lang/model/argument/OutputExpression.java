@@ -8,6 +8,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class OutputExpression extends InputOutput {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final Expression m_expression ;
 	
 	public OutputExpression( Expression expression ) {

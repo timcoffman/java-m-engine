@@ -5,8 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target( { ElementType.TYPE } )
-@Retention(RetentionPolicy.CLASS)
-public @interface NativeWrapperType {
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 
+@Target( { ElementType.METHOD } )
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Variable {
+
+	public BuiltinVariable value() ;
+	
 }

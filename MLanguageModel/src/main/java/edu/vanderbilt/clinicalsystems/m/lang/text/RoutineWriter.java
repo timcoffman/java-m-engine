@@ -19,6 +19,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.OutputExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
@@ -40,7 +41,7 @@ public interface RoutineWriter {
 	void write( MultilineBlock block ) throws RoutineWriterException ;
 	
 	void write( Tag tag ) throws RoutineWriterException ;
-	void write( ParameterName parameterName );
+	void write( ParameterName parameterName ) throws RoutineWriterException;
 
 	void write( Command command ) throws RoutineWriterException ;
 
@@ -53,6 +54,7 @@ public interface RoutineWriter {
 	void write( DeclarationList declarations ) throws RoutineWriterException ;
 	void write( VariableList variables ) throws RoutineWriterException ;
 	void write( ExpressionList expressions ) throws RoutineWriterException ;
+	void write( TaggedRoutineCallList taggedRoutineCallList ) throws RoutineWriterException ;
 	void write( TaggedRoutineCall taggedRoutineCall ) throws RoutineWriterException ;
 	void write( Assignment assignment ) throws RoutineWriterException ;
 	void write( InputOutputList inputOutputs ) throws RoutineWriterException ;

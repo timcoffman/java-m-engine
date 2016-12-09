@@ -7,6 +7,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class UnaryOperation extends Operation {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final Expression m_operand ;
 	
 	public UnaryOperation( OperatorType operator, Expression operand ) {
@@ -19,6 +23,8 @@ public class UnaryOperation extends Operation {
 
 	@Override
 	protected String unformattedRepresentation() { return "( " + operator().canonicalSymbol() + " " + m_operand.unformattedRepresentation() + " )" ; }
+	
+	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitUnaryOperation(this) ; }
 
 	@Override
 	public void write(RoutineWriter writer) throws RoutineWriterException {

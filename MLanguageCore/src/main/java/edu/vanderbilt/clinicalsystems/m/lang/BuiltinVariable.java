@@ -44,6 +44,10 @@ public enum BuiltinVariable implements BuiltinSymbol {
 	@Override public String canonicalAbbreviation() { return m_canoncialAbbreviation ; }
 	@Override public EnumSet<Compatibility> compatibility() { return EnumSet.copyOf(m_compatibility) ; }
 
+	@Override public boolean matchesSymbol( String symbolOrAbbreviation ) {
+		return BuiltinSymbolSupport.matchesSymbol( this, symbolOrAbbreviation ) ;
+	}
+	
 	public static BuiltinVariable valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
 		return BuiltinSymbolSupport.valueOfSymbol(BuiltinVariable.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}

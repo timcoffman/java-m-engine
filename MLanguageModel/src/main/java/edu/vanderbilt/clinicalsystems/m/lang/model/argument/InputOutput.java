@@ -6,6 +6,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public abstract class InputOutput implements Element {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static InputOutput wrap( VariableReference variable ) { return new InputOutputVariable(variable) ; }
 	public static InputOutput wrap( Expression expression ) { return new OutputExpression(expression) ; }
 	

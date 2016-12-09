@@ -8,9 +8,10 @@ import java.lang.annotation.Target;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 
 @Target( { ElementType.METHOD } )
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Function {
 
 	public BuiltinFunction value() ;
+	public boolean assignment() default false ;
 	
 }

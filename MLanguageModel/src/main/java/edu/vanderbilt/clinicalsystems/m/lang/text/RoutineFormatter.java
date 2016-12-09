@@ -8,7 +8,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 
 public interface RoutineFormatter {
@@ -33,9 +32,9 @@ public interface RoutineFormatter {
 	void writeExpressionDelimiter( Writer writer ) throws IOException ;
 	void writeDeclarationDelimiter( Writer writer ) throws IOException ;
 
-	void writeTaggedRoutine( String functionName, String routineName, RoutineAccess routineAccess, Writer writer ) throws IOException ;
+	void writeTaggedRoutine( String functionName, String routineName, Writer writer ) throws IOException ;
 	
-	void writeFunction( String functionName, String routineName, RoutineAccess routineAccess, Writer writer ) throws IOException ;
+	void writeFunction( String functionName, String routineName, Writer writer ) throws IOException ;
 	void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException ;
 
 	void openComment( Writer writer ) throws IOException ;

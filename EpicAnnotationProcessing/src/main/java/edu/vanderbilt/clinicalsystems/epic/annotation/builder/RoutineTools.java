@@ -23,8 +23,7 @@ import javax.tools.Diagnostic.Kind;
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeType;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeWrapperType;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeWrapperType;
 
 public abstract class RoutineTools {
 	
@@ -235,25 +234,25 @@ public abstract class RoutineTools {
 		}
 	}
 
-	public RoutineAccess routineAccess(Element element ) {
-		if ( isPartOfCompilationUnit(element) )
-			return RoutineAccess.LOCAL ;
-		
-		if ( element.getKind() != ElementKind.CLASS ) {
-			Element enclosingElement = element.getEnclosingElement() ;
-			if ( null != enclosingElement )
-				return routineAccess(enclosingElement) ;
-			else
-				return null ;
-		}
-		
-		EpicRoutineLibrary epicRoutineLibraryAnnotation = element.getAnnotation( EpicRoutineLibrary.class ) ;
-		if ( null != epicRoutineLibraryAnnotation && epicRoutineLibraryAnnotation.implicit() ) {
-			return RoutineAccess.IMPLICIT ;
-		} else {
-			return RoutineAccess.EXPLICIT ;
-		}
-	}
+//	public RoutineAccess routineAccess(Element element ) {
+//		if ( isPartOfCompilationUnit(element) )
+//			return RoutineAccess.LOCAL ;
+//		
+//		if ( element.getKind() != ElementKind.CLASS ) {
+//			Element enclosingElement = element.getEnclosingElement() ;
+//			if ( null != enclosingElement )
+//				return routineAccess(enclosingElement) ;
+//			else
+//				return null ;
+//		}
+//		
+//		EpicRoutineLibrary epicRoutineLibraryAnnotation = element.getAnnotation( EpicRoutineLibrary.class ) ;
+//		if ( null != epicRoutineLibraryAnnotation && epicRoutineLibraryAnnotation.implicit() ) {
+//			return RoutineAccess.IMPLICIT ;
+//		} else {
+//			return RoutineAccess.EXPLICIT ;
+//		}
+//	}
 	
 	public interface IdentifierResolution {
 		enum Kind { TYPE, VARIABLE, METHOD, UNKNOWN } ;

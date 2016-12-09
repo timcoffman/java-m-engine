@@ -8,7 +8,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 
 /**
@@ -68,9 +67,9 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 
 	@Override public void writeDeclarationDelimiter( Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeDeclarationDelimiter(writer) ) ; }
 	
-	@Override public void writeTaggedRoutine(String functionName, String routineName, RoutineAccess routineAccess, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeTaggedRoutine(functionName, routineName, routineAccess, writer) ) ; }
+	@Override public void writeTaggedRoutine(String functionName, String routineName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeTaggedRoutine(functionName, routineName, writer) ) ; }
 
-	@Override public void writeFunction(String functionName, String routineName, RoutineAccess routineAccess, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeFunction(functionName, routineName, routineAccess, writer) ) ; }
+	@Override public void writeFunction(String functionName, String routineName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeFunction(functionName, routineName, writer) ) ; }
 
 	@Override public void writeBuiltinFunction(BuiltinFunction builtinFunction, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeBuiltinFunction(builtinFunction, writer) ) ; }
 

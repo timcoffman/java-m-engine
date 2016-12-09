@@ -31,5 +31,17 @@
 			<groupId>${project.groupId}</groupId>
 			<artifactId>MLanguageModel</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>MLanguageJavaWriter</artifactId>
+		</dependency>
+
+		<dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>MLanguageANTLRParser</artifactId>
+		    <scope>test</scope>
+		</dependency>
 	</dependencies>
+
+
 </project>

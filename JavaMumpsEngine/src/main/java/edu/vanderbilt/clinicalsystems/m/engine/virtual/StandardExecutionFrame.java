@@ -268,7 +268,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				return constant;
 			}
 			
-			@Override public Constant visitDirectVariableReference(DirectVariableReference variable) {
+			@Override public Constant visitVariableReference(VariableReference variable) {
 				try { return Constant.from( findNode( variable ).value() ) ; }
 				catch ( EngineException ex ) { caughtException(ex) ; return null ; }
 			}

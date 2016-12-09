@@ -10,8 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
-import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
@@ -25,6 +23,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
@@ -171,8 +170,8 @@ public class RoutineTest {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference(Scope.LOCAL, ReferenceStyle.DIRECT, "MYFUNCTION", null, RoutineAccess.LOCAL ), FunctionCall.Returning.UNKNOWN, Expression.list( Constant.from("123"), Constant.from("456") ) )) ) );
-		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCall("MYFUNCTION", null, RoutineAccess.LOCAL, Expression.list( Constant.from("123"), Constant.from("456") ) ) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference("MYFUNCTION", "MYROUTINE" ), FunctionCall.Returning.UNKNOWN, Expression.list( Constant.from("123"), Constant.from("456") ) )) ) );
+		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCallList( new TaggedRoutineCall( new TagReference( "MYFUNCTION", "MYROUTINE"), Expression.list( Constant.from("123"), Constant.from("456") ) ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		routine.appendElement( new Tag( "MYFUNCTION", Arrays.asList( new ParameterName("x"), new ParameterName("y") )) );
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );

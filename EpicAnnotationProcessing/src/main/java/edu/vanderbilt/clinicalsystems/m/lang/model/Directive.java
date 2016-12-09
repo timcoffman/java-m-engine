@@ -2,6 +2,10 @@ package edu.vanderbilt.clinicalsystems.m.lang.model;
 
 public class Directive extends Comment {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final String DIRECTIVE_FORMAT = ";#%1$s#%2$s" ; // e.g. ;#lglob#
 	
 	public Directive(String directiveText) {

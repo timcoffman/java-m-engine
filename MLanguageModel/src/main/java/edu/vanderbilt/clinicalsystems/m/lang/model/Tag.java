@@ -9,6 +9,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Tag implements RoutineElement {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final String m_name ;
 	private final List<ParameterName> m_parameterNames = new ArrayList<ParameterName>();
 	
@@ -37,4 +39,17 @@ public class Tag implements RoutineElement {
 		return m_name + "(" + m_parameterNames.stream().map((p)->p.toString()).collect(Collectors.joining(",")) + ")";
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof Tag) ) return false ;
+		Tag tag = (Tag)obj ;
+		return
+			m_name.equals( tag.m_name )
+			&& m_parameterNames.equals( tag.m_parameterNames )
+			;
+	}
+
+	
 }

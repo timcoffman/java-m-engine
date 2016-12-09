@@ -9,6 +9,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class VariableList extends ElementListArgument<VariableReference> {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public VariableList( VariableReference ... variables ) { super( Arrays.asList(variables) ) ; }
 
 	public VariableList( List<? extends VariableReference> variables ) { super(variables) ; }

@@ -44,6 +44,10 @@ public enum OperatorType implements BuiltinSymbol {
 	
 	public boolean commutative() { return m_commutative ; }
 
+	@Override public boolean matchesSymbol( String symbolOrAbbreviation ) {
+		return BuiltinSymbolSupport.matchesSymbol( this, symbolOrAbbreviation ) ;
+	}
+	
 	public static OperatorType valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
 		return BuiltinSymbolSupport.valueOfSymbol(OperatorType.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}

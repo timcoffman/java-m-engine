@@ -6,6 +6,12 @@ import java.util.Optional;
 
 public class BuiltinSymbolSupport {
 
+	public static boolean matchesSymbol( BuiltinSymbol builtinSymbol, String symbolOrAbbreviation ) {
+		return builtinSymbol.canonicalSymbol().equalsIgnoreCase( symbolOrAbbreviation )
+				|| builtinSymbol.canonicalAbbreviation().equalsIgnoreCase( symbolOrAbbreviation )
+				;
+	}
+
 	public static <T extends Enum<T> & BuiltinSymbol> T valueOfSymbol(Class<T> enumClass, String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
 		EnumSet<Compatibility> compatibility = EnumSet.of(Compatibility.ANSI_1995_X11_1);
 		compatibility.addAll( Arrays.asList(additionalCompatibilities) ) ;

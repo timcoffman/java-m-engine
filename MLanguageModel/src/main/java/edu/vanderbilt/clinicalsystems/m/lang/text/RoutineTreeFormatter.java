@@ -9,7 +9,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 
 public class RoutineTreeFormatter implements RoutineFormatter {
@@ -76,20 +75,20 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	}
 	
 	@Override
-	public void writeTaggedRoutine(String functionName, String routineName, RoutineAccess routineAccess, Writer writer) throws IOException {
+	public void writeTaggedRoutine(String functionName, String routineName, Writer writer) throws IOException {
 		if ( null != functionName ) {
 			writer.append( functionName ) ;
-			writer.append( "^" ) ;
 		}
-		writer.append( routineName ) ;
-		writer.append( "/" ) ;
-		writer.append( routineAccess.toString() ) ;
+		if ( null != routineName ) {
+			writer.append( "^" ) ;
+			writer.append( routineName ) ;
+		}
 	}
 
 	@Override
-	public void writeFunction(String functionName, String routineName, RoutineAccess routineAccess, Writer writer) throws IOException {
+	public void writeFunction(String functionName, String routineName, Writer writer) throws IOException {
 		writer.append( "$$" ) ;
-		writeTaggedRoutine(functionName, routineName, routineAccess, writer);
+		writeTaggedRoutine(functionName, routineName, writer);
 	}
 	
 	@Override

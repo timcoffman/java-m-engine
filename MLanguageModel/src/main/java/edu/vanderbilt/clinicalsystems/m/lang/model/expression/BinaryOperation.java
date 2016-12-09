@@ -7,6 +7,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class BinaryOperation extends Operation {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final Expression m_leftHandSide ;
 	private final Expression m_rightHandSide ;
 	

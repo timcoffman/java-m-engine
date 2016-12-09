@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 
 @Target( { ElementType.METHOD } )
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Operator {
 
 	public OperatorType value() ;

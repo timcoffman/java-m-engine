@@ -5,8 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType;
+
 @Target( { ElementType.METHOD } )
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface ReadWriteCode {
 
+	ReadWriteCodeType value() ;
+	
 }

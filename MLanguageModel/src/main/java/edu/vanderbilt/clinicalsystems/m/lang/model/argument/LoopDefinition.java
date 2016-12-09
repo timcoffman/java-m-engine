@@ -8,6 +8,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class LoopDefinition extends Argument {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final DirectVariableReference m_destination ;
 	private final Expression m_start ;
 	private final Expression m_step ;

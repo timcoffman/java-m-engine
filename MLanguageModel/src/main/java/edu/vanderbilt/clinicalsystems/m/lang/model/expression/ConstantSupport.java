@@ -25,6 +25,11 @@ public class ConstantSupport {
 		return NUMBER_FORMAT.matcher(value).matches() ;
 	}
 	
+	public static boolean representsInteger(String value) {
+		Matcher m = NUMBER_FORMAT.matcher(value) ;
+		return m.matches() && null == m.group(1) ; // right format and no decimal places
+	}
+	
 	public static boolean representsNumber(String value, long checkValue) {
 		Matcher m = NUMBER_FORMAT.matcher(value) ;
 		if ( !m.matches() )

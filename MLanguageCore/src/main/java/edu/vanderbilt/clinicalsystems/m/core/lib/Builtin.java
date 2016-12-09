@@ -1,14 +1,21 @@
 package edu.vanderbilt.clinicalsystems.m.core.lib;
 
+import edu.vanderbilt.clinicalsystems.m.core.Value;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.Command;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Library;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.Variable;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
+import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 
 @Library
 public class Builtin {
 	
-	@Function(BuiltinFunction.ASCII) public static native int ascii( String characters ) ; 
-	@Function(BuiltinFunction.ASCII) public static native int ascii( String characters, int position ) ; 
+	@Function(BuiltinFunction.ORDER) public static native String followingKey( Value value ) ;
+	@Function(BuiltinFunction.ORDER) public static native String followingKey( Value value, int direction ) ;
 
-	@Function(BuiltinFunction.CHAR) public static native String character( int ... ascii ) ;
+	@Command(CommandType.GOTO) public native static void jump( Runnable destination ) ;
+	
+	@Variable(BuiltinVariable.ECODE) public native static void ecode() ;
 }

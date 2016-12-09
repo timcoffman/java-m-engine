@@ -1,11 +1,11 @@
 package edu.vanderbilt.clinicalsystems.epic.api.oo;
 
-import static edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommandTypes.EXTENSION;
-import static edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValueTypes.RESULT;
+import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeCommandType.EXTENSION;
+import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeValueTypes.RESULT;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValue;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeWrapperType;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeWrapperType;
 
 /**
  * Provides a facade over a Value.
@@ -48,8 +48,8 @@ public class ValueArray {
 	@NativeCommand(EXTENSION)
 	public void addLine( Value value ) {
 		int nextLine = lastLine() + 1 ;
-		m_delegate.put( 0, nextLine ) ;
-		m_delegate.put( nextLine, value) ;
+		m_delegate.get(0).set(nextLine) ;
+		m_delegate.get(nextLine).set(value) ;
 	}
 	
 	@NativeValue(RESULT)

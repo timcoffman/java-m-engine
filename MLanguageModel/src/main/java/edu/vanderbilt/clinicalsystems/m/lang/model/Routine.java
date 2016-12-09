@@ -1,15 +1,23 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model;
 
+import java.io.Serializable;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
-public class Routine {
+public class Routine implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final MultilineBlock m_block = new MultilineBlock();
 	
 	public MultilineBlock root() { return m_block ; }
+	
+	public List<String> tagNames() { return m_block.tagNames() ; }
 	
 	public Iterator<RoutineElement> findTagByName( String name ) { return m_block.findTagByName( name ) ; }
 	

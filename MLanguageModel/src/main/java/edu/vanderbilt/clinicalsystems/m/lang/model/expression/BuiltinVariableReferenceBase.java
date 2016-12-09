@@ -7,12 +7,13 @@ import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 
 public abstract class BuiltinVariableReferenceBase extends VariableReference {
 	
+	private static final long serialVersionUID = 1L;
+
 	public BuiltinVariableReferenceBase(ReferenceStyle referenceStyle) {
 		super(referenceStyle);
 	}
 
-	public BuiltinVariableReferenceBase(ReferenceStyle referenceStyle,
-			List<Expression> keys) {
+	public BuiltinVariableReferenceBase(ReferenceStyle referenceStyle, List<Expression> keys) {
 		super(referenceStyle, keys);
 	}
 

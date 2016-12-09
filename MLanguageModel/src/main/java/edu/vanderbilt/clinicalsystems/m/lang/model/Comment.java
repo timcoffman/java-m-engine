@@ -7,6 +7,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Comment implements RoutineElement {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final String m_text ;
 	
 	public Comment(String text) {
@@ -27,4 +29,14 @@ public class Comment implements RoutineElement {
 	@Override
 	public String toString() { return "// " + m_text ; }
 	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof Comment) ) return false ;
+		Comment comment = (Comment)obj ;
+		return
+			m_text.equals( comment.m_text )
+			;
+	}
 }

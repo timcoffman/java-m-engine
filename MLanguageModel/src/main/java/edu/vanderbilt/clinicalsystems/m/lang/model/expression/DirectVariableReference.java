@@ -10,6 +10,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class DirectVariableReference extends VariableReference {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final ParameterPassMethod m_parameterPassMethod ;
 	private final Scope m_scope ;
 	private final String m_variableName ;
@@ -61,4 +65,18 @@ public class DirectVariableReference extends VariableReference {
 	public void write(RoutineWriter writer) throws RoutineWriterException {
 		writer.write( this ) ;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( !super.equals(this)) return false ;
+		if ( !(obj instanceof DirectVariableReference) ) return false ;
+		DirectVariableReference variable = (DirectVariableReference)obj ;
+		return
+			m_variableName.equals( variable.m_variableName )
+			&& m_parameterPassMethod.equals( variable.m_parameterPassMethod )
+			&& m_scope.equals( variable.m_scope )
+			;
+	}
+
 }

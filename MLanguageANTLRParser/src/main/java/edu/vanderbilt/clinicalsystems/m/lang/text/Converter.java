@@ -13,7 +13,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
 import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.ParameterName;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
@@ -25,6 +24,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutput;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
@@ -45,7 +46,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.FormalArgumentList
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.InputOutputListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.LoopDefinitionContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.ParameterListContext;
-import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.TaggedRoutineCallContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.TaggedRoutineCallListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.VariableListContext;
 
 public class Converter {
@@ -65,6 +66,7 @@ public class Converter {
 	public static final List<Assignment> EMPTY_ASSIGNMENT_LIST = Collections.emptyList() ;
 	public static final List<VariableReference> EMPTY_VARIABLE_LIST = Collections.emptyList() ;
 	public static final List<DirectVariableReference> EMPTY_DECLARATION_LIST = Collections.emptyList() ;
+	public static final List<TaggedRoutineCall> EMPTY_TAGGED_ROUTINE_CALL_LIST = Collections.emptyList() ;
 	public static final List<ParameterName> EMPTY_FORMAL_ARGUMENT_LIST = Collections.emptyList() ;
 	public static final List<InputOutput> EMPTY_INPUT_OUTPUT_LIST = Collections.emptyList() ;
 	
@@ -77,10 +79,19 @@ public class Converter {
 				;
 	}
 	
-	public List<Expression> asList( ParameterListContext expressionListCtx ) {
-		if ( null == expressionListCtx )
+	public List<TaggedRoutineCall> asList( TaggedRoutineCallListContext taggedRoutineCallListCtx ) {
+		if ( null == taggedRoutineCallListCtx )
+			return EMPTY_TAGGED_ROUTINE_CALL_LIST ;
+		return StreamSupport.stream(taggedRoutineCallListCtx.taggedRoutineCall().spliterator(), false)
+				.map( (e)->e.result )
+				.collect( Collectors.toList() )
+				;
+	}
+	
+	public List<Expression> asList( ParameterListContext parameterListCtx ) {
+		if ( null == parameterListCtx )
 			return EMPTY_EXPRESSION_LIST ;
-		return StreamSupport.stream(expressionListCtx.expression().spliterator(), false)
+		return StreamSupport.stream(parameterListCtx.parameter().spliterator(), false)
 				.map( (e)->e != null ? e.result : Constant.NULL )
 				.collect( Collectors.toList() )
 				;
@@ -153,17 +164,18 @@ public class Converter {
 		return new IndirectVariableReference( nameProducer, asList(expressionListCtx) );
 	}
 	
-	public RoutineFunctionCall createRoutineFunctionCall( Scope scope, ReferenceStyle referenceStyle, Token tagNameToken, Token routineNameToken, ParameterListContext parameterListCtx ) {
+	public TagReference createTagReference( ReferenceStyle referenceStyle, Token tagNameToken, Token routineNameToken ) {
 		String routineName ;
 		if ( routineNameToken != null ) {
 			routineName = routineNameToken.getText();
 		} else {
-			if ( null == m_routineName )
-				throw new IllegalStateException("while outside of a routine, cannot parse function call with implicit routine name") ;
-			routineName = m_routineName;
+			routineName = null ;
 		}
-		RoutineAccess routineAccess = routineName.equals(m_routineName) ? RoutineAccess.IMPLICIT : RoutineAccess.EXPLICIT ;
-	  	TagReference tagReference = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, tagNameToken.getText(), routineName, routineAccess ) ;
+	  	return new TagReference( tagNameToken.getText(), routineName ) ;
+	}
+	
+	public RoutineFunctionCall createRoutineFunctionCall( Scope scope, ReferenceStyle referenceStyle, Token tagNameToken, Token routineNameToken, ParameterListContext parameterListCtx ) {
+	  	TagReference tagReference = createTagReference( referenceStyle, tagNameToken, routineNameToken ) ;
 	  	return new RoutineFunctionCall( tagReference, FunctionCall.Returning.SOME_VALUE, asList(parameterListCtx) );
 	}
 	
@@ -195,8 +207,8 @@ public class Converter {
 		return loopDefinitionCtx.result ;
 	}
 	
-	public Argument argumentFrom( TaggedRoutineCallContext taggedRoutineCallCtx ) {
-		return taggedRoutineCallCtx.result ;
+	public Argument argumentFrom( TaggedRoutineCallListContext taggedRoutineCallListCtx ) {
+		return new TaggedRoutineCallList( asList(taggedRoutineCallListCtx) ) ;
 	}
 	
 	public Argument argumentFrom( ExpressionListContext expressionListCtx ) {

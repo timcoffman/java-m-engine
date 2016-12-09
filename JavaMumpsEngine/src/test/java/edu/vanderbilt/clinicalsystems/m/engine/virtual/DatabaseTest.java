@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -18,9 +19,9 @@ import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Executor.ExecutionResult;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinSystemVariable;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
@@ -38,12 +39,15 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.FormatCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutput;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class DatabaseTest {
@@ -97,8 +101,10 @@ public class DatabaseTest {
 	}
 	
 	private Command makeTaggedRoutineCallCommand( String tagName, String routineName, Expression ... parameters ) {
-		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall(tagName, routineName, RoutineAccess.EXPLICIT ) ;
-		Command command = new Command( CommandType.DO, taggedRoutineCall ) ;
+		TagReference tagRef = new TagReference(tagName, routineName) ;
+		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall(tagRef ) ;
+		TaggedRoutineCallList taggedRoutineCallList = new TaggedRoutineCallList( taggedRoutineCall ) ;
+		Command command = new Command( CommandType.DO, taggedRoutineCallList ) ;
 		return command ;
 	}
 	
@@ -217,9 +223,9 @@ public class DatabaseTest {
 		m_cxn.execute( makeDeclarationCommand( "key", Scope.LOCAL ) ) ;
 		m_cxn.execute( makeAssignmentCommand( "key", Scope.LOCAL, nextKeyCall ) ) ;
 		ExecutionResult result = m_cxn.execute( new Command( CommandType.FOR, Argument.NOTHING, new InlineBlock(
-				/* Q:key=""      */ new Command( new BinaryOperation(keyVar, OperatorType.EQUALS, Constant.NULL), CommandType.QUIT, Argument.NOTHING ),
-				/* W x(key)      */ new Command( CommandType.WRITE, new InputOutputList( InputOutput.wrap( subscriptedVar ), FormatCommand.carriageReturn() ) ),
-				/* S key=$O(key) */ makeAssignmentCommand( "key", Scope.LOCAL, nextKeyCall )
+				/* Q:key=""         */ new Command( new BinaryOperation(keyVar, OperatorType.EQUALS, Constant.NULL), CommandType.QUIT, Argument.NOTHING ),
+				/* W x(key)         */ new Command( CommandType.WRITE, new InputOutputList( InputOutput.wrap( subscriptedVar ), FormatCommand.carriageReturn() ) ),
+				/* S key=$O(x(key)) */ makeAssignmentCommand( "key", Scope.LOCAL, nextKeyCall )
 		) ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
@@ -308,6 +314,14 @@ public class DatabaseTest {
 		
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
 		assertThat( m_cxn.result(), equalTo( Constant.from(123) ) ) ;
+	}
+	
+	@Test
+	public void canEvaluateBuiltinVariable() throws RoutineWriterException, EngineException {
+		ExecutionResult result = m_cxn.execute( new Command( CommandType.QUIT, new ExpressionList(new BuiltinVariableReference(BuiltinVariable.HOROLOG) ) ) ) ;
+		assertThat( result, equalTo(ExecutionResult.QUIT) );
+		assertThat( m_cxn.result(), notNullValue() ) ;
+		assertThat( m_cxn.result(), not(equalTo("")) ) ;
 	}
 	
 	@Test

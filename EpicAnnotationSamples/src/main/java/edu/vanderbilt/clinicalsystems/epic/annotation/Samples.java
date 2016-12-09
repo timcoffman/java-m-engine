@@ -118,9 +118,9 @@ public class Samples {
 			patID = znxIxID( "ZPT", 400, allergen, patID) ;
 			if ( patID == Value.nullValue() )
 				 break ;
-			patients.put(patID, ctr) ;
+			patients.get(ctr).set(patID) ;
 		}
-		patients.put(ctr, 0) ;
+		patients.get(0).set(ctr) ;
 		
 		// Send response
 		// ==== Set Array Property Patients ====
@@ -142,10 +142,10 @@ public class Samples {
 		patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
 		while ( patID != Value.nullValue() ) {
 			++ctr ;
-			patients.put(patID, ctr) ;
+			patients.get(ctr).set(patID) ;
 			patID = znxIxID( "ZPT", 400, allergen, patID) ;
 		}
-		patients.put(ctr, 0) ;
+		patients.get(0).set(ctr) ;
 		
 		// Send response
 		// ==== Set Array Property Patients ====

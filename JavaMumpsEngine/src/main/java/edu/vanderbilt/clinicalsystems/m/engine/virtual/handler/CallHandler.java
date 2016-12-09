@@ -11,6 +11,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 
 public class CallHandler extends CommandHandler {
 
@@ -22,13 +23,19 @@ public class CallHandler extends CommandHandler {
 		return execute( block.elements().iterator() ) ;
 	}
 
-	@Override protected ExecutionResult handle( TaggedRoutineCall taggedRoutineCall, Block block ) throws EngineException {
-		return execute( taggedRoutineCall ) ;
+	@Override protected ExecutionResult handle( TaggedRoutineCallList taggedRoutineCallList, Block block ) throws EngineException {
+		ExecutionResult result = ExecutionResult.CONTINUE;
+		for (TaggedRoutineCall taggedRoutineCall : taggedRoutineCallList.elements()) {
+			result = execute( taggedRoutineCall ) ;
+			if ( ExecutionResult.CONTINUE != result )
+				break ;
+		}
+		return result ;
 	}
 
 	private ExecutionResult execute( TaggedRoutineCall taggedRoutineCall ) throws EngineException {
-		String tagName = taggedRoutineCall.tagName();
-		String routineName = taggedRoutineCall.routineName();
+		String tagName = taggedRoutineCall.tagReference().tagName();
+		String routineName = taggedRoutineCall.tagReference().routineName();
 		
 		Routine routine = frame().globalContext().compiledRoutine( routineName ) ;
 		if ( null == routine )

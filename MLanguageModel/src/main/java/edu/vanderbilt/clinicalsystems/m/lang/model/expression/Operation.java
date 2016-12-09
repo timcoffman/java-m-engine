@@ -5,6 +5,10 @@ import java.util.Objects;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 
 public abstract class Operation extends Expression {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final OperatorType m_operator ;
 	
 	public Operation( OperatorType operator ) {

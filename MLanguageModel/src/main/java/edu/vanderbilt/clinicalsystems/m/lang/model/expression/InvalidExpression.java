@@ -5,6 +5,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class InvalidExpression extends Expression {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final InvalidExpression INSTANCE = new InvalidExpression("ERROR") ;
 	
 	public static InvalidExpression instance() { return INSTANCE ; }

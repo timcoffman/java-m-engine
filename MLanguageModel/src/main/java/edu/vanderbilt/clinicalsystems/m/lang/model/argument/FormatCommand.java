@@ -5,6 +5,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public abstract class FormatCommand extends InputOutput {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final FormatCommand CARRIAGE_RETURN = new CarriageReturnCommand() ;
 	private static final FormatCommand PAGE_FEED = new PageFeedCommand();
 	

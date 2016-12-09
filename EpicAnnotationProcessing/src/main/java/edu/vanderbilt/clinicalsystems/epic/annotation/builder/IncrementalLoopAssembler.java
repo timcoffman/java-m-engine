@@ -34,7 +34,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 					blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(loopVar) ) ) ;
 				
 				Expression loopStart = tools().expressions().generate( config.loopVariableInitializer(), blockManager ) ;
-				Constant loopStep = config.loopVariableStep() ;
+				Expression loopStep = config.loopVariableStep() ;
 				Optional<Expression> loopStop = config.loopVariableCondition().map( (b)->tools().expressions().generate( b.rightOperand(), blockManager ) ) ;
 	
 				Block forLoopBlock = wrapInsideInlineBlock( tools().blocks().generate( forLoopNode.statement(), null ) ) ;
@@ -89,7 +89,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 		private boolean m_requiresLoopVariableDeclaration = false ;
 		private Ast.Binary m_loopVariableCondition ;
 		private boolean m_loopVariableAscending = true ;
-		private Constant m_loopVariableStep ;
+		private Expression m_loopVariableStep ;
 		public Ast.Name loopVariable() { return m_loopVariable; }
 		public Ast.Name loopVariable(Ast.Name loopVariable) { return m_loopVariable = loopVariable; }
 		public Ast.Expression loopVariableInitializer() { return m_loopVariableInitializer; }
@@ -100,8 +100,8 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 		public Optional<Ast.Binary> loopVariableCondition(Ast.Binary loopVariableCondition) {return Optional.ofNullable(m_loopVariableCondition = loopVariableCondition); }
 		public boolean loopVariableAscending() { return m_loopVariableAscending ; }
 		public boolean loopVariableAscending( boolean loopVariableAscending ) { return m_loopVariableAscending = loopVariableAscending ; }
-		public Constant loopVariableStep() { return m_loopVariableStep; }
-		public Constant loopVariableStep(Constant loopVariableStep) {	return m_loopVariableStep = loopVariableStep; }
+		public Expression loopVariableStep() { return m_loopVariableStep; }
+		public Expression loopVariableStep(Expression loopVariableStep) {	return m_loopVariableStep = loopVariableStep; }
 		public boolean complete() { return m_complete ; }
 		public boolean complete(boolean complete) { return m_complete = complete ; }
 	}
@@ -231,7 +231,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				return extractUpdateToVariable( target, constantUpdate, config ) ;
 			}
 			
-			private boolean extractUpdateToVariable( Ast.Expression target, Constant constantUpdate, ForLoopConfiguration config) {
+			private boolean extractUpdateToVariable( Ast.Expression target, Expression constantUpdate, ForLoopConfiguration config) {
 				if ( !( target instanceof Ast.Identifier ) ) return false ; // not an update to a variable
 				Ast.Name targetName = ((Ast.Identifier)target).name();
 				if ( !variableName.equals( targetName ) ) return false ; // not the same variable

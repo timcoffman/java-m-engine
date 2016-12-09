@@ -8,6 +8,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class InputOutputList extends ElementListArgument<InputOutput> {
 	
+	private static final long serialVersionUID = 1L;
+
 	public InputOutputList( InputOutput ... inputOutputs ) { super( Arrays.asList(inputOutputs) ) ; }
 
 	public InputOutputList( List<? extends InputOutput> inputOutputs ) { super(inputOutputs) ; }

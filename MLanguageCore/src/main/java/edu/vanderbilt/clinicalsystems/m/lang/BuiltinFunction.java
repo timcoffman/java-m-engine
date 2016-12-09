@@ -50,6 +50,10 @@ public enum BuiltinFunction implements BuiltinSymbol {
 	@Override public String canonicalAbbreviation() { return m_canoncialAbbreviation ; }
 	@Override public EnumSet<Compatibility> compatibility() { return EnumSet.copyOf(m_compatibility) ; }
 
+	@Override public boolean matchesSymbol( String symbolOrAbbreviation ) {
+		return BuiltinSymbolSupport.matchesSymbol( this, symbolOrAbbreviation ) ;
+	}
+	
 	public static BuiltinFunction valueOfSymbol(String symbolOrAbbreviation, Compatibility ... additionalCompatibilities) {
 		return BuiltinSymbolSupport.valueOfSymbol(BuiltinFunction.class, symbolOrAbbreviation, additionalCompatibilities) ;
 	}

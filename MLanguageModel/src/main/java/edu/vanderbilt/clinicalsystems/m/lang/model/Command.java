@@ -11,6 +11,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Command implements RoutineElement {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static String HINT_FORMAT_KEEP_WITH_NEXT = "keep-with-next";
 	
 	private Map<String,Object> m_hints = null ;
@@ -32,6 +37,10 @@ public class Command implements RoutineElement {
 		this( condition, commandType, argument, null ) ;
 	}
 
+	public Command( CommandType commandType, Block block ) {
+		this( null, commandType, Argument.NOTHING, block ) ;
+	}
+	
 	public Command( CommandType commandType, Argument argument, Block block ) {
 		this( null, commandType, argument, block ) ;
 	}
@@ -73,5 +82,19 @@ public class Command implements RoutineElement {
 				+ " | " + m_argument
 				+ ( m_block != null ? " " + m_block : "" )
 				;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof Command) ) return false ;
+		Command command = (Command)obj ;
+		return
+			m_commandType.equals( command.m_commandType )
+			&& m_argument.equals( command.m_argument )
+			&& ( null == m_condition ? null == command.m_condition : m_condition.equals( command.m_condition ) )
+			&& ( null == m_block     ? null == command.m_block     :     m_block.equals( command.m_block     ) )
+			;
 	}
 }

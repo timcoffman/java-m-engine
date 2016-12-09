@@ -5,12 +5,14 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class Constant extends Expression {
 	
+	private static final long serialVersionUID = 1L;
+
 	private final String m_value ;
 		
 	public static final Constant NULL = new Constant() ; 
 	public static final Constant FALSE = new Constant(ConstantSupport.FALSE_VALUE) ; 
-	public static final Constant TRUE = new Constant(ConstantSupport.TRUE_VALUE) ; 
-
+	public static final Constant TRUE = new Constant(ConstantSupport.TRUE_VALUE) ;
+	
 	public Constant() {
 		this(ConstantSupport.NULL_VALUE) ;
 	}
@@ -67,6 +69,10 @@ public class Constant extends Expression {
 
 	public boolean representsNull() {
 		return ConstantSupport.representsNull(m_value) ;
+	}
+	
+	public boolean representsInteger() {
+		return ConstantSupport.representsInteger(m_value) ;
 	}
 	
 	public boolean representsNumber() {

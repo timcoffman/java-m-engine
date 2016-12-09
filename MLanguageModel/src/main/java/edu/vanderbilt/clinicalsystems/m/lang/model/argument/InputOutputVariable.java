@@ -8,6 +8,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
 public class InputOutputVariable extends InputOutput {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final VariableReference m_variable ;
 	
 	public InputOutputVariable( VariableReference variable ) {

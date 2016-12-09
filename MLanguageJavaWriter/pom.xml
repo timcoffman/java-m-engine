@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>MLanguageJavaWriter</artifactId>
+	<parent>
+		<groupId>edu.vanderbilt.clinicalsystems</groupId>
+		<artifactId>EpicAnnotationProjectPom</artifactId>
+		<version>00.00.01-SNAPSHOT</version>
+		<relativePath>../EpicAnnotationProjectPom</relativePath>
+	</parent>
+	<build>
+		<plugins>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>MLanguageParser</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>MLanguageCore</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>MLanguageModel</artifactId>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.antlr</groupId>
+		    <artifactId>ST4</artifactId>
+		</dependency>
+		
+		<dependency>
+		    <groupId>com.sun.codemodel</groupId>
+		    <artifactId>codemodel</artifactId>
+		    <version>2.6</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>${project.groupId}</groupId>
+		    <artifactId>MLanguageANTLRParser</artifactId>
+		    <scope>test</scope>
+		</dependency>
+		
+	</dependencies>
+</project>

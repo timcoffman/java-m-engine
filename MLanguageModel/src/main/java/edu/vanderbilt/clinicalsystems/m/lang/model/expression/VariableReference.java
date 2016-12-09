@@ -10,6 +10,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 
 public abstract class VariableReference extends Expression {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final DirectVariableReference DEFAULT_TEMP_VARIABLE
 		= new DirectVariableReference(Scope.LOCAL, "%");
 
@@ -68,5 +70,18 @@ public abstract class VariableReference extends Expression {
 				"(" + StreamSupport.stream(m_keys.spliterator(), false).map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ")) + ")"
 				;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof VariableReference) ) return false ;
+		VariableReference variable = (VariableReference)obj ;
+		return
+			m_referenceStyle.equals( variable.m_referenceStyle )
+			&& m_keys.equals( variable.m_keys )
+			;
+	}
+	
 	
 }

@@ -13,8 +13,6 @@ import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValue;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
-import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
-import edu.vanderbilt.clinicalsystems.m.lang.RoutineAccess;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
@@ -265,7 +263,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		public Expression visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 			TagReference tagRef ;
 			Expression instance = tools().expressions().generate( memberSelectNode.expression(), listener );
-			tagRef = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName(), RoutineAccess.EXPLICIT ) ;
+			tagRef = new TagReference( memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName() ) ;
 			return tagRef;
 		}
 		
@@ -297,12 +295,12 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 
 				@Override
 				public TagReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-					return new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString(), null, RoutineAccess.LOCAL ) ;
+					return new TagReference( identifierNode.name().toString(), null ) ;
 				}
 
 				@Override
 				public TagReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
-					return new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, memberSelectNode.identifier().toString(), memberSelectNode.expression().toString(), RoutineAccess.LOCAL ) ;
+					return new TagReference( memberSelectNode.identifier().toString(), memberSelectNode.expression().toString() ) ;
 				}
 				
 				
@@ -336,8 +334,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			
 		String tagName = tools().tagName( methodInvocationTarget.declaration() ) ;
 		String routineName = tools().routineName( methodInvocationTarget.declaration() ) ;
-		RoutineAccess routineAccess = tools().routineAccess( methodInvocationTarget.declaration() ) ;
-		TagReference tagRef = new TagReference( Scope.LOCAL, ReferenceStyle.DIRECT, tagName, routineName, routineAccess ) ;
+		TagReference tagRef = new TagReference( tagName, routineName ) ;
 		FunctionCall.Returning returning ;
 		if ( tools().isTypeOfAnything( methodInvocationTarget.returnType() ) )
 			returning = FunctionCall.Returning.SOME_VALUE ;

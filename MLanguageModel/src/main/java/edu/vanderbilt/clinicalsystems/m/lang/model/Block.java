@@ -15,6 +15,10 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 
 public abstract class Block implements RoutineElement {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final List<RoutineElement> m_elements = new ArrayList<RoutineElement>();
 	
 	
@@ -37,13 +41,38 @@ public abstract class Block implements RoutineElement {
 	private final Map<String,Integer> m_tagPositions = new HashMap<String, Integer>() ;
 	private void clearTagPositionCache() { m_tagPositions.clear(); }
 	
+	private Integer positionOfTag( String name ) {
+		return m_tagPositions.get( name ) ;
+	}
+	
+	private String nameOfTagAt( int position ) {
+		RoutineElement element = m_elements.get( position ) ;
+		if ( element instanceof Tag ) {
+			String name = ((Tag)element).name() ;
+			m_tagPositions.put( name, position ) ;
+			return name ;
+		} else {
+			return null ;
+		}
+	}
+	
+	public List<String> tagNames() {
+		List<String> names = new ArrayList<String>() ; 
+		for ( int position = 0 ; position < m_elements.size() ; ++position ) {
+			String name = nameOfTagAt( position ) ;
+			if ( null != name )
+				names.add(name) ;
+		}
+		return names ;
+	}
+	
 	public Iterator<RoutineElement> findTagByName( String name ) {
-		Integer position = m_tagPositions.get( name ) ;
+		Integer position = positionOfTag( name ) ;
 		if ( null == position ) {
 			position = 0 ; 
 			while ( position < m_elements.size() ) {
-				RoutineElement element = m_elements.get( position ) ;
-				if ( element instanceof Tag && name.equalsIgnoreCase( ((Tag)element).name() ) ) {
+				String checkName = nameOfTagAt( position ) ;
+				if ( null != checkName && checkName.equalsIgnoreCase( name ) ) {
 					m_tagPositions.put( name, position ) ;
 					break ;
 				}
@@ -110,4 +139,13 @@ public abstract class Block implements RoutineElement {
 		}
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof Block) ) return false ;
+		Block block = (Block)obj ;
+		return m_elements.equals( block.m_elements ) ;
+	}
+
 }
