@@ -1,7 +1,6 @@
 
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import edu.vanderbilt.clinicalsystems.m.core.Value;
 
 public class Inference {
 
@@ -68,7 +67,7 @@ public class Inference {
      * 
      * 
      */
-    public Value inferSecondOrderReturnTypeFromMethod() {
+    public String inferSecondOrderReturnTypeFromMethod() {
         return inferMethodReturnsString();
     }
 

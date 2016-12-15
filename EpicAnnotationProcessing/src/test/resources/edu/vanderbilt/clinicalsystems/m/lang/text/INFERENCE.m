@@ -36,5 +36,6 @@ inferGlobal ; expect expect boolean, String, Integer, double
 inferSecondOrderReturnTypeFromVariable ; expect String
 	QUIT globalString
 
-;inferSecondOrderReturnTypeFromMethod ; expect String
-;	QUIT $$inferMethodReturnsString()
+inferSecondOrderReturnTypeFromMethod ; expect String
+	QUIT $$inferMethodReturnsString()
+

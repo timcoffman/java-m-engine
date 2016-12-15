@@ -15,24 +15,28 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		super(builderContext) ;
 	}
 	
+	private String methodNameForTag(Routine routine, String tagName) {
+		return tagName.equals( routine.name() ) ? context().mainMethodName() : context().symbolForIdentifier( tagName );
+	}
+	
 	public Builder<JDefinedClass> analyze(Routine routine, String className) {
 		SymbolUsage classSymbolUsage = SymbolUsage.createRoot() ;
 		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolUsage, context().classContext(className) ) ;
 		
+		routine.tagNames().forEach( (tagName)->classSymbolUsage.declaredAs( methodNameForTag(routine, tagName) ) );
+		
 		Map<String,Builder<JMethod>> methodBuilders = new HashMap<String, RoutineJavaBuilder.Builder<JMethod>>() ; 
 		routine.tagNames().forEach( (tagName)->{
 			
-			String methodName = tagName.equals( routine.name() ) ? context().mainMethodName() : context().symbolForIdentifier( tagName );
-			
+			String methodName = methodNameForTag(routine, tagName);
 			Builder<JMethod> builder = methodBuilder.analyze( routine, tagName, methodName ) ;
-			
 			methodBuilders.put( methodName, builder ) ;
 			
 		} );
 		
 		return (c)->build( classSymbolUsage, methodBuilders, c )  ;
 	}
-	
+
 	private void build(SymbolUsage classSymbolUsage, Map<String,Builder<JMethod>> methodBuilders, JDefinedClass definedClass) {
 		System.out.println("") ;
 		for ( String symbol : classSymbolUsage.symbols() ) {

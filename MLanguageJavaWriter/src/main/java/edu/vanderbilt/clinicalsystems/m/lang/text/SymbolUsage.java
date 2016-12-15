@@ -81,7 +81,11 @@ public class SymbolUsage {
 	}
 	
 	public boolean declared(String symbol) {
-		return m_used.containsKey( symbol ) ;
+		return declared( symbol, false ) ;
+	}
+	
+	public boolean declared(String symbol, boolean checkParent) {
+		return m_used.containsKey( symbol ) || !checkParent || !m_parent.isPresent() || m_parent.get().declared(symbol,true) ;
 	}
 	
 	private class SymbolImplication implements Supplier<Optional<Representation>> {

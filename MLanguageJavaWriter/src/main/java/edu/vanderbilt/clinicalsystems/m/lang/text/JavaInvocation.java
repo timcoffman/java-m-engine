@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.sun.codemodel.JBlock;
@@ -19,11 +21,15 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 	private final Representation m_additionalParametersRepresentation ;
 	private final List<JavaExpression<?>> m_arguments = new ArrayList<JavaExpression<?>>() ;
 	
-	public JavaInvocation( JInvocation expr, Representation returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
-		super( expr, returningRepresentation.supplier() ) ;
+	public JavaInvocation( JInvocation expr, Supplier<Optional<Representation>> returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
+		super( expr, returningRepresentation ) ;
 		m_parameterRepresentations.addAll( parameterRepresentations ) ;
 		m_additionalParametersRepresentation = additionalParametersRepresentation ;
 		m_context = context ;
+	}
+	
+	public JavaInvocation( JInvocation expr, Representation returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
+		this( expr, returningRepresentation.supplier(), parameterRepresentations, additionalParametersRepresentation, context ) ;
 	}
 	
 	public JavaInvocation appendArgument( Function<Representation,JavaExpression<?>> f ) {

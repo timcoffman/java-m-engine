@@ -220,12 +220,20 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				} else {
 					tagName = functionCall.tagReference().tagName() ; 
 				}
+				String symbol = context().symbolForIdentifier(tagName);
 				
 				JavaInvocation invocation ;
-				if ( context().outerClassName().equals( routineName ) ) {
+				if ( null == routineName || context().outerClassName().equals( context().symbolForIdentifier(routineName) ) ) {
 
 					List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-					invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
+					if ( m_symbolUsage.declared(symbol,true) ) {
+						m_symbolUsage.usedAs(symbol, expectedRepresentation);
+						Supplier<Optional<Representation>> returningRepresentation = m_symbolUsage.impliedRepresentation(symbol) ;
+						invocation = new JavaInvocation( JExpr.invoke( symbol ), returningRepresentation, parameterRepresentations, null, context() );
+						
+					} else {
+						invocation = new JavaInvocation( JExpr.invoke( symbol ), NATIVE, parameterRepresentations, null, context() );
+					}
 
 				} else {
 					
@@ -234,10 +242,7 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 						invocation = JavaInvocation.builder(context()).invoke(method).build();
 					} else {
 						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-						if ( null != routineName )
-							invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
-						else
-							invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
+						invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( symbol ), NATIVE, parameterRepresentations, null, context() );
 					}
 					
 				}
