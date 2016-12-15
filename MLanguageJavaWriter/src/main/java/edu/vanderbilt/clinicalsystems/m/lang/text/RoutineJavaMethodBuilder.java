@@ -3,8 +3,10 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-import com.sun.codemodel.JClass;
+import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JDocComment;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -15,19 +17,13 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 
-public class RoutineJavaMethodBuilder extends RoutineJavaBuilder {
-	private JClass m_outerClass ;
-	private JMethod m_method ;
-	private final SymbolUsage m_symbolUsage ;
+public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
+	private final SymbolUsage m_classSymbolUsage ;
 
-	public RoutineJavaMethodBuilder( RoutineJavaBuilderContext builderContext, JMethod method, JClass outerClass ) {
+	public RoutineJavaMethodBuilder( SymbolUsage classSymbolUsage, RoutineJavaBuilderClassContext builderContext ) {
 		super(builderContext) ;
-		m_outerClass = outerClass ;
-		m_method = method ;
-		m_symbolUsage = new SymbolUsage() ;
+		m_classSymbolUsage = classSymbolUsage ;
 	}
-	
-	public SymbolUsage symbolUsage() { return m_symbolUsage ; }
 	
 	private void buildComments( final JDocComment javadoc, Iterator<RoutineElement> elementIterator ) {
 		Writer docWriter = new Writer() {
@@ -71,25 +67,59 @@ public class RoutineJavaMethodBuilder extends RoutineJavaBuilder {
 		}
 	}
 	
-	public void build( Routine routine, String tagName ) {
-		buildComments( m_method.javadoc(), routine.findTagByName(tagName) ) ;
+	private String symbolForMethodParameterPosition( String methodName, int position ) {
+		return methodName + "|" + String.format("%04d",position) ;
+	}
+	
+	public Builder<JMethod> analyze(Routine routine, String tagName, String methodName) {
+		SymbolUsage methodSymbolUsage = new SymbolUsage( m_classSymbolUsage ) {
+
+			@Override public void scopeReturns(Supplier<Optional<Representation>> representation) {
+				parent()
+					.orElseThrow( ()->new IllegalStateException( "scope returned in root context" ) )
+					.declaredAs( methodName, representation);
+			}
+			
+			@Override public void scopeAccepts(int position, Supplier<Optional<Representation>> representation) {
+				parent()
+					.orElseThrow( ()->new IllegalStateException( "scope accepting in root context" ) )
+					.declaredAs( symbolForMethodParameterPosition(methodName,position), representation);
+			}
+			
+		};
+		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), methodSymbolUsage ) ;
 		
 		Iterator<RoutineElement> elementIterator = routine.findTagByName(tagName) ;
-		
+
 		Tag tag = ((Tag)elementIterator.next()) ;
 		
 		for ( ParameterName parameterName : tag.parameterNames() ) {
-			m_method.param( JMod.FINAL, codeModel()._ref(valueClass()), parameterName.name() ) ;
+			methodSymbolUsage.usedAsParameter( parameterName.name() ) ;
 		}
 		
-		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), m_symbolUsage, m_method.body(), m_outerClass ) ;
-		blockBuilder.build( elementIterator ) ;
+		Builder<JBlock> bodyBuilder = blockBuilder.analyze( elementIterator ) ;
 
+		return (m)->build( methodSymbolUsage, routine, tagName, bodyBuilder, m ) ;
+	}
+	
+	private void build( SymbolUsage methodSymbolUsage, Routine routine, String tagName, Builder<JBlock> bodyBuilder, JMethod method ) {
+		buildComments( method.javadoc(), routine.findTagByName(tagName) ) ;
+		
+		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), methodSymbolUsage ) ;
+		
+		Iterator<RoutineElement> elementIterator = routine.findTagByName(tagName) ;
+		Tag tag = ((Tag)elementIterator.next()) ;
+		blockBuilder.analyze( elementIterator ) ;
+		
 		for ( ParameterName parameterName : tag.parameterNames() ) {
 			String symbol = context().symbolForIdentifier( parameterName.name() );
-			JType impliedType = blockBuilder.symbolUsage().impliedType( symbol, context() ) ;
-			m_method.params().get(0).type( impliedType );
+			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ) ;
+			method.param( JMod.FINAL, parameterType, parameterName.name() ) ;
 		}
+		
+		elementIterator = routine.findTagByName(tagName) ;
+		elementIterator.next() ; // skip tag (second pass)
+		bodyBuilder.build( method.body() ) ;
 		
 	}
 }

@@ -1,115 +1,220 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.EnumSet;
+import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JFieldRef;
-import com.sun.codemodel.JFieldVar;
-import com.sun.codemodel.JFormatter;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class SymbolUsage {
+	private final Optional<SymbolUsage> m_parent ;
+	
+	private static class Usage {
+		private final Collection<Supplier<Optional<Representation>>> m_usedAs = new ArrayList<Supplier<Optional<Representation>>>();
+		private boolean m_indexedByKey = false;
+		private boolean m_passedByReference = false;
+		private boolean m_usedAsParameter = false;
+		
+		public Collection<Supplier<Optional<Representation>>> usedAs() { return m_usedAs; }
+		public Collection<Supplier<Optional<Representation>>> usedAs(Supplier<Optional<Representation>> usedAs) {
+			Collection<Supplier<Optional<Representation>>> oldValue = new ArrayList<Supplier<Optional<Representation>>>( m_usedAs ) ;
+			m_usedAs.add( usedAs ) ;
+			return oldValue ;
+		}
+		
+		public boolean indexedByKey() { return m_indexedByKey; }
+		public boolean indexedByKey(boolean indexedByKey) {
+			boolean oldValue = m_indexedByKey ;
+			m_indexedByKey = indexedByKey;
+			return oldValue ;
+		}
+		
+		public boolean passedByReference() { return m_indexedByKey; }
+		public boolean passedByReference(boolean passedByReference) {
+			boolean oldValue = m_passedByReference ;
+			m_passedByReference = passedByReference;
+			return oldValue ;
+		}
+		
+		public boolean usedAsParameter() { return m_indexedByKey; }
+		public boolean usedAsParameter(boolean usedAsParameter) {
+			boolean oldValue = m_usedAsParameter ;
+			m_usedAsParameter = usedAsParameter;
+			return oldValue ;
+		}
+		
+	}
 
-	private final Set<String> m_declared = new HashSet<String>();
-	private final Map<String,EnumSet<Representation>> m_used = new HashMap<String, EnumSet<Representation>>();
+	private final Usage m_returns = new Usage() ;
 
-	public SymbolUsage() { }
+	private final Map<String,Usage> m_used = new HashMap<String, Usage>();
+
+	public static SymbolUsage createRoot() { return new SymbolUsage() ; } 
+	
+	private SymbolUsage() { m_parent = Optional.empty() ; }
+	public SymbolUsage( SymbolUsage parent ) { m_parent = Optional.of(parent) ; }
+	
+	protected Optional<SymbolUsage> parent() { return m_parent ; }
 	
 	public Set<String> symbols() { return m_used.keySet(); }
 	
-	public void importUndeclared( SymbolUsage symbolUsage ) {
-		m_declared.addAll( symbolUsage.m_declared ) ;
-		m_used.putAll( symbolUsage.m_used );
+	public String describe( String symbol ) {
+		Usage usage = m_used.get( symbol );
+		if ( null != usage ) {
+			return usage.usedAs().stream().map( Supplier::get ).map( Object::toString ).collect( Collectors.joining(" + ")) ;
+		} else if ( m_parent.isPresent() ) {
+			return "parent -> " + m_parent.get().describe(symbol) ;
+		} else {
+			return "-not declared-" ;
+		}
 	}
 	
-	public SymbolUsage undeclared() {
-		SymbolUsage symbolUsage = new SymbolUsage() ;
-		symbolUsage.m_used.putAll( m_used ) ;
-		symbolUsage.m_used.keySet().removeAll( m_declared ) ;
-		return symbolUsage ;
+	public Supplier<Optional<Representation>> impliedReturnType() {
+		return impliedRepresentation(m_returns);
 	}
 	
 	public boolean declared(String symbol) {
-		return m_declared.contains( symbol ) ;
+		return m_used.containsKey( symbol ) ;
 	}
 	
-	public JType impliedType(String symbol, RoutineJavaBuilderContext builderContext) {
-		EnumSet<Representation> usage = m_used.get( symbol ) ;
-		if ( null != usage ) {
-			EnumSet<Representation> working = EnumSet.copyOf(usage) ;
-			if ( !working.remove(Representation.ANY) ) {
-				/* didn't contain any */
-				if ( working.remove(Representation.BOOLEAN) ) {
-					if ( working.isEmpty() )
-						return builderContext.codeModel().BOOLEAN ;
-				}
+	private class SymbolImplication implements Supplier<Optional<Representation>> {
+		private final String m_symbol ;
+		public SymbolImplication( String symbol ) {
+			m_symbol = symbol ;
+		}
+		@Override public Optional<Representation> get() {
+			Usage usage = m_used.get( m_symbol );
+			if ( null != usage ) {
+				return impliedRepresentation(usage).get();
+			} else if ( m_parent.isPresent() ) {
+				return m_parent.get().impliedRepresentation(m_symbol).get() ;
+			} else {
+				return Optional.empty() ;
 			}
-		}		
-		return builderContext.codeModel().ref( builderContext.env().valueClass() );
-	}
-
-	public void declaredAs(JExpression e, Representation representation) {
-		String symbol = symbolFor(e);
-		if ( null != symbol ) {
-			m_declared.add( symbol ) ;
-			usedAs(symbol, representation);
 		}
+		@Override public String toString() { return describe(m_symbol); }
 	}
 	
-	public void usedAs(JExpression e, Representation representation) {
-		String symbol = symbolFor(e);
-		if ( null != symbol ) {
-			usedAs( symbol, representation ) ;
-		}
+	public Supplier<Optional<Representation>> impliedRepresentation(String symbol) {
+		return new SymbolImplication(symbol) ;
 	}
+//	public Supplier<Optional<Representation>> impliedRepresentation(String symbol) {
+//		return ()->{
+//			Usage usage = m_used.get( symbol );
+//			if ( null != usage ) {
+//				return impliedRepresentation(usage).get();
+//			} else if ( m_parent.isPresent() ) {
+//				return m_parent.get().impliedRepresentation(symbol).get() ;
+//			} else {
+//				return Optional.empty() ;
+//			}
+//		} ;
+//	}
 
-	private String symbolFor( JExpression e ) {
-		if ( e instanceof JVar )
-			return symbolFor( (JVar)e ) ;
-		else if ( e instanceof JFieldVar )
-			return symbolFor( (JFieldVar)e ) ;
-		else if ( e instanceof JFieldRef )
-			return symbolFor( (JFieldRef)e ) ;
+	private Supplier<Optional<Representation>> impliedRepresentation(Usage usage) {
+		if ( usage.indexedByKey() || usage.passedByReference() )
+			return NATIVE.supplier() ;
 		else
-			return null ;
+			return impliedRepresentation( usage.usedAs() );
 	}
 	
-	public String symbolFor(JVar variable) {
-		return variable.name() ;
+	private Supplier<Optional<Representation>> commonRepresentation( Collection<Supplier<Optional<Representation>>> representations ) {
+		Optional<Representation> representation = representations.stream()
+			.map(Supplier::get)
+			.filter(Optional::isPresent)
+			.map( Optional::get )
+			.reduce( Representation::commonRepresentation )
+			;
+		return ()->representation ;
+	}
+	
+	private Supplier<Optional<Representation>> impliedRepresentation(Collection<Supplier<Optional<Representation>>> representations) {
+		return commonRepresentation(representations) ;
 	}
 
-	public String symbolFor(JFieldVar field) {
-		return field.name() ;
+	public void scopeReturns(Supplier<Optional<Representation>> representation) {
+		m_parent
+			.orElseThrow( ()->new IllegalStateException( "method returning from root context" ) )
+			.scopeReturns( representation )
+			;
+	}
+
+	public void scopeAccepts(int position,Supplier<Optional<Representation>> representation) {
+		m_parent
+			.orElseThrow( ()->new IllegalStateException( "method returning from root context" ) )
+			.scopeAccepts( position, representation )
+			;
+	}
+
+	public void declaredAs(String symbol) {
+		Objects.requireNonNull( symbol ) ;
+		declare( symbol ) ;
 	}
 	
-	public String symbolFor(JFieldRef field) {
-		java.io.ByteArrayOutputStream baos = new ByteArrayOutputStream() ;
-		java.io.PrintWriter pw = new java.io.PrintWriter(baos);
-		field.generate( new JFormatter(pw, "" ));
-		pw.flush();
-		try {
-			String name = baos.toString("UTF-8");
-			return name;
-		} catch (UnsupportedEncodingException ex) {
-			return null ;
-		}
-	}
-	
-	private void usedAs(String symbol, Representation representation) {
+	public void declaredAs(String symbol, Representation representation) {
 		Objects.requireNonNull( symbol ) ;
 		Objects.requireNonNull( representation ) ;
-		EnumSet<Representation> usage = m_used.get( symbol ) ;
-		if ( null == usage )
-			m_used.put( symbol, usage = EnumSet.noneOf(Representation.class) ) ;
-		usage.add(representation) ;
+		declaredAs( symbol, representation.supplier() ) ;
+	}
+	
+	public void declaredAs(String symbol, Supplier<Optional<Representation>> representation) {
+		Objects.requireNonNull( symbol ) ;
+		Objects.requireNonNull( representation ) ;
+		declare( symbol ).usedAs( representation ) ;
+//		System.out.println( "\"" + symbol + "\" -> " + representation ) ;
+	}
+	
+	public void usedAs(String symbol, Supplier<Optional<Representation>> representation) {
+		Objects.requireNonNull( symbol ) ;
+		Objects.requireNonNull( representation ) ;
+		used(symbol, u->u.usedAs(representation) ) ;
 	}
 
+	public void usedAs(String symbol, Representation representation) {
+		Objects.requireNonNull( symbol ) ;
+		Objects.requireNonNull( representation ) ;
+		usedAs(symbol, representation.supplier()) ;
+	}
+	
+	public void passedByReference(String symbol) {
+		Objects.requireNonNull( symbol ) ;
+		used(symbol, u->u.passedByReference(true) ) ;
+	}
+	
+	public void indexedByKey(String symbol) {
+		Objects.requireNonNull( symbol ) ;
+		used(symbol, u->u.indexedByKey(true) ) ;
+	}
+	
+	public void usedAsParameter(String symbol) {
+		Objects.requireNonNull( symbol ) ;
+		declare(symbol).usedAsParameter(true) ;
+	}
+
+	private Usage declare( String symbol ) {
+		Objects.requireNonNull( symbol ) ;
+		Usage usage = new Usage();
+		m_used.put( symbol, usage ) ;
+		return usage ;
+	}
+	
+	protected void used( String symbol, Consumer<Usage> action ) {
+		Usage usage = m_used.get(symbol);
+		if ( null != usage ) {
+			action.accept(usage);
+		} else if ( m_parent.isPresent() ) {
+			m_parent.get().used( symbol, action ) ;
+		} else {
+			action.accept( declare(symbol) ); // root, auto-declare it here
+		}
+	}
+	
+	
 }

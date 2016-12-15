@@ -7,15 +7,19 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 
-public class RoutineJavaBuilder {
+public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 
-	private final RoutineJavaBuilderContext m_builderContext ;
+	private final T m_builderContext ;
 
-	public RoutineJavaBuilder( RoutineJavaBuilderContext builderContext ) {
+	public RoutineJavaBuilder( T builderContext ) {
 		m_builderContext = builderContext ;
 	}
 	
-	protected RoutineJavaBuilderContext context() { return m_builderContext; }
+	public interface Builder<T> {
+		void build( T location ) ;
+	}
+	
+	protected T context() { return m_builderContext; }
 	protected RoutineJavaBuilderEnvironment env() { return context().env(); }
 
 	protected JCodeModel codeModel() { return context().codeModel(); }

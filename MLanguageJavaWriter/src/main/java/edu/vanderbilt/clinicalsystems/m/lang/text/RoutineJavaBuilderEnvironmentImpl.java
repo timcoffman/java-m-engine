@@ -150,6 +150,24 @@ class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment
 			) ;
 	}
 	
+	@Override
+	public Class<?> typeFor(Representation representation) {
+		switch ( representation ) {
+		case NUMERIC:
+		case DECIMAL:
+			return java.lang.Double.TYPE ;
+		case INTEGER:
+			return java.lang.Integer.TYPE ;
+		case BOOLEAN:
+			return java.lang.Boolean.TYPE ;
+		case STRING:
+			return java.lang.String.class ;
+		case NATIVE:
+		default:
+			return valueClass() ;
+		}
+	}
+
 	@Override public Class<?> classForRoutine( String routineName ) {
 		return m_libraries.get( routineName ) ;
 	}

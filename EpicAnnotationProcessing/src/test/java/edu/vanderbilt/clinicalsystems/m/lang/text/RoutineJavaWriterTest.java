@@ -18,7 +18,39 @@ import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
 public class RoutineJavaWriterTest {
-	
+
+	@Test
+	public void canInferTypes() throws Exception {
+		ServiceLoader<RoutineParserFactory> serviceLoader = ServiceLoader.load(RoutineParserFactory.class);
+		RoutineParserFactory routineParserFactory = serviceLoader.iterator().next();
+		RoutineParser routineParser = routineParserFactory.createRoutineParser();
+		
+		Routine routine = routineParser.parse(RoutineJavaWriterTest.class.getResource("INFERENCE.m"));
+
+		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder();
+		routineBuilder.env().additionalCompatibility( Compatibility.EXTENSION ) ;
+		Core.useLibrariesIn(routineBuilder.env());
+		Epic.useLibrariesIn(routineBuilder.env());
+
+		try {
+			routineBuilder.build(RoutineJavaWriterTest.class.getPackage().getName(), routine);
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+		}
+
+		File f = new File(
+				"/Users/timvanderbilt/Documents/Development/Epic/workspace-trunk/"
+				+ "EpicAnnotationProcessing/"
+				+ "src/test/java"
+			);
+		CodeWriter cw = new FileCodeWriter(f);
+		try {
+			routineBuilder.codeModel().build(cw);
+		} finally {
+			cw.close();
+		}
+	}
+
 //	@Test
 	public void canSerializeRoutine() throws Exception {
 		URL src = RoutineJavaWriterTest.class.getResource("EALIBECF1.m");
@@ -28,14 +60,14 @@ public class RoutineJavaWriterTest {
 		RoutineParserFactory routineParserFactory = serviceLoader.iterator().next();
 		RoutineParser routineParser = routineParserFactory.createRoutineParser();
 		
-		Routine routine = routineParser.parse(RoutineJavaWriterTest.class.getResource("EALIBECF1.m"));
+		Routine routine = routineParser.parse(src);
 
 		try (ObjectOutputStream s = new ObjectOutputStream( new FileOutputStream(dst))) {
 			s.writeObject(routine);
 		}
 	}
 
-	@Test
+//	@Test
 	public void canWriteEpicClass() throws Exception {
 		Routine routine;
 		try (ObjectInputStream s = new ObjectInputStream( RoutineJavaWriterTest.class.getResourceAsStream("EALIBECF1.ser"))) {

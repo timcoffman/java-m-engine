@@ -1,22 +1,23 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.VALUE_INDEX;
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.ANY;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.BOOLEAN;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.DECIMAL;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.INTEGER;
+import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NUMERIC;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JOp;
@@ -35,34 +36,31 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 
-public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
+public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	
-	private final JClass m_outerClass ;
-	
-	private final SymbolUsageListener m_listener ;
+	private final SymbolUsage m_symbolUsage ;
 	private final JavaExpression<?> m_nullExpr ;
 
 	public interface SymbolUsageListener {
-		void usedAs( JExpression e, Representation representation ) ;
-		
-		default void usedAs( JavaExpression<?> e ) { usedAs( e.expr(), e.representation() ) ; }
+		void usedAs( String symbol, Supplier<Optional<Representation>> representation ) ;
 	}
 	
-	public RoutineJavaExpressionBuilder( RoutineJavaBuilderContext builderContext, JClass outerClass, SymbolUsageListener listener ) {
+	public RoutineJavaExpressionBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage symbolUsage ) {
 		super(builderContext) ;
-		m_outerClass = outerClass ;
-		m_listener = listener ;
+		m_symbolUsage = symbolUsage ;
 		Method initialValueMethod = env().methodFor( NativeValueTypes.INITIAL_VALUE ) ;
 		m_nullExpr = JavaInvocation.builder(builderContext).invoke(initialValueMethod).acceptingNothing().build() ;
 	}
 
-	public JClass outerClass() { return m_outerClass ; }
-	
 	public JavaExpression<?> build( Expression expression ) {
-		return build( expression, ANY ) ;
+		return build( expression, ()->Optional.empty() ) ;
 	}
 	
-	public JavaExpression<?> build( Expression expression, Representation representation ) {
+	public JavaExpression<?> build( Expression expression, Representation expectedRepresentation ) {
+		return build( expression, expectedRepresentation.supplier() ) ;
+	}
+	
+	public JavaExpression<?> build( Expression expression, Supplier<Optional<Representation>> expectedRepresentation ) {
 		if ( null == expression )
 			return m_nullExpr ;
 		
@@ -80,6 +78,8 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 			@Override
 			public JavaExpression<?> visitDirectVariableReference( DirectVariableReference variable ) {
 				String symbol = context().symbolForIdentifier(variable.variableName());
+				m_symbolUsage.usedAs(symbol, expectedRepresentation);
+				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation(symbol) ;
 				return JavaExpression.from( JExpr.ref( symbol ), representation );
 			}
 			
@@ -105,13 +105,13 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 			private JavaExpression<?> literalInteger( Constant constant ) {
 				long longValue = constant.toLong() ;
 				if ( longValue < Integer.MAX_VALUE && longValue > Integer.MIN_VALUE )
-					return JavaExpression.from( JExpr.lit( (int)constant.toLong() ), Representation.INTEGER );
+					return JavaExpression.from( JExpr.lit( (int)constant.toLong() ), INTEGER );
 				else
-					return JavaExpression.from( JExpr.lit( constant.toLong() ), Representation.INTEGER );
+					return JavaExpression.from( JExpr.lit( constant.toLong() ), INTEGER );
 			}
 			
 			private JavaExpression<?> literalDecimal( Constant constant ) {
-				return JavaExpression.from( JExpr.lit( constant.toDouble() ), Representation.DECIMAL );
+				return JavaExpression.from( JExpr.lit( constant.toDouble() ), DECIMAL );
 			}
 			
 			@Override
@@ -119,11 +119,11 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 				if ( constant.representsNull() )
 					return m_nullExpr ;
 				
-				switch ( representation ) {
+				switch ( expectedRepresentation.get().orElse(NATIVE) ) {
 				case STRING:
-					return JavaExpression.from( JExpr.lit( constant.value() ), representation );
+					return JavaExpression.from( JExpr.lit( constant.value() ), STRING );
 				case BOOLEAN:
-					return JavaExpression.from( JExpr.lit( constant.toBoolean() ), representation );
+					return JavaExpression.from( JExpr.lit( constant.toBoolean() ), BOOLEAN );
 				case INTEGER:
 					return literalInteger( constant );
 				case DECIMAL:
@@ -134,14 +134,14 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 					} else {
 						return literalDecimal( constant );
 					}
-				case ANY:
+				case NATIVE:
 				default:
 					if ( constant.representsInteger() )
 						return literalInteger( constant );
 					else if ( constant.representsNumber() )
 						return literalDecimal( constant ); 
 					else
-						return JavaExpression.from( JExpr.lit( constant.value() ), representation );
+						return JavaExpression.from( JExpr.lit( constant.value() ), STRING );
 				}
 			}
 
@@ -164,33 +164,33 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 				case CONCAT:
 					return buildOp( operation, JOp::plus, STRING, STRING, STRING ) ;
 				case ADD:
-					return buildOp( operation, JOp::plus, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::plus, NUMERIC, NUMERIC, NUMERIC ) ;
 				case SUBTRACT:
-					return buildOp( operation, JOp::minus, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::minus, NUMERIC, NUMERIC, NUMERIC ) ;
 				case MULTIPLY:
-					return buildOp( operation, JOp::mul, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::mul, NUMERIC, NUMERIC, NUMERIC ) ;
 				case DIVIDE:
-					return buildOp( operation, JOp::div, ANY, DECIMAL, DECIMAL ) ;
+					return buildOp( operation, JOp::div, DECIMAL, DECIMAL, DECIMAL ) ;
 				case DIVIDE_INT:
-					return buildOp( operation, JOp::div, ANY, INTEGER, INTEGER ) ;
+					return buildOp( operation, JOp::div, INTEGER, INTEGER, INTEGER ) ;
 				case MODULO:
-					return buildOp( operation, JOp::mod, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::mod, NUMERIC, NUMERIC, NUMERIC ) ;
 				case EQUALS:
-					return buildOp( operation, JOp::eq, ANY, ANY, ANY) ;
+					return buildOp( operation, JOp::eq, NATIVE, NATIVE, NATIVE) ;
 				case NOT_EQUALS:
-					return buildOp( operation, JOp::ne, ANY, ANY, ANY) ;
+					return buildOp( operation, JOp::ne, NATIVE, NATIVE, NATIVE) ;
 				case GREATER_THAN:
-					return buildOp( operation, JOp::gt, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::gt, BOOLEAN, NUMERIC, NUMERIC ) ;
 				case NOT_GREATER_THAN:
-					return buildOp( operation, JOp::lte, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::lte, BOOLEAN, NUMERIC, NUMERIC ) ;
 				case LESS_THAN:
-					return buildOp( operation, JOp::lt, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::lt, BOOLEAN, NUMERIC, NUMERIC ) ;
 				case NOT_LESS_THAN:
-					return buildOp( operation, JOp::gte, ANY, NUMERIC, NUMERIC ) ;
+					return buildOp( operation, JOp::gte, BOOLEAN, NUMERIC, NUMERIC ) ;
 				case AND:
-					return buildOp( operation, JOp::cand, ANY, BOOLEAN, BOOLEAN ) ;
+					return buildOp( operation, JOp::cand, BOOLEAN, BOOLEAN, BOOLEAN ) ;
 				case OR:
-					return buildOp( operation, JOp::cor, ANY, BOOLEAN, BOOLEAN ) ;
+					return buildOp( operation, JOp::cor, BOOLEAN, BOOLEAN, BOOLEAN ) ;
 				default:
 					return builtinExpr( operation.operator(), build( operation.leftHandSide() ), build( operation.rightHandSide() ) ) ;
 				}
@@ -202,9 +202,9 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 				case ADD:
 					return build( operation.operand() ) ;
 				case SUBTRACT:
-					return buildOp( operation, JOp::minus, ANY, NUMERIC ) ;
+					return buildOp( operation, JOp::minus, NATIVE, NUMERIC ) ;
 				case NOT:
-					return buildOp( operation, JOp::not, ANY, BOOLEAN ) ;
+					return buildOp( operation, JOp::not, NATIVE, BOOLEAN ) ;
 				default:
 					throw new UnsupportedOperationException( "operator type \"" + operation.operator() + "\" not supported" ) ;	
 				}
@@ -222,10 +222,10 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 				}
 				
 				JavaInvocation invocation ;
-				if ( m_outerClass.name().equals( routineName ) ) {
+				if ( context().outerClassName().equals( routineName ) ) {
 
-					List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->ANY ).collect( Collectors.toList() ) ;
-					invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), ANY, parameterRepresentations, null, context() );
+					List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
+					invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
 
 				} else {
 					
@@ -233,11 +233,11 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 					if ( null != method ) {
 						invocation = JavaInvocation.builder(context()).invoke(method).build();
 					} else {
-						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->ANY ).collect( Collectors.toList() ) ;
+						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
 						if ( null != routineName )
-							invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( context().symbolForIdentifier(tagName) ), ANY, parameterRepresentations, null, context() );
+							invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
 						else
-							invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), ANY, parameterRepresentations, null, context() );
+							invocation = new JavaInvocation( JExpr.invoke( context().symbolForIdentifier(tagName) ), NATIVE, parameterRepresentations, null, context() );
 					}
 					
 				}
@@ -259,8 +259,6 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 			
 			
 		}) ;
-		
-		m_listener.usedAs(e);
 		
 		return e ;
 	}
@@ -297,7 +295,14 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder {
 				JavaExpression<?> testExpression = build( conditional.condition(), BOOLEAN );
 				JavaExpression<?> trueResult = build(conditional.expression());
 				JavaExpression<?> falseResult = conditionalExpr(expressionIterator);
-				Representation representation = JavaExpression.both( trueResult.representation(), falseResult.representation() ) ;
+				Supplier<Optional<Representation>> trueRep = trueResult.representation();
+				Supplier<Optional<Representation>> falseRep = falseResult.representation();
+				Supplier<Optional<Representation>> representation = ()->trueRep.get().flatMap(
+						(t)->falseRep.get().flatMap(
+							(f)->Optional.of(t.commonRepresentation(f)
+							)
+						)
+					);
 				return JavaExpression.from( JOp.cond( testExpression.expr(), trueResult.expr(), falseResult.expr() ), representation );
 			}
 			

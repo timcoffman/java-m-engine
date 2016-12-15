@@ -31,6 +31,8 @@ public interface RoutineJavaBuilderEnvironment {
 	
 	Method methodFor(ReadWriteCodeType readWriteCodeType);
 	
+	Class<?> typeFor(Representation representation);
+	
 	Class<?> classForRoutine( String routineName ) ;
 	Method methodFor( String routineName, String tagName ) ;
 

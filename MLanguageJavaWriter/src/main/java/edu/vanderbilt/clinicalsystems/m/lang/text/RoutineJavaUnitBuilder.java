@@ -6,7 +6,7 @@ import com.sun.codemodel.JDefinedClass;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
-public class RoutineJavaUnitBuilder extends RoutineJavaBuilder {
+public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
 
 	public RoutineJavaUnitBuilder() {
 		super( new RoutineJavaBuilderContextImpl( new JCodeModel() ) ) ;
@@ -23,8 +23,8 @@ public class RoutineJavaUnitBuilder extends RoutineJavaBuilder {
 				: fullyQualifiedPackageName + "." + className
 				;
 		JDefinedClass definedClass = codeModel()._class( fullyQualifiedName, ClassType.CLASS ) ;
-		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context(), definedClass ) ;
-		classBuilder.build( routine );
+		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context() ) ;
+		classBuilder.analyze( routine, className ).build( definedClass );
 
 		return this ;
 	}

@@ -1,5 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model.argument;
 
+import java.util.Objects;
+
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
@@ -18,6 +20,9 @@ public class LoopDefinition extends Argument {
 	private final Expression m_stop ;
 	
 	public LoopDefinition( DirectVariableReference destination, Expression start, Expression stop, Expression step ) {
+		Objects.requireNonNull( destination ) ;
+		Objects.requireNonNull( start ) ;
+		Objects.requireNonNull( step ) ;
 		m_destination = destination ;
 		m_start = start ;
 		m_stop = stop ;

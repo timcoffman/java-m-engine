@@ -7,11 +7,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
+import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
 
@@ -19,24 +19,34 @@ public class IfElseBuilder extends CommandJavaStatementBuilder {
 
 	private final SymbolUsage m_outerSymbolUsage ;
 	
-	public IfElseBuilder( RoutineJavaBuilderContext builderContext, SymbolUsage outerSymbolUsage, JBlock block, RoutineJavaExpressionBuilder expressionBuilder ) {
-		super( builderContext, block, expressionBuilder ) ;
+	public IfElseBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+		super( builderContext, expressionBuilder ) ;
 		m_outerSymbolUsage = outerSymbolUsage ;
 	}
 
-	@Override protected void build( CommandType commandType, ExpressionList expressionList, Block block ) {
+	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
 		expect( CommandType.IF, commandType, expressionList ) ;
-		Expression firstExpression = expressionList.elements().iterator().next();
-		JConditional conditional = block()._if( expr(firstExpression, Representation.BOOLEAN ).expr() ) ;
-		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage, conditional._then(), outerClass() ) ;
-		conditionalBlockBuilder.build( block.elements().iterator() ) ;
+		JavaExpression<?> conditionalExpression = expr(expressionList.elements().iterator().next(), Representation.BOOLEAN );
+		
+		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage ) ;
+		Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyze( innerBlock.elements().iterator() ) ;
+		return (b)->{
+			
+			JConditional conditional = b._if( conditionalExpression.expr() ) ;
+			conditionalBuilder.build( conditional._then() ) ;
+		};
 	}
 	
-	@Override protected void build( CommandType commandType, Nothing nothing, Block block ) {
+	@Override protected Builder<JBlock> analyze( CommandType commandType, Nothing nothing, Block innerBlock ) {
 		expect( CommandType.ELSE, commandType, nothing ) ;
-		JConditional conditional = getContext( JConditional.class ) ;
-		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage, conditional._else(), outerClass() ) ;
-		conditionalBlockBuilder.build( block.elements().iterator() ) ;
+		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage ) ;
+		Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyze( innerBlock.elements().iterator() ) ;
+		return (b)->{
+
+			JConditional conditional = getContext( JConditional.class, b ) ;
+			conditionalBuilder.build( conditional._else() ) ;
+
+		};
 	}
 	
 }

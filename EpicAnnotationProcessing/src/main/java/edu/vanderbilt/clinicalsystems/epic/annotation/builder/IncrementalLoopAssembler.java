@@ -15,8 +15,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.LoopDefinition;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 
 public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	
@@ -45,11 +45,9 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				
 				/*
 				 * CMD: <initializer>
-				 * CMD: <initializer>
 				 * CMD: FOR | (-) {
 				 *   CMD: QUIT:<condition> | (-)
 				 *   <statement>
-				 *   CMD: <update>
 				 *   CMD: <update>
 				 * }
 				 */

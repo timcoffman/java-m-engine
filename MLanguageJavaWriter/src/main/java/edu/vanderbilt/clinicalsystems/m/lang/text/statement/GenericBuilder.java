@@ -6,8 +6,9 @@ import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWrite
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.INTEGER;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
@@ -23,28 +24,32 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.OutputExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.PageFeedCommand;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
-import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
 public class GenericBuilder extends CommandJavaStatementBuilder {
 
-	public GenericBuilder( RoutineJavaBuilderContext builderContext, JBlock block, RoutineJavaExpressionBuilder expressionBuilder ) {
-		super( builderContext, block, expressionBuilder ) ;
+	public GenericBuilder( RoutineJavaBuilderClassContext builderContext, RoutineJavaExpressionBuilder expressionBuilder ) {
+		super( builderContext, expressionBuilder ) ;
 	}
 	
-	@Override protected void build( CommandType commandType, ExpressionList expressionList, Block block ) {
-		JavaInvocation invocation = invoke(commandType) ;
-		for ( Expression expression : expressionList.elements() )
-			invocation.appendArgument( expr(expression) ) ;
-	}
+	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
 
-	@Override protected void build( CommandType commandType, InputOutputList inputOutputList, Block block ) {
-		final List<JavaExpression<?>> inputOutputCommands = new ArrayList<JavaExpression<?>>() ;
-		for ( InputOutput inputOutput : inputOutputList.elements() )
-			inputOutputCommands.add( inputOutput.visit( new InputOutput.Visitor<JavaExpression<?>>() {
+		List<JavaExpression<?>> arguments = StreamSupport.stream(expressionList.elements().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
+		return JavaInvocation.builder(context())
+				.invoke( env().methodFor(commandType) )
+				.supplying( arguments )
+				::build
+				;
+	}
+	
+
+	@Override protected Builder<JBlock> analyze( CommandType commandType, InputOutputList inputOutputList, Block innerBlock ) {
+		
+		List<JavaExpression<?>> arguments = StreamSupport.stream(inputOutputList.elements().spliterator(),false).map( (io)->{
+			return io.visit( new InputOutput.Visitor<JavaExpression<?>>() {
 
 				@Override
 				public JavaExpression<?> visitInputOutput(InputOutput inputOutput) {
@@ -83,20 +88,15 @@ public class GenericBuilder extends CommandJavaStatementBuilder {
 					return expr(outputExpression.expression()) ; 
 				}
 				
-			}) ) ;
+			} );
+		} ).collect( Collectors.toList() );
 		
-		JavaInvocation.builder(context())
-				.invoke( env().methodFor(commandType) )
-				.accepting( java.lang.Object[].class)
-				.supplying( inputOutputCommands.toArray( new JavaExpression<?>[0] ) )
-				.build( block() );
-		
-	}
-	
-	private JavaInvocation invoke(CommandType commandType) {
 		return JavaInvocation.builder(context())
 				.invoke( env().methodFor(commandType) )
-				.build( block() );
+				.accepting( java.lang.Object[].class)
+				.supplying( arguments )
+				::build;
+		
 	}
 	
 }

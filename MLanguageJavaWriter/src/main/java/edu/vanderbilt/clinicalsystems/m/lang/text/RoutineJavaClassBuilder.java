@@ -1,48 +1,63 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JType;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
-public class RoutineJavaClassBuilder extends RoutineJavaBuilder {
-	private final JDefinedClass m_definedClass ;
-	
-	public RoutineJavaClassBuilder( RoutineJavaBuilderContext builderContext, JDefinedClass definedClass ) {
+public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
+	public RoutineJavaClassBuilder( RoutineJavaBuilderContext builderContext ) {
 		super(builderContext) ;
-		m_definedClass = definedClass ;
 	}
 	
-	public void build(Routine routine) {
+	public Builder<JDefinedClass> analyze(Routine routine, String className) {
+		SymbolUsage classSymbolUsage = SymbolUsage.createRoot() ;
+		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolUsage, context().classContext(className) ) ;
 		
-		SymbolUsage symbolUsage = new SymbolUsage() ;
+		Map<String,Builder<JMethod>> methodBuilders = new HashMap<String, RoutineJavaBuilder.Builder<JMethod>>() ; 
+		routine.tagNames().forEach( (tagName)->{
+			
+			String methodName = tagName.equals( routine.name() ) ? context().mainMethodName() : context().symbolForIdentifier( tagName );
+			
+			Builder<JMethod> builder = methodBuilder.analyze( routine, tagName, methodName ) ;
+			
+			methodBuilders.put( methodName, builder ) ;
+			
+		} );
 		
-		for ( String tagName : routine.tagNames() ) {
+		return (c)->build( classSymbolUsage, methodBuilders, c )  ;
+	}
+	
+	private void build(SymbolUsage classSymbolUsage, Map<String,Builder<JMethod>> methodBuilders, JDefinedClass definedClass) {
+		System.out.println("") ;
+		for ( String symbol : classSymbolUsage.symbols() ) {
+			System.out.println( "\"" + symbol + "\": " + classSymbolUsage.describe(symbol) ) ;
+		}
+		
+		for ( String symbol : classSymbolUsage.symbols() ) {
+			
+			if ( methodBuilders.containsKey(symbol) ) continue ; // they'll be handled from methodBuilders
+			
+			Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElseThrow( ()->new IllegalStateException("unresolvable field symbol") ) ;
+			definedClass.field( JMod.PUBLIC, context().typeFor(repr), symbol ) ;
+			
+		}
 
-			JMethod method ;
-			if ( tagName.equals( routine.name() ) ) {
-				
-				method = m_definedClass.method( JMod.PUBLIC, codeModel()._ref(valueClass()), context().mainMethodName() );
-				
-			} else {
-				
-				String methodName = context().symbolForIdentifier( tagName ) ;
-				method = m_definedClass.method( JMod.PUBLIC, codeModel()._ref(valueClass()), methodName ) ;
-				
-			}
+		methodBuilders.forEach( (methodName,methodBuilder)->{
+
+			Representation repr = classSymbolUsage.impliedRepresentation(methodName).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ;
+			JType returnType = context().typeFor( repr );
+			JMethod method = definedClass.method( JMod.PUBLIC, returnType, methodName ) ;
 			
-			RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( context(), method, m_definedClass ) ;
-			methodBuilder.build( routine, tagName ) ;
-			
-			symbolUsage.importUndeclared( methodBuilder.symbolUsage() );
-		}
-		
-		for ( String symbol : symbolUsage.symbols() ) {
-			
-			m_definedClass.field( JMod.PUBLIC, symbolUsage.impliedType(symbol, context() ), symbol ) ;
-			
-		}
+			methodBuilder.build( method ) ;
+
+		}) ;
+
 	}
 	
 }

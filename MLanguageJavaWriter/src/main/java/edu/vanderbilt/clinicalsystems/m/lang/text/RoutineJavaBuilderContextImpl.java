@@ -1,37 +1,95 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeValueTypes;
 
 class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 
 	private final JCodeModel m_codeModel;
 	private final RoutineJavaBuilderEnvironment m_environment ;
+	private JExpression m_nullExpr ;
 	
 	public RoutineJavaBuilderContextImpl( JCodeModel codeModel ) {
+		this( codeModel, new RoutineJavaBuilderEnvironmentImpl() ) ;
+	}
+	
+	public RoutineJavaBuilderContextImpl( JCodeModel codeModel, RoutineJavaBuilderEnvironment environment ) {
 		m_codeModel = codeModel ;
-		m_environment = new RoutineJavaBuilderEnvironmentImpl() ;
+		m_environment = environment ;
 	}
 	
 	@Override public JCodeModel codeModel() { return m_codeModel; }
+
+	@Override public JType typeFor(Representation representation) {
+		switch ( representation ) {
+		case VOID:
+			return m_codeModel.VOID ;
+		case NUMERIC:
+		case DECIMAL:
+			return m_codeModel.DOUBLE ;
+		case INTEGER:
+			return m_codeModel.INT ;
+		case BOOLEAN:
+			return m_codeModel.BOOLEAN ;
+		case STRING:
+		case NATIVE:
+		default:
+			return m_codeModel.ref( m_environment.typeFor(representation) ) ;
+		}
+	}
+
+	@Override public JExpression initialValueFor(Representation representation) {
+		switch ( representation ) {
+		case VOID:
+			return null ;
+		case NUMERIC:
+		case DECIMAL:
+			return JExpr.lit(0D) ;
+		case INTEGER:
+			return JExpr.lit(0) ;
+		case BOOLEAN:
+			return JExpr.lit(false) ;
+		case STRING:
+			return JExpr.lit("") ;
+		case NATIVE:
+		default:
+			if ( null == m_nullExpr ) {
+				Method initialValueMethod = m_environment.methodFor( NativeValueTypes.INITIAL_VALUE ) ;
+				m_nullExpr = m_codeModel.ref(initialValueMethod.getDeclaringClass()).staticInvoke(initialValueMethod.getName());
+			}
+			return m_nullExpr ;
+		}
+	}
 
 	@Override public RoutineJavaBuilderEnvironment env() { return m_environment ; }
 
 	@Override public String mainMethodName() { return "main" ; }
 
+	@Override public RoutineJavaBuilderClassContext classContext(String outerClassName) {
+		return new RoutineJavaBuilderClassContextImpl( m_codeModel, outerClassName, m_environment ) ;
+	}
+	
 	@Override public String symbolForIdentifier( String variableName ) {
-		String symbol = variableName.replaceAll("[^a-zA-Z0-9]", "_") ;
+		String symbol = variableName
+				.replaceAll("[%]", "\\$")
+				.replaceAll("[^$a-zA-Z0-9]", "_")
+				;
 		if ( symbol.length() == 1 )
 			symbol = symbol.substring(0,1).toLowerCase() ;
 		else if ( symbol.length() > 1 )
 			symbol = symbol.substring(0,1).toLowerCase() + symbol.substring(1) ;
 		if ( RESERVED_WORDS.contains(symbol) )
-			symbol = "_" + symbol ;
+			symbol = "_" + symbol + "_" ;
 		return symbol ;
 	}
 
@@ -61,5 +119,5 @@ class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 			return false ;
 		}
 	}
-	
+
 }

@@ -20,10 +20,10 @@ public abstract class Value {
 
 	@NativeCommand(VALUE_CLEAR) public native void clear() ;
 	
-	@NativeCommand(VALUE_ASSIGN) public native void set( Value  value ) ;
-	@NativeCommand(VALUE_ASSIGN) public native void set( String value ) ;
-	@NativeCommand(VALUE_ASSIGN) public native void set( int    value ) ;
-	@NativeCommand(VALUE_ASSIGN) public native void set( double value ) ;
+	@NativeCommand(VALUE_ASSIGN) public native void assign( Value  value ) ;
+	@NativeCommand(VALUE_ASSIGN) public native void assign( String value ) ;
+	@NativeCommand(VALUE_ASSIGN) public native void assign( int    value ) ;
+	@NativeCommand(VALUE_ASSIGN) public native void assign( double value ) ;
 
 	@Override
 	@NativeFunction(IMPLICIT_CAST) public native String toString() ;

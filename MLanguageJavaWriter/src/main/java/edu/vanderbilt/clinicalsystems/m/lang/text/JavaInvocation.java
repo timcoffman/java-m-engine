@@ -20,7 +20,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 	private final List<JavaExpression<?>> m_arguments = new ArrayList<JavaExpression<?>>() ;
 	
 	public JavaInvocation( JInvocation expr, Representation returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
-		super( expr, returningRepresentation ) ;
+		super( expr, returningRepresentation.supplier() ) ;
 		m_parameterRepresentations.addAll( parameterRepresentations ) ;
 		m_additionalParametersRepresentation = additionalParametersRepresentation ;
 		m_context = context ;
@@ -55,6 +55,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		JavaInvocationBuilder accepting( Class<?> ... parameterTypes ) ;
 		JavaInvocationBuilder acceptingNothing() ;
 		JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) ;
+		JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) ;
 		JavaInvocation build() ;
 		JavaInvocation build( JBlock block ) ;
 	}
@@ -194,13 +195,17 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		}
 
 		@Override public JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) {
+			return supplying( Arrays.asList( arguments ) );
+		}
+		
+		@Override public JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) {
 			if ( null != m_arguments )
 				throw new IllegalStateException( "arguments already specified") ;
-			m_arguments = Arrays.asList( arguments ) ;
+			m_arguments = new ArrayList<JavaExpression<?>>( arguments ) ;
 			if ( null == m_parameterTypes ) {
-				if ( null != m_numberOfParameters && m_numberOfParameters != arguments.length )
+				if ( null != m_numberOfParameters && m_numberOfParameters != arguments.size() )
 					throw new IllegalStateException( "number of parameters already specified with a different value") ;
-				m_parameterTypes = Arrays.stream(arguments)
+				m_parameterTypes = arguments.stream()
 						.map( (e)->e.type(context.env()) )
 						.collect( Collectors.toList() )
 						;

@@ -48,8 +48,8 @@ public class ValueArray {
 	@NativeCommand(EXTENSION)
 	public void addLine( Value value ) {
 		int nextLine = lastLine() + 1 ;
-		m_delegate.get(0).set(nextLine) ;
-		m_delegate.get(nextLine).set(value) ;
+		m_delegate.get(0).assign(nextLine) ;
+		m_delegate.get(nextLine).assign(value) ;
 	}
 	
 	@NativeValue(RESULT)

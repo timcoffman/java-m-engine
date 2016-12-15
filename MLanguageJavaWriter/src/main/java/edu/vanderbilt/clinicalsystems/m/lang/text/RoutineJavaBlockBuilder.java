@@ -2,12 +2,12 @@ package edu.vanderbilt.clinicalsystems.m.lang.text;
 
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.BOOLEAN;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
-import com.sun.codemodel.JExpression;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
@@ -17,7 +17,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
-import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder.SymbolUsageListener;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ExecBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ForLoopBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.GenericBuilder;
@@ -25,43 +24,35 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.statement.IfElseBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ReturnBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.VariableBuilder;
 
-public class RoutineJavaBlockBuilder extends RoutineJavaBuilder {
-	private JClass m_outerClass ;
-	private final JBlock m_block ;
+public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	private final SymbolUsage m_outerSymbolUsage ; 
-	private final SymbolUsage m_symbolUsage ; 
-	private final RoutineJavaExpressionBuilder m_expressionBuilder ;
 	
-	public RoutineJavaBlockBuilder( RoutineJavaBuilderContext builderContext, SymbolUsage outerSymbolUsage, JBlock block, JClass outerClass ) {
+	public RoutineJavaBlockBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage ) {
 		super(builderContext) ;
-		m_outerClass = outerClass ;
 		m_outerSymbolUsage = outerSymbolUsage ;
-		m_block = block ;
-		m_symbolUsage = new SymbolUsage() ;
-		SymbolUsageListener listener = new SymbolUsageListener() {
-			@Override public void usedAs(JExpression e, Representation representation) { m_symbolUsage.usedAs(e, representation); }
-		};
-		m_expressionBuilder = new RoutineJavaExpressionBuilder( context(), m_outerClass, listener ) ;
 	}
 
-	public SymbolUsage symbolUsage() { return m_symbolUsage ; }
-	
-	public void build( Iterator<RoutineElement> elementIterator) {
+	public Builder<JBlock> analyze( Iterator<RoutineElement> elementIterator ) {
+		SymbolUsage symbolUsage = new SymbolUsage(m_outerSymbolUsage) ;
+		
+		RoutineJavaExpressionBuilder expressionBuilder = new RoutineJavaExpressionBuilder( context(), symbolUsage ) ;
+
+		List<Builder<JBlock>> elementBuilders = new ArrayList<RoutineJavaBuilder.Builder<JBlock>>();
 		
 		while ( elementIterator.hasNext() ) {
 			RoutineElement element = elementIterator.next();
 			
 			if ( element instanceof Tag ) {
 				
-				build( (Tag)element );
+				elementBuilders.add( analyzeTag( (Tag)element ) );
 				
 			} else if ( element instanceof Comment ) {
 				
-				build( (Comment)element );
+				elementBuilders.add( analyzeComment( (Comment)element ) );
 				
 			} else if ( element instanceof Command ) {
 				
-				build( (Command)element );
+				elementBuilders.add( analyzeCommand( symbolUsage, expressionBuilder, (Command)element ) );
 				
 			} else {
 				
@@ -72,73 +63,100 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder {
 			if ( endOfMethod( element ) )
 				break ;
 		}
+		
+		return (b)->build( symbolUsage, expressionBuilder, elementBuilders, b ) ;
 	}
+	
+	private void build( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, List<Builder<JBlock>> elementBuilders, JBlock block ) {
+		
+		for ( Builder<JBlock> elementBuilder : elementBuilders ) {
+			elementBuilder.build(block);
+		}
 
-	public void build( Tag tag ) {
+	}
+	
+	public Builder<JBlock> analyzeTag( Tag tag ) {
+		/* no analysis */
+		return (b)->buildTag( tag, b ) ;
+	}	
+
+	private void buildTag( Tag tag, JBlock block ) {
 		if ( !tag.parameterNames().iterator().hasNext() )
-			m_block.label( context().symbolForIdentifier(tag.name()) );
+			block.label( context().symbolForIdentifier(tag.name()) );
 	}	
 	
-	public void build( Comment comment ) {
+	public Builder<JBlock> analyzeComment( Comment comment ) {
+		/* no analysis */
+		return (b)->buildComment( comment, b ) ;
+	}	
+	
+	private void buildComment( Comment comment, JBlock block ) {
 		/* no comment */
 	}	
 	
-	public void build( Command command ) {
+	public Builder<JBlock> analyzeCommand( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, Command command ) {
+		Builder<JBlock> blockBuilder = analyzeCommand( symbolUsage, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
+		
 		Expression condition = command.condition();
 		if ( null != condition ) {
-			JConditional conditional = m_block._if( expr(condition,BOOLEAN).expr() ) ;
-			RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_symbolUsage, conditional._then(), m_outerClass ) ;
-			conditionalBlockBuilder.build( command.commandType(), command.argument(), command.block() ) ;
+			RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), symbolUsage ) ;
+			Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyzeCommand( symbolUsage, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
+			
+			return (b)->{
+				conditionalBuilder.build(b);
+				JConditional conditional = b._if( expressionBuilder.build(condition,BOOLEAN).expr() ) ;
+				blockBuilder.build( conditional._then() ) ;
+			} ;
+			
 		} else {
-			build( command.commandType(), command.argument(), command.block() ) ;
+			
+			return blockBuilder ;
 		}
 		
-		m_outerSymbolUsage.importUndeclared( m_symbolUsage );
 	}	
 	
-	private CommandJavaStatementBuilder createStatementBuilder( CommandType commandType ) {
+	private CommandJavaStatementBuilder createStatementBuilder( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType ) {
 		switch ( commandType ) {
 		case DO:
 		case GOTO:
-			return new ExecBuilder( context(), m_outerSymbolUsage, m_block, m_expressionBuilder ) ;
+			return new ExecBuilder( context(), symbolUsage, expressionBuilder ) ;
 		case FOR:
-			return new ForLoopBuilder( context(), m_outerSymbolUsage, m_block, m_expressionBuilder ) ;
+			return new ForLoopBuilder( context(), symbolUsage, expressionBuilder ) ;
 		
 		case IF:
 		case ELSE:
-			return new IfElseBuilder( context(), m_outerSymbolUsage, m_block, m_expressionBuilder ) ;
+			return new IfElseBuilder( context(), symbolUsage, expressionBuilder ) ;
 			
 		case SET:
 		case MERGE:
 		case NEW:
 		case KILL:
-			return new VariableBuilder( context(), m_outerSymbolUsage, m_block, m_expressionBuilder ) ;
+			return new VariableBuilder( context(), symbolUsage, expressionBuilder ) ;
 			
 		case QUIT:
-			return new ReturnBuilder( context(), m_block, m_expressionBuilder ) ;
+			return new ReturnBuilder( context(), symbolUsage, expressionBuilder ) ;
 			
 		case USE:
 		default:
 //			throw new UnsupportedOperationException( "command type \"" + commandType + "\" not supported" ) ;	
-			return new GenericBuilder( context(), m_block, m_expressionBuilder ) ;
+			return new GenericBuilder( context(), expressionBuilder ) ;
 		}
 	}
 	
-	public void build( CommandType commandType, Argument argument, Block block ) {
-		CommandJavaStatementBuilder statementBuilder = createStatementBuilder( commandType ) ;
-		statementBuilder.build(commandType, argument, block);
+	public Builder<JBlock> analyzeCommand( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType, Argument argument, Block innerBlock ) {
+		CommandJavaStatementBuilder statementBuilder = createStatementBuilder( symbolUsage, expressionBuilder, commandType ) ;
+		return statementBuilder.analyze(commandType, argument, innerBlock);
 	}
 	
-	
-	public JavaExpression<?> nullExpr() {
-		return m_expressionBuilder.build( null );
-	}
-	
-	public JavaExpression<?> expr( Expression expression ) {
-		return m_expressionBuilder.build( expression  ) ;
-	}
-	
-	public JavaExpression<?> expr( Expression expression, Representation representation ) {
-		return m_expressionBuilder.build(expression, representation);
-	}
+//	public JavaExpression<?> nullExpr() {
+//		return m_expressionBuilder.build( null );
+//	}
+//	
+//	public JavaExpression<?> expr( Expression expression ) {
+//		return m_expressionBuilder.build( expression  ) ;
+//	}
+//	
+//	public JavaExpression<?> expr( Expression expression, Representation representation ) {
+//		return m_expressionBuilder.build(expression, representation);
+//	}
 }

@@ -13,66 +13,57 @@ import edu.vanderbilt.clinicalsystems.m.core.lib.Text;
 
 public class Ealibecf1 {
 
-    public Value zzErrNum;
+    public Value $sv9;
+    public String zzErrNum;
+    public int $ecfFromThrow;
+    public Value $sv7;
+    public Value $sv8;
     public Value data;
-    public boolean zzNoLog;
+    public Value zzNoLog;
     public Value zzCodeLn;
     public Value parentPropId;
-    public Value _ecfInBufLoc;
     public Value mode;
-    public Value _ecfToken;
+    public Value $ecfMode;
     public Value merge;
     public Value appendToPrevious;
-    public Value _ecfMode;
-    public Value _int;
-    public boolean ltlEndian;
+    public Value $sv1;
+    public Value $sv2;
+    public Value $sv5;
+    public Value ltlEndian;
+    public Value $sv6;
+    public Value $sv3;
+    public Value $sv4;
     public Value zzDetails;
+    public Value $;
     public Value colDefs;
     public Value params;
-    public boolean _ecfEncrypt;
-    public boolean _ecfAsync;
     public Value str;
     public Value tmpGlo;
-    public boolean _EA;
-    public boolean shared;
+    public Value $ecfFtrs;
+    public Value shared;
     public Value varName;
-    public Value _sv1;
-    public Value _ecfCurrTCPdev;
-    public boolean _ecfDbg;
     public Value propName;
     public Value propStore;
-    public Value _sv10;
-    public Value _sv11;
-    public Value _sv6;
-    public Value _sv7;
-    public boolean _ecfStreamCmd;
-    public Value _sv8;
+    public Value $ecfOutBuf;
+    public Value $sv11;
+    public Value $sv10;
     public Value row;
     public Value enc;
-    public Value _sv9;
-    public Value _sv2;
-    public Value _short;
-    public Value _sv3;
     public Value value;
     public Value key;
-    public Value _sv4;
-    public Value _sv5;
     public Value containerPropId;
     public Value more;
     public Value lineOrKey;
     public Value column;
-    public Value _ecfOutBuf;
     public Value propNameOrId;
     public Value tblId;
-    public Value _ecfFtrs;
-    public Value _ecfSrvTmout;
+    public Value int;
     public Value cells;
     public Value tableId;
     public Value dataStore;
-    public boolean _ecfVersion;
+    public Value short;
     public Value zzErrCode;
     public Value errRsn;
-    public Value _ecfPckSz;
     public Value columnName;
 
     /**
@@ -142,13 +133,13 @@ public class Ealibecf1 {
         Value tmpGlo = Value.nullValue();
         if (shared) {
             tmpGlo.set(ZefnLib.acquireSharedTempGlobal());
-            _ecfMode = (((("-1"+ Text.character(1))+ tmpGlo)+ Text.character(1))+"1");
+            $ecfMode = (((("-1"+ Text.character(1))+ tmpGlo)+ Text.character(1))+"1");
         } else {
             tmpGlo.set(ZefnLib.acquirePrivateTempGlobal());
-            _ecfMode = (("-1"+ Text.character(1))+ tmpGlo);
+            $ecfMode = (("-1"+ Text.character(1))+ tmpGlo);
         }
         VariableContext.lookup(tmpGlo).set((- 1));
-        return _ecfMode;
+        return $ecfMode;
     }
 
     /**
@@ -159,15 +150,15 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFSetDestClient() {
-        Text.pieceAssign(_ecfMode, Text.character(1), 1, 0);
-        return _ecfMode;
+        Text.pieceAssign($ecfMode, Text.character(1), 1, 0);
+        return $ecfMode;
     }
 
     /**
      * 
      */
     public Value zECFInitDest(final Value mode) {
-        _ecfMode.set(mode);
+        $ecfMode.set(mode);
         return  1;
     }
 
@@ -178,10 +169,10 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFGetDest() {
-        if (_ecfMode == Value.nullValue()) {
-            _ecfMode = 0;
+        if ($ecfMode == Value.nullValue()) {
+            $ecfMode = 0;
         }
-        return _ecfMode;
+        return $ecfMode;
     }
 
     /**
@@ -189,7 +180,7 @@ public class Ealibecf1 {
      */
     public Value zECFReleaseDestGlobal(final Value mode) {
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (Text.piece(mode, Text.character(1), 3)) {
             ZefnLib.releaseSharedTempGlobal(Text.piece(mode, Text.character(1), 2));
@@ -203,29 +194,29 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFGet(final Value propName, final Value parentPropId, final Value more, final Value mode) {
-        _sv1 .set(Value.nullValue());
+        $sv1 .set(Value.nullValue());
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        _sv5 .set((Text.follows(Object.toString(), Object.toString())?_sv5 :(true?_ecfInBufLoc:Value.nullValue())));
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 .set((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())));
         if (more == 0) {
             more = 1;
         }
         while (true) {
-            _sv1 = (_sv1 + VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(1).get(more));
-            more = Builtin.followingKey(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(1).get(more));
+            $sv1 = ($sv1 + VariableContext.lookup($sv5).get(parentPropId).get(propName).get(1).get(more));
+            more = Builtin.followingKey(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(1).get(more));
             if (more == Value.nullValue()) {
                 return ;
             }
-            if ((Text.length(_sv1)+ Text.length(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(1).get(more)))>_EA) {
+            if ((Text.length($sv1)+ Text.length(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(1).get(more)))>$EA) {
                 return ;
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
@@ -233,93 +224,93 @@ public class Ealibecf1 {
      */
     public Value zECFGetWasSent(final Value propName, final Value parentPropId, final Value lineOrKey, final Value mode) {
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        _sv5 .set((Text.follows(Object.toString(), Object.toString())?_sv5 :(true?_ecfInBufLoc:Value.nullValue())));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            return Text.follows(Builtin.followingKey(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(lineOrKey).get(Value.nullValue())), Object.toString());
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 .set((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())));
+        if (Text.follows(lineOrKey.toString(), Value.nullValue().toString())) {
+            return Text.follows(Builtin.followingKey(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(lineOrKey).get(Value.nullValue())), Value.nullValue().toString());
         }
-        if (!_ecfVersion) {
+        if (!$ecfVersion) {
             do {
                 Value errRsn = Value.nullValue();
                 errRsn.set("The communication assembly Epic.Core.Ecf.dll does not support ");
                 errRsn = (errRsn +"ignoring properties and renders a call to $$zECFGetWasSent invalid.");
-                _.set(zECFThrow("CLIENT-CANNOT-IGNORE-PROPERTIES", errRsn));
+                $.set(zECFThrow("CLIENT-CANNOT-IGNORE-PROPERTIES", errRsn));
             } while (false);
         }
-        return (Builtin.followingKey(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(Value.nullValue()))!= Value.nullValue());
+        return (Builtin.followingKey(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(Value.nullValue()))!= Value.nullValue());
     }
 
     /**
      * 
      */
     public Value zECFGetElmt(final Value propName, final Value parentPropId, final Value lineOrKey, final Value more, final Value mode) {
-        _sv1 .set(Value.nullValue());
+        $sv1 .set(Value.nullValue());
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        _sv5 .set((Text.follows(Object.toString(), Object.toString())?_sv5 :(true?_ecfInBufLoc:Value.nullValue())));
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 .set((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())));
         if (more == Value.nullValue()) {
-            if (zbitAnd(VariableContext.lookup(_sv5).get(parentPropId).get(propName), 32) == 32) {
-                if (VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(lineOrKey).get(1) == 0) {
+            if (zbitAnd(VariableContext.lookup($sv5).get(parentPropId).get(propName), 32) == 32) {
+                if (VariableContext.lookup($sv5).get(parentPropId).get(propName).get(lineOrKey).get(1) == 0) {
                     return Value.nullValue();
                 }
             }
         }
         if (more == Value.nullValue()) {
-            more = ("1,"+ VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(lineOrKey).get(0));
+            more = ("1,"+ VariableContext.lookup($sv5).get(parentPropId).get(propName).get(lineOrKey).get(0));
         }
         while (true) {
-            _sv1 = (_sv1 + VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(lineOrKey).get(more));
+            $sv1 = ($sv1 + VariableContext.lookup($sv5).get(parentPropId).get(propName).get(lineOrKey).get(more));
             if ((1 + more)>Text.piece(more, ",", 2)) {
                 more.set(Value.nullValue());
             }
             if (more == Value.nullValue()) {
                 return ;
             }
-            Text.pieceAssign(more, ",", Object.toString());
-            if ((Text.length(_sv1)+ Text.length(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(lineOrKey).get(more)))>_EA) {
+            Text.pieceAssign(more, ",", (1 + more).toString());
+            if ((Text.length($sv1)+ Text.length(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(lineOrKey).get(more)))>$EA) {
                 return ;
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
      * 
      */
     public Value zECFGetCell(final Value propName, final Value parentPropId, final Value row, final Value column, final Value more, final Value mode) {
-        _sv1 .set(Value.nullValue());
+        $sv1 .set(Value.nullValue());
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        _sv5 .set((Text.follows(Object.toString(), Object.toString())?_sv5 :(true?_ecfInBufLoc:Value.nullValue())));
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 .set((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())));
         if (more == Value.nullValue()) {
             more = 1;
         }
         while (true) {
-            _sv1 = (_sv1 + VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(row).get(column).get(more));
-            more = Builtin.followingKey(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(row).get(column).get(more));
+            $sv1 = ($sv1 + VariableContext.lookup($sv5).get(parentPropId).get(propName).get(row).get(column).get(more));
+            more = Builtin.followingKey(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(row).get(column).get(more));
             if (more == Value.nullValue()) {
                 return ;
             }
-            if ((Text.length(_sv1)+ Text.length(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(row).get(column).get(more)))>_EA) {
+            if ((Text.length($sv1)+ Text.length(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(row).get(column).get(more)))>$EA) {
                 return ;
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
@@ -327,13 +318,13 @@ public class Ealibecf1 {
      */
     public Value zECFNumElmts(final Value propName, final Value parentPropId, final Value mode) {
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        return VariableContext.lookup(Object.toString()).get(parentPropId).get(propName).get(0);
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        return VariableContext.lookup((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())).toString()).get(parentPropId).get(propName).get(0);
     }
 
     /**
@@ -341,20 +332,20 @@ public class Ealibecf1 {
      */
     public Value zECFDctNxKey(final Value propName, final Value parentPropId, final Value key, final Value mode) {
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 .set(Value.nullValue());
-        _sv5 = Text.piece(mode, Text.character(1), 2);
-        _sv5 .set((Text.follows(Object.toString(), Object.toString())?_sv5 :(true?_ecfInBufLoc:Value.nullValue())));
+        $sv5 .set(Value.nullValue());
+        $sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 .set((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())));
         while (true) {
-            key = Builtin.followingKey(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(key));
+            key = Builtin.followingKey(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(key));
             if (key == Value.nullValue()) {
                 return ;
             }
-            if (Reflect.dataType(VariableContext.lookup(_sv5).get(parentPropId).get(propName).get(key))> 1) {
+            if (Reflect.dataType(VariableContext.lookup($sv5).get(parentPropId).get(propName).get(key))> 1) {
                 return ;
             }
         }
@@ -366,76 +357,76 @@ public class Ealibecf1 {
      */
     public Value zECFTblNxCol(final Value propName, final Value parentPropId, final Value row, final Value column, final Value mode) {
         if (mode == Value.nullValue()) {
-            mode.set(_ecfMode);
+            mode.set($ecfMode);
         }
         if (parentPropId == Value.nullValue()) {
             parentPropId.set(mode);
         }
-        _sv5 = Text.piece(mode, Text.character(1), 2);
+        $sv5 = Text.piece(mode, Text.character(1), 2);
         if (row == Value.nullValue()) {
             row = 1;
         }
-        return Builtin.followingKey(VariableContext.lookup(Object.toString()).get(parentPropId).get(propName).get(row).get(column));
+        return Builtin.followingKey(VariableContext.lookup((Text.follows($sv5 .toString(), Value.nullValue().toString())?$sv5 :(true?$ecfInBufLoc:Value.nullValue())).toString()).get(parentPropId).get(propName).get(row).get(column));
     }
 
     /**
      * 
      */
-    public Value zECFMrgIn(final Value propName, final Value parentPropId, final Value varName) {
+    public Value zECFMrgIn(final String propName, final Value parentPropId, final Value varName) {
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         VariableContext.lookup(varName).set(Value.nullValue());
-        VariableContext.lookup(varName).set(VariableContext.lookup(_ecfInBufLoc).get(parentPropId).get(propName));
-        VariableContext.lookup(_ecfInBufLoc).get(parentPropId).get(propName).set(Value.nullValue());
+        VariableContext.lookup(varName).set(VariableContext.lookup($ecfInBufLoc).get(parentPropId).get(propName));
+        VariableContext.lookup($ecfInBufLoc).get(parentPropId).get(propName).set(Value.nullValue());
         return  1;
     }
 
     /**
      * 
      */
-    public Value zECFTblMrgIn(final Value propName, final Value parentPropId, final Value varName) {
-        _sv1 .set(Value.nullValue());
-        _sv2 .set(Value.nullValue());
-        _sv3 .set(Value.nullValue());
-        _sv4 .set(Value.nullValue());
+    public Value zECFTblMrgIn(final String propName, final Value parentPropId, final Value varName) {
+        $sv1 .set(Value.nullValue());
+        $sv2 .set(Value.nullValue());
+        $sv3 .set(Value.nullValue());
+        $sv4 .set(Value.nullValue());
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         VariableContext.lookup(varName).set(Value.nullValue());
-        VariableContext.lookup(varName).set(VariableContext.lookup(_ecfInBufLoc).get(parentPropId).get(propName));
-        VariableContext.lookup(_ecfInBufLoc).get(parentPropId).get(propName).set(Value.nullValue());
-        for (int%sv1 = 1; (%sv1 >= VariableContext.lookup(varName).get(0)); %sv1 ++) {
+        VariableContext.lookup(varName).set(VariableContext.lookup($ecfInBufLoc).get(parentPropId).get(propName));
+        VariableContext.lookup($ecfInBufLoc).get(parentPropId).get(propName).set(Value.nullValue());
+        for (int $sv1 = 1; ($sv1 >= VariableContext.lookup(varName).get(0)); $sv1 ++) {
             do {
                 while (true) {
-                    _sv2 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv1).get(_sv2));
-                    if (_sv2 == Value.nullValue()) {
+                    $sv2 = Builtin.followingKey(VariableContext.lookup(varName).get($sv1).get($sv2));
+                    if ($sv2 == Value.nullValue()) {
                         return ;
                     }
                     do {
-                        for (int%sv3 = 1; (%sv3 >= VariableContext.lookup(varName).get(_sv1).get(_sv2).get(0)); %sv3 ++) {
+                        for (int $sv3 = 1; ($sv3 >= VariableContext.lookup(varName).get($sv1).get($sv2).get(0)); $sv3 ++) {
                             do {
-                                VariableContext.lookup(varName).get(_sv1).get(_sv2).set((VariableContext.lookup(varName).get(_sv1).get(_sv2)+ VariableContext.lookup(varName).get(_sv1).get(_sv2).get(_sv3)));
-                                VariableContext.lookup(varName).get(_sv1).get(_sv2).get(_sv3).set(Value.nullValue());
+                                VariableContext.lookup(varName).get($sv1).get($sv2).set((VariableContext.lookup(varName).get($sv1).get($sv2)+ VariableContext.lookup(varName).get($sv1).get($sv2).get($sv3)));
+                                VariableContext.lookup(varName).get($sv1).get($sv2).get($sv3).set(Value.nullValue());
                             } while (false);
                         }
-                        VariableContext.lookup(varName).get(_sv1).get(_sv2).get(0).set(Value.nullValue());
+                        VariableContext.lookup(varName).get($sv1).get($sv2).get(0).set(Value.nullValue());
                     } while (false);
                 }
             } while (false);
         }
         while (true) {
-            _sv4 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv4));
-            if (_sv4 == Value.nullValue()) {
+            $sv4 = Builtin.followingKey(VariableContext.lookup(varName).get($sv4));
+            if ($sv4 == Value.nullValue()) {
                 return ;
             }
             while (true) {
-                _sv2 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv4).get(_sv2));
-                if (_sv2 == Value.nullValue()) {
+                $sv2 = Builtin.followingKey(VariableContext.lookup(varName).get($sv4).get($sv2));
+                if ($sv2 == Value.nullValue()) {
                     return ;
                 }
-                if (!Reflect.dataType(VariableContext.lookup(varName).get(0).get(_sv2))) {
-                    VariableContext.lookup(varName).get(0).get(_sv2).set(Math.increment(VariableContext.lookup(varName).get(0)));
+                if (!Reflect.dataType(VariableContext.lookup(varName).get(0).get($sv2))) {
+                    VariableContext.lookup(varName).get(0).get($sv2).set(Math.increment(VariableContext.lookup(varName).get(0)));
                 }
             }
         }
@@ -446,83 +437,83 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFNew(final Value propName, final Value parentPropId, final Value propStore, final Value merge, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFNewGlobal();
+                EGECFUTL.$zzECFNewGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
-        _ecfFtrs.set((_ecfFtrs + 1));
-        _sv1 .set(_ecfFtrs);
+        enc.set(($ecfEncrypt||enc));
+        $ecfFtrs.set(($ecfFtrs + 1));
+        $sv1 .set($ecfFtrs);
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         if (enc) {
-            _.set(zcrypt(propName, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), propName));
+            $.set(zcrypt(propName, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), propName));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(propName))+ 12)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length(propName))+ 12)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +((((((Text.character(2)+ Text.character(((propStore == "S")? 0 :((propStore == "A")? 16 :((propStore == "L")? 16 :((propStore == "D")? 32 :(true? 0 :Value.nullValue())))))))+ Text.character(((merge* 64)+(enc* 128))))+ zchrL(_sv1))+ zchrL(parentPropId))+ Text.character(Text.length(propName)))+ propName));
-        return _sv1;
+        $ecfOutBuf = ($ecfOutBuf +((((((Text.character(2)+ Text.character(((propStore == "S")? 0 :((propStore == "A")? 16 :((propStore == "L")? 16 :((propStore == "D")? 32 :(true? 0 :Value.nullValue())))))))+ Text.character(((merge* 64)+(enc* 128))))+ zchrL($sv1))+ zchrL(parentPropId))+ Text.character(Text.length(propName)))+ propName));
+        return $sv1;
     }
 
     /**
      * 
      */
-    public Value zECFNewElmtObj(final boolean containerPropId, final Value key, final Value enc) {
-        if (_ecfMode == (- 1)) {
+    public Value zECFNewElmtObj(final Value containerPropId, final Value key, final Value enc) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFNewElmtObjGlobal();
+                EGECFUTL.$zzECFNewElmtObjGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
-        _ecfFtrs.set((_ecfFtrs + 1));
-        _sv1 .set(_ecfFtrs);
+        enc.set(($ecfEncrypt||enc));
+        $ecfFtrs.set(($ecfFtrs + 1));
+        $sv1 .set($ecfFtrs);
         if (enc) {
-            if (Text.follows(Object.toString(), Object.toString())) {
-                _.set(zcrypt(key, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), key));
+            if (Text.follows(key.toString(), Value.nullValue().toString())) {
+                $.set(zcrypt(key, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), key));
             }
         }
-        if ((Text.length(_ecfOutBuf)+(Text.follows(Object.toString(), Object.toString())?(Text.length(key)+ 12):(true? 11 :Value.nullValue())))>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if ((Text.length($ecfOutBuf)+(Text.follows(key.toString(), Value.nullValue().toString())?(Text.length(key)+ 12):(true? 11 :Value.nullValue())))>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _ecfOutBuf = (_ecfOutBuf +((((((Text.character(2)+ Text.character(2))+ Text.character((enc* 128)))+ zchrL(_sv1))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key));
+        if (Text.follows(key.toString(), Value.nullValue().toString())) {
+            $ecfOutBuf = ($ecfOutBuf +((((((Text.character(2)+ Text.character(2))+ Text.character((enc* 128)))+ zchrL($sv1))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key));
         } else {
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(2)+ Text.character(1))+ Text.character((enc* 128)))+ zchrL(_sv1))+ zchrL(containerPropId)));
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(2)+ Text.character(1))+ Text.character((enc* 128)))+ zchrL($sv1))+ zchrL(containerPropId)));
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
      * 
      */
     public Value zECFReset(final boolean propName, final Value parentPropId, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFResetGlobal();
+                EGECFUTL.$zzECFResetGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
+        enc.set(($ecfEncrypt||enc));
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         if (enc) {
-            if (Text.follows(Object.toString(), Object.toString())) {
-                _.set(zcrypt(propName, _ecfToken, (ju()+ _ecfToken), propName));
+            if (Text.follows(propName.toString(), Value.nullValue().toString())) {
+                $.set(zcrypt(propName, $ecfToken, (ju()+ $ecfToken), propName));
             }
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(propName))+ 8)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length(propName))+ 8)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(3)+ Text.character(0))+ Text.character(0))+ zchrL(parentPropId))+ Text.character(Text.length(propName)))+ propName));
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(3)+ Text.character(0))+ Text.character(0))+ zchrL(parentPropId))+ Text.character(Text.length(propName)))+ propName));
         return  1;
     }
 
@@ -530,95 +521,95 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFNewCol(final boolean tableId, final Value columnName, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFNewColGlobal();
+                EGECFUTL.$zzECFNewColGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
-        _ecfFtrs.get(tableId).set((_ecfFtrs + 1));
-        _sv1 .set(_ecfFtrs);
+        enc.set(($ecfEncrypt||enc));
+        $ecfFtrs.get(tableId).set(($ecfFtrs + 1));
+        $sv1 .set($ecfFtrs);
         if (enc) {
-            _.set(zcrypt(columnName, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), columnName));
+            $.set(zcrypt(columnName, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), columnName));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(columnName))+ 10)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length(columnName))+ 10)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +((((((Text.character(1)+ Text.character(0))+ Text.character(0))+ zchrL(tableId))+ zchrW(_sv1))+ Text.character(Text.length(columnName)))+ columnName));
-        return _sv1;
+        $ecfOutBuf = ($ecfOutBuf +((((((Text.character(1)+ Text.character(0))+ Text.character(0))+ zchrL(tableId))+ zchrW($sv1))+ Text.character(Text.length(columnName)))+ columnName));
+        return $sv1;
     }
 
     /**
      * 
      */
     public Value zECFSet(final Value propNameOrId, final Value value, final Value parentPropId, final Value enc) {
-        _sv1 .set(propNameOrId);
-        if (_ecfMode == (- 1)) {
+        $sv1 .set(propNameOrId);
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFSetGlobal();
+                EGECFUTL.$zzECFSetGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
-        if (_sv1 == propNameOrId) {
+        enc.set(($ecfEncrypt||enc));
+        if ($sv1 == propNameOrId) {
             try {
-                _zzECFSetValSwitch();
+                $zzECFSetValSwitch();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfFtrs.set((_ecfFtrs + 1));
-        _sv1 .set(_ecfFtrs);
+        $ecfFtrs.set(($ecfFtrs + 1));
+        $sv1 .set($ecfFtrs);
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         if (enc) {
-            _.set(zcrypt(propNameOrId, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), propNameOrId));
+            $.set(zcrypt(propNameOrId, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), propNameOrId));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(propNameOrId))+ 12)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length(propNameOrId))+ 12)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +((((((Text.character(2)+ Text.character(0))+ Text.character((enc* 128)))+ zchrL(_sv1))+ zchrL(parentPropId))+ Text.character(Text.length(propNameOrId)))+ propNameOrId));
-        _zzECFSetValSwitch:
+        $ecfOutBuf = ($ecfOutBuf +((((((Text.character(2)+ Text.character(0))+ Text.character((enc* 128)))+ zchrL($sv1))+ zchrL(parentPropId))+ Text.character(Text.length(propNameOrId)))+ propNameOrId));
+        $zzECFSetValSwitch:
         if (enc) {
             try {
-                _zzECFSetValEnc();
+                $zzECFSetValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _zzECFSetVal:
-        _sv2 .set(Value.nullValue());
-        _sv3 = Text.length(value);
-        if (_sv3 == 0) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+        $zzECFSetVal:
+        $sv2 .set(Value.nullValue());
+        $sv3 = Text.length(value);
+        if ($sv3 == 0) {
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(0)));
-            return _sv1;
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW(0)));
+            return $sv1;
         }
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 9)>= _ecfPckSz) {
-            _sv4 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 8));
-            _sv2 .set(Text.extractAssign(value, (_sv4 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv4));
-            _sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 9)>= $ecfPckSz) {
+            $sv4 .set((($ecfPckSz-Text.length($ecfOutBuf))- 8));
+            $sv2 = Text.extract(value, ($sv4 + 1), 999999999);
+            value = Text.extract(value, 1, $sv4);
+            $sv3 = Text.length(value);
         }
-        if ((_sv3 > 0)||(Text.length(_sv2) == 0)) {
-            _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(_sv3))+ value));
+        if (($sv3 > 0)||(Text.length($sv2) == 0)) {
+            $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW($sv3))+ value));
         }
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetVal();
+                $zzECFSetVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
@@ -631,78 +622,78 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFSetValSwitch() {
+    public Value $zzECFSetValSwitch() {
         if (enc) {
             try {
-                _zzECFSetValEnc();
+                $zzECFSetValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _zzECFSetVal:
-        _sv2 .set(Value.nullValue());
-        _sv3 = Text.length(value);
-        if (_sv3 == 0) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+        $zzECFSetVal:
+        $sv2 .set(Value.nullValue());
+        $sv3 = Text.length(value);
+        if ($sv3 == 0) {
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(0)));
-            return _sv1;
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW(0)));
+            return $sv1;
         }
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 9)>= _ecfPckSz) {
-            _sv4 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 8));
-            _sv2 .set(Text.extractAssign(value, (_sv4 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv4));
-            _sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 9)>= $ecfPckSz) {
+            $sv4 .set((($ecfPckSz-Text.length($ecfOutBuf))- 8));
+            $sv2 = Text.extract(value, ($sv4 + 1), 999999999);
+            value = Text.extract(value, 1, $sv4);
+            $sv3 = Text.length(value);
         }
-        if ((_sv3 > 0)||(Text.length(_sv2) == 0)) {
-            _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(_sv3))+ value));
+        if (($sv3 > 0)||(Text.length($sv2) == 0)) {
+            $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW($sv3))+ value));
         }
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetVal();
+                $zzECFSetVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetVal() {
-        _sv2 .set(Value.nullValue());
-        _sv3 = Text.length(value);
-        if (_sv3 == 0) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+    public Value $zzECFSetVal() {
+        $sv2 .set(Value.nullValue());
+        $sv3 = Text.length(value);
+        if ($sv3 == 0) {
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(0)));
-            return _sv1;
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW(0)));
+            return $sv1;
         }
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 9)>= _ecfPckSz) {
-            _sv4 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 8));
-            _sv2 .set(Text.extractAssign(value, (_sv4 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv4));
-            _sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 9)>= $ecfPckSz) {
+            $sv4 .set((($ecfPckSz-Text.length($ecfOutBuf))- 8));
+            $sv2 = Text.extract(value, ($sv4 + 1), 999999999);
+            value = Text.extract(value, 1, $sv4);
+            $sv3 = Text.length(value);
         }
-        if ((_sv3 > 0)||(Text.length(_sv2) == 0)) {
-            _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL(_sv1))+ zchrW(_sv3))+ value));
+        if (($sv3 > 0)||(Text.length($sv2) == 0)) {
+            $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(0))+ zchrL($sv1))+ zchrW($sv3))+ value));
         }
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetVal();
+                $zzECFSetVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
@@ -718,99 +709,99 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFSetValEnc() {
+    public Value $zzECFSetValEnc() {
         if (Text.length(value) == 0) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(128))+ zchrL(_sv1))+ zchrW(0)));
-            return _sv1;
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(0))+ Text.character(128))+ zchrL($sv1))+ zchrW(0)));
+            return $sv1;
         }
-        _sv2 .set(Value.nullValue());
-        _sv5 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 9));
-        _sv5 .set((_sv5 -(_sv5 % 4)));
-        _sv3 .set((_sv5 -(_sv5 / 32.0D)));
-        _sv3 .set((_sv3 /(4 * 3)));
-        if (Text.length(value)>_sv3) {
-            _sv2 .set(Text.extractAssign(value, (_sv3 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv3));
+        $sv2 .set(Value.nullValue());
+        $sv5 .set((($ecfPckSz-Text.length($ecfOutBuf))- 9));
+        $sv5 .set(($sv5 -($sv5 % 4)));
+        $sv3 .set(($sv5 -($sv5 / 32.0D)));
+        $sv3 .set(($sv3 /(4 * 3)));
+        if (Text.length(value)>$sv3) {
+            $sv2 = Text.extract(value, ($sv3 + 1), 999999999);
+            value = Text.extract(value, 1, $sv3);
         }
-        if ((_sv3 > 0)||(Text.length(_sv2) == 0)) {
-            _.set(zcrypt(value, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), value));
-            value.set(Text.extractAssign(value, 1, (Text.length(value)- 1)));
-            _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(128))+ zchrL(_sv1))+ zchrW(Text.length(value)))+ value));
+        if (($sv3 > 0)||(Text.length($sv2) == 0)) {
+            $.set(zcrypt(value, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), value));
+            value = Text.extract(value, 1, (Text.length(value)- 1));
+            $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(0))+ Text.character(128))+ zchrL($sv1))+ zchrW(Text.length(value)))+ value));
         }
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetValEnc();
+                $zzECFSetValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        return _sv1;
+        return $sv1;
     }
 
     /**
      * 
      */
     public Value zECFSetElmt(final boolean containerPropId, final Value value, final Value key, final Value appendToPrevious, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFSetElmtGlobal();
+                EGECFUTL.$zzECFSetElmtGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
+        enc.set(($ecfEncrypt||enc));
         if ((!enc)&&(key == Value.nullValue())) {
             try {
-                _zzECFSetElmtArrVal();
+                $zzECFSetElmtArrVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
         if (!enc) {
             try {
-                _zzECFSetElmtDctVal();
+                $zzECFSetElmtDctVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
         if (key == Value.nullValue()) {
             try {
-                _zzECFSetElmtArrValEnc();
+                $zzECFSetElmtArrValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _.set(zcrypt(key, _ecfToken, (ju()+ _ecfToken), key));
-        _zzECFSetElmtDctValEnc:
+        $.set(zcrypt(key, $ecfToken, (ju()+ $ecfToken), key));
+        $zzECFSetElmtDctValEnc:
         if (!Text.length(value)) {
-            if (((Text.length(_ecfOutBuf)+ Text.length(key))+ 10)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+            if (((Text.length($ecfOutBuf)+ Text.length(key))+ 10)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
+            $ecfOutBuf = ($ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
             return containerPropId;
         }
-        _sv2 .set(Value.nullValue());
-        _sv5 .set((((_ecfPckSz-Text.length(_ecfOutBuf))-Text.length(key))- 9));
-        _sv5 .set((_sv5 -(_sv5 % 4)));
-        _sv3 .set((_sv5 -(_sv5 / 32.0D)));
-        _sv3 .set((_sv3 /(4 * 3)));
-        if (Text.length(value)>_sv3) {
-            _sv2 .set(Text.extractAssign(value, (_sv3 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv3));
+        $sv2 .set(Value.nullValue());
+        $sv5 .set(((($ecfPckSz-Text.length($ecfOutBuf))-Text.length(key))- 9));
+        $sv5 .set(($sv5 -($sv5 % 4)));
+        $sv3 .set(($sv5 -($sv5 / 32.0D)));
+        $sv3 .set(($sv3 /(4 * 3)));
+        if (Text.length(value)>$sv3) {
+            $sv2 = Text.extract(value, ($sv3 + 1), 999999999);
+            value = Text.extract(value, 1, $sv3);
         }
-        _.set(zcrypt(value, _ecfToken, (ju()+ _ecfToken), value));
-        value.set(Text.extractAssign(value, 1, (Text.length(value)- 1)));
-        _ecfOutBuf = (_ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(Text.length(value)))+ value));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        $.set(zcrypt(value, $ecfToken, (ju()+ $ecfToken), value));
+        value = Text.extract(value, 1, (Text.length(value)- 1));
+        $ecfOutBuf = ($ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(Text.length(value)))+ value));
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetElmtDctValEnc();
+                $zzECFSetElmtDctValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
@@ -832,31 +823,31 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFSetElmtDctValEnc() {
+    public Value $zzECFSetElmtDctValEnc() {
         if (!Text.length(value)) {
-            if (((Text.length(_ecfOutBuf)+ Text.length(key))+ 10)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+            if (((Text.length($ecfOutBuf)+ Text.length(key))+ 10)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
+            $ecfOutBuf = ($ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
             return containerPropId;
         }
-        _sv2 .set(Value.nullValue());
-        _sv5 .set((((_ecfPckSz-Text.length(_ecfOutBuf))-Text.length(key))- 9));
-        _sv5 .set((_sv5 -(_sv5 % 4)));
-        _sv3 .set((_sv5 -(_sv5 / 32.0D)));
-        _sv3 .set((_sv3 /(4 * 3)));
-        if (Text.length(value)>_sv3) {
-            _sv2 .set(Text.extractAssign(value, (_sv3 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv3));
+        $sv2 .set(Value.nullValue());
+        $sv5 .set(((($ecfPckSz-Text.length($ecfOutBuf))-Text.length(key))- 9));
+        $sv5 .set(($sv5 -($sv5 % 4)));
+        $sv3 .set(($sv5 -($sv5 / 32.0D)));
+        $sv3 .set(($sv3 /(4 * 3)));
+        if (Text.length(value)>$sv3) {
+            $sv2 = Text.extract(value, ($sv3 + 1), 999999999);
+            value = Text.extract(value, 1, $sv3);
         }
-        _.set(zcrypt(value, _ecfToken, (ju()+ _ecfToken), value));
-        value.set(Text.extractAssign(value, 1, (Text.length(value)- 1)));
-        _ecfOutBuf = (_ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(Text.length(value)))+ value));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        $.set(zcrypt(value, $ecfToken, (ju()+ $ecfToken), value));
+        value = Text.extract(value, 1, (Text.length(value)- 1));
+        $ecfOutBuf = ($ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(128))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(Text.length(value)))+ value));
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetElmtDctValEnc();
+                $zzECFSetElmtDctValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
@@ -868,29 +859,29 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetElmtArrVal() {
-        _sv2 .set(Value.nullValue());
-        _sv3 = Text.length(value);
-        if (_sv3 == 0) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+    public Value $zzECFSetElmtArrVal() {
+        $sv2 .set(Value.nullValue());
+        $sv3 = Text.length(value);
+        if ($sv3 == 0) {
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(16))+ Text.character((appendToPrevious* 64)))+ zchrL(containerPropId))+ zchrW(0)));
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(16))+ Text.character((appendToPrevious* 64)))+ zchrL(containerPropId))+ zchrW(0)));
             return containerPropId;
         }
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 9)>= _ecfPckSz) {
-            _sv4 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 8));
-            _sv2 .set(Text.extractAssign(value, (_sv4 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv4));
-            _sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 9)>= $ecfPckSz) {
+            $sv4 .set((($ecfPckSz-Text.length($ecfOutBuf))- 8));
+            $sv2 = Text.extract(value, ($sv4 + 1), 999999999);
+            value = Text.extract(value, 1, $sv4);
+            $sv3 = Text.length(value);
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(16))+ Text.character((appendToPrevious* 64)))+ zchrL(containerPropId))+ zchrW(_sv3))+ value));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(16))+ Text.character((appendToPrevious* 64)))+ zchrL(containerPropId))+ zchrW($sv3))+ value));
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             appendToPrevious = 1;
             try {
-                _zzECFSetElmtArrVal();
+                $zzECFSetElmtArrVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
@@ -902,28 +893,28 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetElmtDctVal() {
-        _sv2 .set(Value.nullValue());
-        _sv3 = Text.length(value);
-        if (_sv3 == 0) {
-            if (((Text.length(_ecfOutBuf)+ Text.length(key))+ 10)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+    public Value $zzECFSetElmtDctVal() {
+        $sv2 .set(Value.nullValue());
+        $sv3 = Text.length(value);
+        if ($sv3 == 0) {
+            if (((Text.length($ecfOutBuf)+ Text.length(key))+ 10)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(0))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
+            $ecfOutBuf = ($ecfOutBuf +((((((Text.character(0)+ Text.character(32))+ Text.character(0))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(0)));
             return containerPropId;
         }
-        if ((((Text.length(_ecfOutBuf)+ _sv3)+ Text.length(key))+ 10)>= _ecfPckSz) {
-            _sv4 .set((((_ecfPckSz-Text.length(_ecfOutBuf))-Text.length(key))- 9));
-            _sv2 .set(Text.extractAssign(value, (_sv4 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv4));
-            _sv3 = Text.length(value);
+        if ((((Text.length($ecfOutBuf)+ $sv3)+ Text.length(key))+ 10)>= $ecfPckSz) {
+            $sv4 .set(((($ecfPckSz-Text.length($ecfOutBuf))-Text.length(key))- 9));
+            $sv2 = Text.extract(value, ($sv4 + 1), 999999999);
+            value = Text.extract(value, 1, $sv4);
+            $sv3 = Text.length(value);
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(0))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW(_sv3))+ value));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        $ecfOutBuf = ($ecfOutBuf +(((((((Text.character(0)+ Text.character(32))+ Text.character(0))+ zchrL(containerPropId))+ Text.character(Text.length(key)))+ key)+ zchrW($sv3))+ value));
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             try {
-                _zzECFSetElmtDctVal();
+                $zzECFSetElmtDctVal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
@@ -945,32 +936,32 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFSetElmtArrValEnc() {
+    public Value $zzECFSetElmtArrValEnc() {
         if (!Text.length(value)) {
-            if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-                _.set(zECFSndRsltPckt());
+            if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+                $.set(zECFSndRsltPckt());
             }
-            _ecfOutBuf = (_ecfOutBuf +((((Text.character(0)+ Text.character(16))+ Text.character((128 +(appendToPrevious* 64))))+ zchrL(containerPropId))+ zchrW(0)));
+            $ecfOutBuf = ($ecfOutBuf +((((Text.character(0)+ Text.character(16))+ Text.character((128 +(appendToPrevious* 64))))+ zchrL(containerPropId))+ zchrW(0)));
             return containerPropId;
         }
-        _sv2 .set(Value.nullValue());
-        _sv5 .set(((_ecfPckSz-Text.length(_ecfOutBuf))- 8));
-        _sv5 .set((_sv5 -(_sv5 % 4)));
-        _sv3 .set((_sv5 -(_sv5 / 32.0D)));
-        _sv3 .set((_sv3 /(4 * 3)));
-        if (Text.length(value)>_sv3) {
-            _sv2 .set(Text.extractAssign(value, (_sv3 + 1), "999999999"));
-            value.set(Text.extractAssign(value, 1, _sv3));
+        $sv2 .set(Value.nullValue());
+        $sv5 .set((($ecfPckSz-Text.length($ecfOutBuf))- 8));
+        $sv5 .set(($sv5 -($sv5 % 4)));
+        $sv3 .set(($sv5 -($sv5 / 32.0D)));
+        $sv3 .set(($sv3 /(4 * 3)));
+        if (Text.length(value)>$sv3) {
+            $sv2 = Text.extract(value, ($sv3 + 1), 999999999);
+            value = Text.extract(value, 1, $sv3);
         }
-        _.set(zcrypt(value, _ecfToken, (ju()+ _ecfToken), value));
-        value.set(Text.extractAssign(value, 1, (Text.length(value)- 1)));
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(0)+ Text.character(16))+ Text.character((128 +(appendToPrevious* 64))))+ zchrL(containerPropId))+ zchrW(Text.length(value)))+ value));
-        if (Text.follows(Object.toString(), Object.toString())) {
-            _.set(zECFSndRsltPckt());
-            value.set(_sv2);
+        $.set(zcrypt(value, $ecfToken, (ju()+ $ecfToken), value));
+        value = Text.extract(value, 1, (Text.length(value)- 1));
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(0)+ Text.character(16))+ Text.character((128 +(appendToPrevious* 64))))+ zchrL(containerPropId))+ zchrW(Text.length(value)))+ value));
+        if (Text.follows($sv2 .toString(), Value.nullValue().toString())) {
+            $.set(zECFSndRsltPckt());
+            value.set($sv2);
             appendToPrevious = 1;
             try {
-                _zzECFSetElmtArrValEnc();
+                $zzECFSetElmtArrValEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
@@ -982,70 +973,70 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFSetRow(final Value tableId, final Value cells, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             try {
-                EGECFUTL._zzECFSetRowGlobal();
+                EGECFUTL.$zzECFSetRowGlobal();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        enc.set((_ecfEncrypt||enc));
-        _sv1 = 0;
-        _sv2 .set(_ecfFtrs);
-        if ((Text.length(_ecfOutBuf)+ 9)>_ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        enc.set(($ecfEncrypt||enc));
+        $sv1 = 0;
+        $sv2 .set($ecfFtrs);
+        if ((Text.length($ecfOutBuf)+ 9)>$ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +(((Text.character(0)+ Text.character(48))+ Text.character((enc* 128)))+ zchrL(tableId)));
+        $ecfOutBuf = ($ecfOutBuf +(((Text.character(0)+ Text.character(48))+ Text.character((enc* 128)))+ zchrL(tableId)));
         if (enc) {
             try {
-                _zzECFSetRowCellEnc();
+                $zzECFSetRowCellEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _zzECFSetRowCell:
-        _sv1 .set((_sv1 + 1));
+        $zzECFSetRowCell:
+        $sv1 .set(($sv1 + 1));
         value.set(cells);
-        _sv3 = Text.length(value);
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 6)>_ecfPckSz) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-            _.set(zECFSndRsltPckt());
+        $sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 6)>$ecfPckSz) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+            $.set(zECFSndRsltPckt());
         } else {
-            _ecfOutBuf = (_ecfOutBuf +((zchrW(_sv1)+ zchrW(_sv3))+ value));
+            $ecfOutBuf = ($ecfOutBuf +((zchrW($sv1)+ zchrW($sv3))+ value));
             try {
-                _zzECFSetRowCellFnsh();
+                $zzECFSetRowCellFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId))+ zchrW(_sv1))+ zchrW(_sv3))+ value);
-        if ((_sv3 + 13)<= _ecfPckSz) {
+        $ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId))+ zchrW($sv1))+ zchrW($sv3))+ value);
+        if (($sv3 + 13)<= $ecfPckSz) {
             try {
-                _zzECFSetRowCellFnsh();
+                $zzECFSetRowCellFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-        _.set(zECFSndRsltPckt());
-        if (_sv1 == _sv2) {
+        $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+        $.set(zECFSndRsltPckt());
+        if ($sv1 == $sv2) {
             try {
-                _zzECFSetRowFnsh();
+                $zzECFSetRowFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId));
-        _zzECFSetRowCellFnsh:
-        if (_sv1 <_sv2) {
+        $ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId));
+        $zzECFSetRowCellFnsh:
+        if ($sv1 <$sv2) {
             try {
-                _zzECFSetRowCell();
+                $zzECFSetRowCell();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
         try {
-            _zzECFSetRowFnsh();
+            $zzECFSetRowFnsh();
         } finally {
             throw new HaltCondition("return from GOTO");
         }
@@ -1055,49 +1046,49 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetRowCell() {
-        _sv1 .set((_sv1 + 1));
+    public Value $zzECFSetRowCell() {
+        $sv1 .set(($sv1 + 1));
         value.set(cells);
-        _sv3 = Text.length(value);
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 6)>_ecfPckSz) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-            _.set(zECFSndRsltPckt());
+        $sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 6)>$ecfPckSz) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+            $.set(zECFSndRsltPckt());
         } else {
-            _ecfOutBuf = (_ecfOutBuf +((zchrW(_sv1)+ zchrW(_sv3))+ value));
+            $ecfOutBuf = ($ecfOutBuf +((zchrW($sv1)+ zchrW($sv3))+ value));
             try {
-                _zzECFSetRowCellFnsh();
+                $zzECFSetRowCellFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId))+ zchrW(_sv1))+ zchrW(_sv3))+ value);
-        if ((_sv3 + 13)<= _ecfPckSz) {
+        $ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId))+ zchrW($sv1))+ zchrW($sv3))+ value);
+        if (($sv3 + 13)<= $ecfPckSz) {
             try {
-                _zzECFSetRowCellFnsh();
+                $zzECFSetRowCellFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-        _.set(zECFSndRsltPckt());
-        if (_sv1 == _sv2) {
+        $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+        $.set(zECFSndRsltPckt());
+        if ($sv1 == $sv2) {
             try {
-                _zzECFSetRowFnsh();
+                $zzECFSetRowFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId));
-        _zzECFSetRowCellFnsh:
-        if (_sv1 <_sv2) {
+        $ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(64))+ zchrL(tableId));
+        $zzECFSetRowCellFnsh:
+        if ($sv1 <$sv2) {
             try {
-                _zzECFSetRowCell();
+                $zzECFSetRowCell();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
         try {
-            _zzECFSetRowFnsh();
+            $zzECFSetRowFnsh();
         } finally {
             throw new HaltCondition("return from GOTO");
         }
@@ -1107,16 +1098,16 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetRowCellFnsh() {
-        if (_sv1 <_sv2) {
+    public Value $zzECFSetRowCellFnsh() {
+        if ($sv1 <$sv2) {
             try {
-                _zzECFSetRowCell();
+                $zzECFSetRowCell();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
         try {
-            _zzECFSetRowFnsh();
+            $zzECFSetRowFnsh();
         } finally {
             throw new HaltCondition("return from GOTO");
         }
@@ -1126,52 +1117,52 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetRowCellEnc() {
-        _sv1 .set((_sv1 + 1));
+    public Value $zzECFSetRowCellEnc() {
+        $sv1 .set(($sv1 + 1));
         value.set(cells);
-        _.set(zcrypt(value, _ecfToken, (ju()+ _ecfToken), value));
-        value.set(Text.extractAssign(value, 1, (Text.length(value)- 1)));
-        _sv3 = Text.length(value);
-        if (((Text.length(_ecfOutBuf)+ _sv3)+ 6)>_ecfPckSz) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-            _.set(zECFSndRsltPckt());
+        $.set(zcrypt(value, $ecfToken, (ju()+ $ecfToken), value));
+        value = Text.extract(value, 1, (Text.length(value)- 1));
+        $sv3 = Text.length(value);
+        if (((Text.length($ecfOutBuf)+ $sv3)+ 6)>$ecfPckSz) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+            $.set(zECFSndRsltPckt());
         } else {
-            _ecfOutBuf = (_ecfOutBuf +((zchrW(_sv1)+ zchrW(Text.length(value)))+ value));
+            $ecfOutBuf = ($ecfOutBuf +((zchrW($sv1)+ zchrW(Text.length(value)))+ value));
             try {
-                _zzECFSetRowCellEncFnsh();
+                $zzECFSetRowCellEncFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(192))+ zchrL(tableId))+ zchrW(_sv1))+ zchrW(_sv3))+ value);
-        if ((_sv3 + 13)<= _ecfPckSz) {
+        $ecfOutBuf = ((((((Text.character(0)+ Text.character(48))+ Text.character(192))+ zchrL(tableId))+ zchrW($sv1))+ zchrW($sv3))+ value);
+        if (($sv3 + 13)<= $ecfPckSz) {
             try {
-                _zzECFSetRowCellEncFnsh();
+                $zzECFSetRowCellEncFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (_ecfOutBuf + zchrW(0));
-        _.set(zECFSndRsltPckt());
-        if (_sv1 == _sv2) {
+        $ecfOutBuf = ($ecfOutBuf + zchrW(0));
+        $.set(zECFSndRsltPckt());
+        if ($sv1 == $sv2) {
             try {
-                _zzECFSetRowFnsh();
+                $zzECFSetRowFnsh();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(192))+ zchrL(tableId));
-        _zzECFSetRowCellEncFnsh:
-        if (_sv1 <_sv2) {
+        $ecfOutBuf = (((Text.character(0)+ Text.character(48))+ Text.character(192))+ zchrL(tableId));
+        $zzECFSetRowCellEncFnsh:
+        if ($sv1 <$sv2) {
             try {
-                _zzECFSetRowCellEnc();
+                $zzECFSetRowCellEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _zzECFSetRowFnsh:
-        if (Text.length(_ecfOutBuf)> 0) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
+        $zzECFSetRowFnsh:
+        if (Text.length($ecfOutBuf)> 0) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
         }
         return  1;
     }
@@ -1182,17 +1173,17 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFSetRowCellEncFnsh() {
-        if (_sv1 <_sv2) {
+    public Value $zzECFSetRowCellEncFnsh() {
+        if ($sv1 <$sv2) {
             try {
-                _zzECFSetRowCellEnc();
+                $zzECFSetRowCellEnc();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _zzECFSetRowFnsh:
-        if (Text.length(_ecfOutBuf)> 0) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
+        $zzECFSetRowFnsh:
+        if (Text.length($ecfOutBuf)> 0) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
         }
         return  1;
     }
@@ -1201,9 +1192,9 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFSetRowFnsh() {
-        if (Text.length(_ecfOutBuf)> 0) {
-            _ecfOutBuf = (_ecfOutBuf + zchrW(0));
+    public Value $zzECFSetRowFnsh() {
+        if (Text.length($ecfOutBuf)> 0) {
+            $ecfOutBuf = ($ecfOutBuf + zchrW(0));
         }
         return  1;
     }
@@ -1212,24 +1203,24 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFStream(final Value data) {
-        if (!_ecfStreamCmd) {
-            _.set(zECFThrow("ECF-INVALID-FUNCTION-CALL", "The zECFStream function can only be used with StreamCommand type ECF commands."));
+        if (!$ecfStreamCmd) {
+            $.set(zECFThrow("ECF-INVALID-FUNCTION-CALL", "The zECFStream function can only be used with StreamCommand type ECF commands."));
             return  0;
         }
-        _zzECFStreamLenChk:
-        _sv1 = Text.length(data);
-        _sv2 = Text.length(_ecfOutBuf);
-        if (((_sv1 + _sv2)+ 5)>_ecfPckSz) {
-            _ecfOutBuf = (_ecfOutBuf + Text.extractAssign(data, 1, ((_ecfPckSz-_sv2)- 5)));
-            data.set(Text.extractAssign(data, ((_ecfPckSz-_sv2)- 4), _sv1));
-            _.set(zECFSndRsltPckt());
+        $zzECFStreamLenChk:
+        $sv1 = Text.length(data);
+        $sv2 = Text.length($ecfOutBuf);
+        if ((($sv1 + $sv2)+ 5)>$ecfPckSz) {
+            $ecfOutBuf = ($ecfOutBuf + Text.extract(data, 1, (($ecfPckSz-$sv2)- 5)));
+            data = Text.extract(data, (($ecfPckSz-$sv2)- 4), $sv1);
+            $.set(zECFSndRsltPckt());
             try {
-                _zzECFStreamLenChk();
+                $zzECFStreamLenChk();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (_ecfOutBuf + data);
+        $ecfOutBuf = ($ecfOutBuf + data);
         return  1;
     }
 
@@ -1240,20 +1231,20 @@ public class Ealibecf1 {
      * 
      * 
      */
-    public Value _zzECFStreamLenChk() {
-        _sv1 = Text.length(data);
-        _sv2 = Text.length(_ecfOutBuf);
-        if (((_sv1 + _sv2)+ 5)>_ecfPckSz) {
-            _ecfOutBuf = (_ecfOutBuf + Text.extractAssign(data, 1, ((_ecfPckSz-_sv2)- 5)));
-            data.set(Text.extractAssign(data, ((_ecfPckSz-_sv2)- 4), _sv1));
-            _.set(zECFSndRsltPckt());
+    public Value $zzECFStreamLenChk() {
+        $sv1 = Text.length(data);
+        $sv2 = Text.length($ecfOutBuf);
+        if ((($sv1 + $sv2)+ 5)>$ecfPckSz) {
+            $ecfOutBuf = ($ecfOutBuf + Text.extract(data, 1, (($ecfPckSz-$sv2)- 5)));
+            data = Text.extract(data, (($ecfPckSz-$sv2)- 4), $sv1);
+            $.set(zECFSndRsltPckt());
             try {
-                _zzECFStreamLenChk();
+                $zzECFStreamLenChk();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _ecfOutBuf = (_ecfOutBuf + data);
+        $ecfOutBuf = ($ecfOutBuf + data);
         return  1;
     }
 
@@ -1261,206 +1252,206 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFMrgOut(final Value propName, final Value parentPropId, final Value varName, final Value dataStore, final Value enc) {
-        _sv6 .set(Value.nullValue());
-        _sv7 .set(Value.nullValue());
-        _sv8 .set(Value.nullValue());
-        _sv9 .set(Value.nullValue());
-        _sv10 .set(Value.nullValue());
-        _sv11 .set(Value.nullValue());
-        enc.set((_ecfEncrypt||enc));
-        _sv6 .set(zECFNew(propName, parentPropId, dataStore, enc));
-        _sv7 = 1;
+        $sv6 .set(Value.nullValue());
+        $sv7 .set(Value.nullValue());
+        $sv8 .set(Value.nullValue());
+        $sv9 .set(Value.nullValue());
+        $sv10 .set(Value.nullValue());
+        $sv11 .set(Value.nullValue());
+        enc.set(($ecfEncrypt||enc));
+        $sv6 .set(zECFNew(propName, parentPropId, dataStore, enc));
+        $sv7 = 1;
         if (dataStore == "D") {
             try {
-                _zzECFMrgOutDct();
+                $zzECFMrgOutDct();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _sv8 = 0;
-        _sv9 = 0;
+        $sv8 = 0;
+        $sv9 = 0;
         if (!Reflect.dataType(VariableContext.lookup(varName).get(1).get(1))) {
             while (true) {
-                _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8));
-                if (_sv8 == Value.nullValue()) {
+                $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8));
+                if ($sv8 == Value.nullValue()) {
                     return ;
                 }
-                _sv9 .set((_sv9 + 1));
-                _sv7 .set(zECFSetElmt(_sv6, VariableContext.lookup(varName).get(_sv8), enc));
-                if (!_sv7) {
+                $sv9 .set(($sv9 + 1));
+                $sv7 .set(zECFSetElmt($sv6, VariableContext.lookup(varName).get($sv8), enc));
+                if (!$sv7) {
                     return ;
                 }
             }
         } else {
             while (true) {
-                _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8));
-                if (_sv8 == Value.nullValue()) {
+                $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8));
+                if ($sv8 == Value.nullValue()) {
                     return ;
                 }
-                _sv9 .set((_sv9 + 1));
-                _sv10 = 0;
-                _sv11 = 0;
+                $sv9 .set(($sv9 + 1));
+                $sv10 = 0;
+                $sv11 = 0;
                 while (true) {
-                    _sv10 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8).get(_sv10));
-                    if (_sv10 == Value.nullValue()) {
+                    $sv10 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8).get($sv10));
+                    if ($sv10 == Value.nullValue()) {
                         return ;
                     }
-                    _sv7 .set(zECFSetElmt(_sv6, VariableContext.lookup(varName).get(_sv8).get(_sv10), _sv11, enc));
-                    _sv11 = 1;
-                    if (!_sv7) {
+                    $sv7 .set(zECFSetElmt($sv6, VariableContext.lookup(varName).get($sv8).get($sv10), $sv11, enc));
+                    $sv11 = 1;
+                    if (!$sv7) {
                         return ;
                     }
                 }
             }
         }
         VariableContext.lookup(varName).set(Value.nullValue());
-        return _sv7;
+        return $sv7;
     }
 
     /**
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFMrgOutDct() {
-        _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(Value.nullValue()), (- 1));
-        if (_sv8 == Value.nullValue()) {
-            return _sv6;
+    public Value $zzECFMrgOutDct() {
+        $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(Value.nullValue()), (- 1));
+        if ($sv8 == Value.nullValue()) {
+            return $sv6;
         }
-        if (!Reflect.dataType(VariableContext.lookup(varName).get(_sv8).get(1))) {
-            _sv8 .set(Value.nullValue());
+        if (!Reflect.dataType(VariableContext.lookup(varName).get($sv8).get(1))) {
+            $sv8 .set(Value.nullValue());
             while (true) {
-                _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8));
-                if (_sv8 == Value.nullValue()) {
+                $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8));
+                if ($sv8 == Value.nullValue()) {
                     return ;
                 }
-                _sv7 .set(zECFSetElmt(_sv6, VariableContext.lookup(varName).get(_sv8), _sv8, enc));
-                if (!_sv7) {
+                $sv7 .set(zECFSetElmt($sv6, VariableContext.lookup(varName).get($sv8), $sv8, enc));
+                if (!$sv7) {
                     return ;
                 }
             }
         } else {
-            _sv8 .set(Value.nullValue());
+            $sv8 .set(Value.nullValue());
             while (true) {
-                _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8));
-                if (_sv8 == Value.nullValue()) {
+                $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8));
+                if ($sv8 == Value.nullValue()) {
                     return ;
                 }
-                _sv10 = 0;
+                $sv10 = 0;
                 while (true) {
-                    _sv10 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8).get(_sv10));
-                    if (_sv10 == Value.nullValue()) {
+                    $sv10 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8).get($sv10));
+                    if ($sv10 == Value.nullValue()) {
                         return ;
                     }
-                    _sv7 .set(zECFSetElmt(_sv6, VariableContext.lookup(varName).get(_sv8).get(_sv10), _sv8, enc));
-                    if (!_sv7) {
+                    $sv7 .set(zECFSetElmt($sv6, VariableContext.lookup(varName).get($sv8).get($sv10), $sv8, enc));
+                    if (!$sv7) {
                         return ;
                     }
                 }
             }
         }
         VariableContext.lookup(varName).set(Value.nullValue());
-        return _sv7;
+        return $sv7;
     }
 
     /**
      * 
      */
     public Value zECFTblMrgOut(final Value propName, final Value parentPropId, final Value varName, final Value enc) {
-        _sv6 .set(Value.nullValue());
-        _sv7 .set(Value.nullValue());
-        _sv8 .set(Value.nullValue());
-        _sv9 .set(Value.nullValue());
-        enc.set((_ecfEncrypt||enc));
-        _sv6 .set(zECFNew(propName, parentPropId, "T", enc));
+        $sv6 .set(Value.nullValue());
+        $sv7 .set(Value.nullValue());
+        $sv8 .set(Value.nullValue());
+        $sv9 .set(Value.nullValue());
+        enc.set(($ecfEncrypt||enc));
+        $sv6 .set(zECFNew(propName, parentPropId, "T", enc));
         while (true) {
-            _sv7 = Builtin.followingKey(VariableContext.lookup(varName).get(0).get(_sv7));
-            if (_sv7 == Value.nullValue()) {
+            $sv7 = Builtin.followingKey(VariableContext.lookup(varName).get(0).get($sv7));
+            if ($sv7 == Value.nullValue()) {
                 return ;
             }
-            VariableContext.lookup(varName).get(0).get(_sv7).set(zECFNewCol(_sv6, _sv7, enc));
+            VariableContext.lookup(varName).get(0).get($sv7).set(zECFNewCol($sv6, $sv7, enc));
         }
-        _sv9 = 1;
-        _sv8 = 0;
+        $sv9 = 1;
+        $sv8 = 0;
         while (true) {
-            _sv8 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8));
-            if (_sv8 == Value.nullValue()) {
+            $sv8 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8));
+            if ($sv8 == Value.nullValue()) {
                 return ;
             }
             do {
                 while (true) {
-                    _sv7 = Builtin.followingKey(VariableContext.lookup(varName).get(_sv8).get(_sv7));
-                    if (_sv7 == Value.nullValue()) {
+                    $sv7 = Builtin.followingKey(VariableContext.lookup(varName).get($sv8).get($sv7));
+                    if ($sv7 == Value.nullValue()) {
                         return ;
                     }
-                    if (Reflect.dataType(VariableContext.lookup(varName).get(_sv8).get(_sv7))) {
-                        cells.get(VariableContext.lookup(varName).get(0).get(_sv7)).set(VariableContext.lookup(varName).get(_sv8).get(_sv7));
+                    if (Reflect.dataType(VariableContext.lookup(varName).get($sv8).get($sv7))) {
+                        cells.get(VariableContext.lookup(varName).get(0).get($sv7)).set(VariableContext.lookup(varName).get($sv8).get($sv7));
                     }
                 }
-                _sv9 .set(zECFSetRow(_sv6, cells, enc));
-                if (!_sv9) {
+                $sv9 .set(zECFSetRow($sv6, cells, enc));
+                if (!$sv9) {
                     return ;
                 }
                 cells.set(Value.nullValue());
-                VariableContext.lookup(varName).get(_sv8).set(Value.nullValue());
+                VariableContext.lookup(varName).get($sv8).set(Value.nullValue());
             } while (false);
-            if (!_sv9) {
+            if (!$sv9) {
                 return ;
             }
         }
         VariableContext.lookup(varName).set(Value.nullValue());
-        return _sv9;
+        return $sv9;
     }
 
     /**
      * 
      */
     public Value zECFNewTbl(final Value propName, final Value parentPropId, final Value colDefs, final Value enc) {
-        _ecfFtrs.set((_ecfFtrs + 1));
-        _sv1 .set(_ecfFtrs);
-        if (_ecfMode == (- 1)) {
-            return _sv1;
+        $ecfFtrs.set(($ecfFtrs + 1));
+        $sv1 .set($ecfFtrs);
+        if ($ecfMode == (- 1)) {
+            return $sv1;
         }
-        enc.set((_ecfEncrypt||enc));
+        enc.set(($ecfEncrypt||enc));
         if (parentPropId == Value.nullValue()) {
             parentPropId = 0;
         }
         if (enc) {
-            _.set(zcrypt(propName, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), propName));
+            $.set(zcrypt(propName, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), propName));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(propName))+ 12)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length(propName))+ 12)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +((((((Text.character(4)+ Text.character(64))+ Text.character((enc* 128)))+ zchrL(_sv1))+ Text.character((Text.length(propName)+ 4)))+ zchrL(parentPropId))+ propName));
-        _sv2 = 0;
-        _zzECFNewTblCol:
-        _sv2 .set((_sv2 + 1));
-        if (_sv2 >colDefs) {
+        $ecfOutBuf = ($ecfOutBuf +((((((Text.character(4)+ Text.character(64))+ Text.character((enc* 128)))+ zchrL($sv1))+ Text.character((Text.length(propName)+ 4)))+ zchrL(parentPropId))+ propName));
+        $sv2 = 0;
+        $zzECFNewTblCol:
+        $sv2 .set(($sv2 + 1));
+        if ($sv2 >colDefs) {
             try {
-                _zzECFNewTblDone();
+                $zzECFNewTblDone();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _sv3 .set(Value.nullValue());
-        _sv4 .set(Value.nullValue());
-        _ecfFtrs.get(_sv1).set(_sv2);
+        $sv3 .set(Value.nullValue());
+        $sv4 .set(Value.nullValue());
+        $ecfFtrs.get($sv1).set($sv2);
         while (true) {
-            _sv3 = Builtin.followingKey(colDefs);
-            if (_sv3 == Value.nullValue()) {
+            $sv3 = Builtin.followingKey(colDefs);
+            if ($sv3 == Value.nullValue()) {
                 return ;
             }
-            _sv5 .set(colDefs);
-            _sv4 = ((((_sv4 + Text.character(Text.length(_sv3)))+ _sv3)+ Text.character(Text.length(_sv5)))+ _sv5);
+            $sv5 .set(colDefs);
+            $sv4 = (((($sv4 + Text.character(Text.length($sv3)))+ $sv3)+ Text.character(Text.length($sv5)))+ $sv5);
         }
         if (enc) {
-            _.set(zcrypt(_sv4, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), _sv4));
+            $.set(zcrypt($sv4, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), $sv4));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(_sv4))+ 9)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length($sv4))+ 9)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(20)+ Text.character(80))+ Text.character((enc* 128)))+ zchrL(_sv1))+ zchrW(Text.length(_sv4)))+ _sv4));
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(20)+ Text.character(80))+ Text.character((enc* 128)))+ zchrL($sv1))+ zchrW(Text.length($sv4)))+ $sv4));
         try {
-            _zzECFNewTblCol();
+            $zzECFNewTblCol();
         } finally {
             throw new HaltCondition("return from GOTO");
         }
@@ -1470,35 +1461,35 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFNewTblCol() {
-        _sv2 .set((_sv2 + 1));
-        if (_sv2 >colDefs) {
+    public Value $zzECFNewTblCol() {
+        $sv2 .set(($sv2 + 1));
+        if ($sv2 >colDefs) {
             try {
-                _zzECFNewTblDone();
+                $zzECFNewTblDone();
             } finally {
                 throw new HaltCondition("return from GOTO");
             }
         }
-        _sv3 .set(Value.nullValue());
-        _sv4 .set(Value.nullValue());
-        _ecfFtrs.get(_sv1).set(_sv2);
+        $sv3 .set(Value.nullValue());
+        $sv4 .set(Value.nullValue());
+        $ecfFtrs.get($sv1).set($sv2);
         while (true) {
-            _sv3 = Builtin.followingKey(colDefs);
-            if (_sv3 == Value.nullValue()) {
+            $sv3 = Builtin.followingKey(colDefs);
+            if ($sv3 == Value.nullValue()) {
                 return ;
             }
-            _sv5 .set(colDefs);
-            _sv4 = ((((_sv4 + Text.character(Text.length(_sv3)))+ _sv3)+ Text.character(Text.length(_sv5)))+ _sv5);
+            $sv5 .set(colDefs);
+            $sv4 = (((($sv4 + Text.character(Text.length($sv3)))+ $sv3)+ Text.character(Text.length($sv5)))+ $sv5);
         }
         if (enc) {
-            _.set(zcrypt(_sv4, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), _sv4));
+            $.set(zcrypt($sv4, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), $sv4));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(_sv4))+ 9)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length($sv4))+ 9)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(20)+ Text.character(80))+ Text.character((enc* 128)))+ zchrL(_sv1))+ zchrW(Text.length(_sv4)))+ _sv4));
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(20)+ Text.character(80))+ Text.character((enc* 128)))+ zchrL($sv1))+ zchrW(Text.length($sv4)))+ $sv4));
         try {
-            _zzECFNewTblCol();
+            $zzECFNewTblCol();
         } finally {
             throw new HaltCondition("return from GOTO");
         }
@@ -1508,37 +1499,37 @@ public class Ealibecf1 {
      * IllegalStateException: block (depth:-1) concluded without starting a new line
      * 
      */
-    public Value _zzECFNewTblDone() {
-        _sv4 .set(Value.nullValue());
-        _sv5 .set(Value.nullValue());
-        return _sv1;
+    public Value $zzECFNewTblDone() {
+        $sv4 .set(Value.nullValue());
+        $sv5 .set(Value.nullValue());
+        return $sv1;
     }
 
     /**
      * 
      */
     public Value zECFSetTblPrms(final Value tblId, final Value params, final Value enc) {
-        if (_ecfMode == (- 1)) {
+        if ($ecfMode == (- 1)) {
             return  0;
         }
-        enc.set((_ecfEncrypt||enc));
-        _sv3 .set(Value.nullValue());
-        _sv4 .set(Value.nullValue());
+        enc.set(($ecfEncrypt||enc));
+        $sv3 .set(Value.nullValue());
+        $sv4 .set(Value.nullValue());
         while (true) {
-            _sv3 = Builtin.followingKey(params);
-            if (_sv3 == Value.nullValue()) {
+            $sv3 = Builtin.followingKey(params);
+            if ($sv3 == Value.nullValue()) {
                 return ;
             }
-            _sv5 .set(params);
-            _sv4 = ((((_sv4 + Text.character(Text.length(_sv3)))+ _sv3)+ Text.character(Text.length(_sv5)))+ _sv5);
+            $sv5 .set(params);
+            $sv4 = (((($sv4 + Text.character(Text.length($sv3)))+ $sv3)+ Text.character(Text.length($sv5)))+ $sv5);
         }
         if (enc) {
-            _.set(zcrypt(_sv4, _ecfToken, (ju()+ _ecfToken), Value.nullValue(), Value.nullValue(), _sv4));
+            $.set(zcrypt($sv4, $ecfToken, (ju()+ $ecfToken), Value.nullValue(), Value.nullValue(), $sv4));
         }
-        if (((Text.length(_ecfOutBuf)+ Text.length(_sv4))+ 9)>= _ecfPckSz) {
-            _.set(zECFSndRsltPckt());
+        if (((Text.length($ecfOutBuf)+ Text.length($sv4))+ 9)>= $ecfPckSz) {
+            $.set(zECFSndRsltPckt());
         }
-        _ecfOutBuf = (_ecfOutBuf +(((((Text.character(20)+ Text.character(96))+ Text.character((enc* 128)))+ zchrL(tblId))+ zchrW(Text.length(_sv4)))+ _sv4));
+        $ecfOutBuf = ($ecfOutBuf +(((((Text.character(20)+ Text.character(96))+ Text.character((enc* 128)))+ zchrL(tblId))+ zchrW(Text.length($sv4)))+ $sv4));
         return  1;
     }
 
@@ -1556,20 +1547,20 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFSndRsltPckt() {
-        if (_ecfAsync) {
+        if ($ecfAsync) {
             return  0;
         }
-        _ecfOutBuf = ("L"+ _ecfOutBuf);
+        $ecfOutBuf = ("L"+ $ecfOutBuf);
         ReadWrite.use(zECFTCPDev());
-        ReadWrite.write(zchrW(0), zchrW(Text.length(_ecfOutBuf)), _ecfOutBuf);
+        ReadWrite.write(zchrW(0), zchrW(Text.length($ecfOutBuf)), $ecfOutBuf);
         ReadWrite.use(zUniqNullDev());
-        if (_ecfDbg) {
-            EGECFS2 .lgRespLn(_elogID, "Body", _ecfOutBuf);
+        if ($ecfDbg) {
+            EGECFS2 .lgRespLn($elogID, "Body", $ecfOutBuf);
         }
-        if (_EA) {
-            EGEI.logPacket("RESP", (Text.length(_ecfOutBuf)+ 4));
+        if ($EA) {
+            EGEI.logPacket("RESP", (Text.length($ecfOutBuf)+ 4));
         }
-        _ecfOutBuf.set(Value.nullValue());
+        $ecfOutBuf.set(Value.nullValue());
         return  1;
     }
 
@@ -1577,21 +1568,21 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFTCPDev() {
-        return _ecfCurrTCPdev;
+        return $ecfCurrTCPdev;
     }
 
     /**
      * 
      */
     public Value zShrToStr(final Value short) {
-        return zascW(_short);
+        return zascW(_short_);
     }
 
     /**
      * 
      */
     public Value zIntToStr(final Value int) {
-        return zascL(_int);
+        return zascL(_int_);
     }
 
     /**
@@ -1612,7 +1603,7 @@ public class Ealibecf1 {
      * 
      */
     public Value zECFTmout() {
-        return ((zPerfTimer()<_ecfSrvTmout)? 0 :(true? 1 :Value.nullValue()));
+        return ((zPerfTimer()<$ecfSrvTmout)? 0 :(true? 1 :Value.nullValue()));
     }
 
     /**
@@ -1627,12 +1618,12 @@ public class Ealibecf1 {
         zzCodeLn.set((Reflect.stackInfo((- 1))- 1));
         zzCodeLn = Reflect.stackInfo(zzCodeLn, "PLACE");
         if (!zzNoLog) {
-            _zErrLog(("EGECFS2: <zECFThrow>"+ zzCodeLn), Value.nullValue(), 1, zzErrNum);
+            $zErrLog(("EGECFS2: <zECFThrow>"+ zzCodeLn), Value.nullValue(), 1, zzErrNum);
             zzErrNum = Text.piece(zzErrNum, ",", 2);
         }
         EGECFS2 .sndError(zzErrCode, zzDetails, zzErrNum, zzCodeLn);
-        zzErrCode = ((((Text.extractAssign(zzErrCode, 1, "3") == ",U-")?Value.nullValue():(true?",U-":Value.nullValue()))+ zzErrCode)+((Text.extractAssign(zzErrCode, Text.length(zzErrCode)) == ",")?Value.nullValue():(true?",":Value.nullValue())));
-        _ecfFromThrow = 1;
+        zzErrCode = ((((Text.extract(zzErrCode, 1, 3) == ",U-")?Value.nullValue():(true?",U-":Value.nullValue()))+ zzErrCode)+((Text.extract(zzErrCode, Text.length(zzErrCode)) == ",")?Value.nullValue():(true?",":Value.nullValue())));
+        $ecfFromThrow = 1;
         Builtin.ecode().set(zzErrCode);
         return  1;
     }
