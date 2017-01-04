@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -20,6 +21,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallLis
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
+import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
@@ -84,7 +86,7 @@ public class ExecBuilder extends CommandJavaStatementBuilder {
 			Method method = env().methodFor(routineName, tagName ) ;
 			if ( null != method ) {
 				
-				List<JavaExpression<?>> arguments = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
+				List<Function<Representation, JavaExpression<?>>> arguments = analyze( taggedRoutineCall.arguments() ) ;
 				return JavaInvocation.builder(context())
 						.invoke(method)
 						.supplying( arguments )

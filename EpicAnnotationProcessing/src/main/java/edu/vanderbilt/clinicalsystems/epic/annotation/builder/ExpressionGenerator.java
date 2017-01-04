@@ -263,6 +263,12 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		public Expression visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 			TagReference tagRef ;
 			Expression instance = tools().expressions().generate( memberSelectNode.expression(), listener );
+			
+			/*
+			 * may be an annotated native function
+			 */
+			
+			
 			tagRef = new TagReference( memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName() ) ;
 			return tagRef;
 		}

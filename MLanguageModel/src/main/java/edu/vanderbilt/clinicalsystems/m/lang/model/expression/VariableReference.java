@@ -40,7 +40,13 @@ public abstract class VariableReference extends Expression {
 		return copyWithKeys( parentKeys ) ;
 	}
 	
-	protected abstract VariableReference copyWithKeys(  List<Expression> keys ) ;
+	public VariableReference child( Expression key ) {
+		List<Expression> childKeys = new ArrayList<Expression>( m_keys );
+		childKeys.add( key ) ;
+		return copyWithKeys( childKeys ) ;
+	}
+	
+	protected abstract VariableReference copyWithKeys( List<Expression> keys ) ;
 	
 	public ReferenceStyle referenceStyle() { return m_referenceStyle; }
 	public Iterable<Expression> keys() { return m_keys; }

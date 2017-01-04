@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Command;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
@@ -116,13 +117,21 @@ class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment
 		return methodFor(
 				Function.class,
 				(a,m)->a.value().equals(builtinFunction)
-					&& a.assignment() == forAssignment
+					&& (a.assignment() == forAssignment || Consumer.class.isAssignableFrom( m.getReturnType() ) )
 					&& numberOfParametersMatches(numberOfParameters,m)
 			).orElseThrow(
 				()->new IllegalArgumentException( "method for builtin function \"" + builtinFunction + "\" not present in a library" )
 			) ;
 	}
 	
+	@Override public Method methodForFunctionAssignment() {
+		try {
+			return Consumer.class.getMethod("accept", Object.class );
+		} catch (NoSuchMethodException | SecurityException ex) {
+			throw new RuntimeException(ex) ;
+		}
+	}
+
 	@Override public Method methodFor(BuiltinVariable builtinVariable) {
 		return methodFor(
 				Variable.class,

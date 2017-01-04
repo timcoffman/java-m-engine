@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.DoWhileLoop;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.EmptyStatement;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.MemberSelect;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.MethodResolution;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
@@ -33,6 +33,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableRefe
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
@@ -274,7 +275,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		if ( null != nativeCommandAnnotation ) {
 			switch ( nativeCommandAnnotation.value() ) {
 			case VALUE_ASSIGN:
-				assembleValueAssignment( methodInvocationTarget.declaration(), methodInvocationNode, block ) ;
+				assembleValueAssignment( methodInvocationNode.methodSelect(), methodInvocationNode.arguments().get(0), block ) ;
 				return true ;
 			case EXTENSION:
 				assembleExtension( (ExecutableElement)methodInvocationTarget, methodInvocationNode, block ) ;
@@ -287,17 +288,80 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		return false ;
 	}
 
-	private void assembleValueAssignment(Element methodInvocationTarget, Ast.MethodInvocation methodInvocationNode, Block block) {
+//	private DirectVariableReference assembleDirectVariableReference( Ast.Expression variableProvidingExpression, BlockManager blockManager ) {
+//		DirectVariableReference variableRef = variableProvidingExpression.accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
+//			@Override
+//			public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
+//				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() ) ;
+//			}
+//
+//			@Override
+//			public DirectVariableReference visitMemberSelect( Ast.MemberSelect memberSelectNode, Listener listener) {
+//				Expression instance = tools().expressions().generate( memberSelectNode.expression(), listener ) ;
+//				MethodResolution methodInvocationTarget = tools().resolveMethodInvocationTarget( memberSelectNode );
+//				if ( null == methodInvocationTarget ) {
+//					report( RoutineTools.ReportType.ERROR, "failed to resolve method", methodInvocationNode ) ;
+//					return null ;
+//				}
+//				
+//				NativeFunction nativeFunctionAnnotation = methodInvocationTarget.declaration().getAnnotation( NativeFunction.class ) ;
+//				if ( null == nativeFunctionAnnotation ) {
+//					report(RoutineTools.ReportType.ERROR, "assignment requires a variable", methodInvocationNode);
+//					return null ;
+//				}
+//				if ( NativeFunctionType.VALUE_INDEX != nativeFunctionAnnotation.value() ) {
+//					report(RoutineTools.ReportType.ERROR, "assignment requires indexing a variable", methodInvocationNode);
+//					return null ;
+//				}
+//				Expression key = tools().expressions().generate( methodInvocationNode.arguments().get(0), blockManager );
+//
+//				DirectVariableReference variableRef = assembleDirectVariableReference( methodInvocationNode.methodSelect(), listener );
+//				return (DirectVariableReference)variableRef.child( key ) ;
+//			}
+//
+//			@Override
+//			public DirectVariableReference visitMethodInvocation( Ast.MethodInvocation methodInvocationNode, Listener listener) {
+//				MethodResolution methodInvocationTarget = tools().resolveMethodInvocationTarget( methodInvocationNode );
+//				if ( null == methodInvocationTarget ) {
+//					report( RoutineTools.ReportType.ERROR, "failed to resolve method", methodInvocationNode ) ;
+//					return null ;
+//				}
+//				
+//				NativeFunction nativeFunctionAnnotation = methodInvocationTarget.declaration().getAnnotation( NativeFunction.class ) ;
+//				if ( null == nativeFunctionAnnotation ) {
+//					report(RoutineTools.ReportType.ERROR, "assignment requires a variable", methodInvocationNode);
+//					return null ;
+//				}
+//				if ( NativeFunctionType.VALUE_INDEX != nativeFunctionAnnotation.value() ) {
+//					report(RoutineTools.ReportType.ERROR, "assignment requires indexing a variable", methodInvocationNode);
+//					return null ;
+//				}
+//				Expression key = tools().expressions().generate( methodInvocationNode.arguments().get(0), blockManager );
+//
+//				DirectVariableReference variableRef = assembleDirectVariableReference( methodInvocationNode.methodSelect(), listener );
+//				return (DirectVariableReference)variableRef.child( key ) ;
+//			}
+//		}, blockManager) ;
+//		return variableRef ;
+//	}
+	
+	private void assembleValueAssignment(Ast.Expression target, Ast.Expression sourceArgument, Block block) {
 		try ( BlockManager blockManager = new BlockManager(block) ) {
-			Expression source = tools().expressions().generate( methodInvocationNode.arguments().get(0), blockManager );
-			
-			DirectVariableReference variableRef = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
+			Expression source = tools().expressions().generate( sourceArgument, blockManager );
+			VariableReference variableRef = target.accept( new Ast.Interpreter<VariableReference, Listener>(tools()) {
+
 				@Override
-				public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-					return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() ) ;
+				public VariableReference visitExpression(Ast.Expression expressionNode, Listener listener) {
+					return super.visitExpression(expressionNode, listener);
+				}
+
+				@Override
+				public VariableReference visitMemberSelect( MemberSelect memberSelectNode, Listener listener) {
+					return (VariableReference)tools().expressions().generate( memberSelectNode.expression(), listener ) ;
 				}
 				
-			}, blockManager) ;
+			}, blockManager ) ;
+			
 			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), source) ) ) );
 		}
 	}

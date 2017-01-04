@@ -1,10 +1,13 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
+import java.lang.reflect.Modifier;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.ReportType;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
@@ -31,7 +34,13 @@ public class RoutineGenerator extends Generator<Routine,TypeElement> {
 			final EpicTag epicTag = element.getAnnotation( EpicTag.class ) ;
 			if ( null == epicTag )
 				continue ;
-
+			
+			if ( !element.getModifiers().contains( Modifier.PUBLIC ) )
+				report( ReportType.WARNING, "tagged methods are expected to be public", element);
+			
+			if ( !element.getModifiers().contains( Modifier.STATIC ) )
+				report( ReportType.WARNING, "tagged methods are expected to be static", element);
+			
 			element.accept( new ElementInterpreter<Void, Routine>(tools()) {
 
 				@Override public Void visitExecutable(ExecutableElement executableElement, Routine routine) {

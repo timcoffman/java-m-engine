@@ -8,28 +8,28 @@ CMD: QUIT | (-)
 TAG: forLoopIncrementByOne
 CMD: NEW | i
 CMD: FOR | i := 1:1:10 {
-  CMD: DO | loopBody^WhileLoop/LOCAL( i )
+  CMD: DO | loopBody^WhileLoop( i )
 }
 CMD: QUIT | (-)
 
 TAG: forLoopIncrementByTwo
 CMD: NEW | i
 CMD: FOR | i := 1:2:10 {
-  CMD: DO | loopBody^WhileLoop/LOCAL( i )
+  CMD: DO | loopBody^WhileLoop( i )
 }
 CMD: QUIT | (-)
 
 TAG: forLoopIncrementByOneForever
 CMD: NEW | i
 CMD: FOR | i := 1 {
-  CMD: DO | loopBody^WhileLoop/LOCAL( i )
+  CMD: DO | loopBody^WhileLoop( i )
 }
 CMD: QUIT | (-)
 
 TAG: forLoopIncrementByTwoForever
 CMD: NEW | i
 CMD: FOR | i := 1:2 {
-  CMD: DO | loopBody^WhileLoop/LOCAL( i )
+  CMD: DO | loopBody^WhileLoop( i )
 }
 CMD: QUIT | (-)
 
@@ -37,10 +37,10 @@ TAG: forLoopStopNotIncludedIncrementByOne
 CMD: NEW | i
 CMD: SET | i := 0
 CMD: FOR | (-) {
-  CMD: QUIT : '(i<10) | (-)
+  CMD: QUIT : '( i<10 ) | (-)
   CMD: DO | (-)
   {
-    CMD: DO | loopBody^WhileLoop/LOCAL( i )
+    CMD: DO | loopBody^WhileLoop( i )
     CMD: SET | i := i+1
   }
 }
@@ -50,10 +50,10 @@ TAG: forLoopStopNotIncludedIncrementByTwo
 CMD: NEW | i
 CMD: SET | i := 0
 CMD: FOR | (-) {
-  CMD: QUIT : '(i<10) | (-)
+  CMD: QUIT : '( i<10 ) | (-)
   CMD: DO | (-)
   {
-    CMD: DO | loopBody^WhileLoop/LOCAL( i )
+    CMD: DO | loopBody^WhileLoop( i )
     CMD: SET | i := i+2
   }
 }

@@ -35,6 +35,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableRefe
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	
@@ -89,17 +90,9 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 						.on(VariableContext.class)
 						.invoke("lookup")
 						.accepting( java.lang.String.class )
-						.supplying( build( variable.variableNameProducer(), STRING ) ) 
+						.supplying( (r)->build( variable.variableNameProducer(), STRING ) ) 
 						.build() ;
-
-				Iterator<Expression> keyIterator = variable.keys().iterator();
-				while ( keyIterator.hasNext() )
-					target = JavaInvocation.builder(context())
-						.on( target )
-						.invoke( env().methodFor(VALUE_INDEX) )
-						.supplying( build( keyIterator.next() ) )
-						.build();
-				return target ;
+				return applyKeys(variable,target) ;
 			}
 
 			private JavaExpression<?> literalInteger( Constant constant ) {
@@ -202,9 +195,9 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				case ADD:
 					return build( operation.operand() ) ;
 				case SUBTRACT:
-					return buildOp( operation, JOp::minus, NATIVE, NUMERIC ) ;
+					return buildOp( operation, JOp::minus, NUMERIC, NUMERIC ) ;
 				case NOT:
-					return buildOp( operation, JOp::not, NATIVE, BOOLEAN ) ;
+					return buildOp( operation, JOp::not, BOOLEAN, BOOLEAN ) ;
 				default:
 					throw new UnsupportedOperationException( "operator type \"" + operation.operator() + "\" not supported" ) ;	
 				}
@@ -223,26 +216,26 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				String symbol = context().symbolForIdentifier(tagName);
 				
 				JavaInvocation invocation ;
-				if ( null == routineName || context().outerClassName().equals( context().symbolForIdentifier(routineName) ) ) {
-
+				if ( (null == routineName && m_symbolUsage.declared(symbol,true) || context().outerClassName().equals( context().symbolForIdentifier(routineName) ) ) ) {
+					/* unspecified library and found internal, or specified internal */
+					
 					List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-					if ( m_symbolUsage.declared(symbol,true) ) {
-						m_symbolUsage.usedAs(symbol, expectedRepresentation);
-						Supplier<Optional<Representation>> returningRepresentation = m_symbolUsage.impliedRepresentation(symbol) ;
-						invocation = new JavaInvocation( JExpr.invoke( symbol ), returningRepresentation, parameterRepresentations, null, context() );
-						
-					} else {
-						invocation = new JavaInvocation( JExpr.invoke( symbol ), NATIVE, parameterRepresentations, null, context() );
-					}
-
+					m_symbolUsage.usedAs(symbol, expectedRepresentation);
+					Supplier<Optional<Representation>> returningRepresentation = m_symbolUsage.impliedRepresentation(symbol) ;
+					invocation = new JavaInvocation( JExpr.invoke( symbol ), returningRepresentation, parameterRepresentations, null, context() );
+					
 				} else {
+					/* expected external */
 					
 					Method method = env().methodFor(routineName, tagName ) ;
 					if ( null != method ) {
 						invocation = JavaInvocation.builder(context()).invoke(method).build();
-					} else {
+					} else if ( null != routineName ) {
 						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
 						invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( symbol ), NATIVE, parameterRepresentations, null, context() );
+					} else {
+						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
+						invocation = new JavaInvocation( JExpr.invoke( symbol ), NATIVE, parameterRepresentations, null, context() );
 					}
 					
 				}
@@ -279,10 +272,10 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 		return invocation ;
 	}
 	
-	private JavaInvocation builtinExpr( OperatorType symbol, JavaExpression<?> ... arguments ) {
+	private JavaInvocation builtinExpr( OperatorType symbol, JavaExpression<?> argument1, JavaExpression<?> argument2 ) {
 		return JavaInvocation.builder(context())
 				.invoke( env().methodFor( symbol ) )
-				.supplying( arguments )
+				.supplying( (r)->argument1, (r)->argument2 )
 				.build();
 	}
 	
@@ -315,4 +308,35 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 		}) ;
 	}
 
+	public KeyApplier keyApplier( VariableReference variable ) {
+		return new KeyApplierImpl(variable) ;
+	}
+
+	public JavaExpression<?> applyKeys( VariableReference variable, JavaExpression<?> target ) {
+		return keyApplier(variable).apply(target) ;
+	}
+	
+	public interface KeyApplier {
+		boolean hasKeys() ;
+		JavaExpression<?> apply( JavaExpression<?> target );
+	}
+	
+	private class KeyApplierImpl implements KeyApplier {
+		private List<JavaExpression<?>> m_keys;
+		public KeyApplierImpl( VariableReference variable ) {
+			m_keys = StreamSupport.stream(variable.keys().spliterator(),true).map( (e)->build(e,STRING) ).collect( Collectors.toList() ) ;
+		}
+		@Override
+		public boolean hasKeys() { return !m_keys.isEmpty() ; }
+		@Override
+		public JavaExpression<?> apply( JavaExpression<?> target ) {
+			return m_keys.stream().reduce( target, (t,k)->
+				JavaInvocation.builder(context())
+					.on( t )
+					.invoke( env().methodFor(VALUE_INDEX) )
+					.supplying( (r)->k )
+					.build()
+			) ;
+		}
+	}
 }

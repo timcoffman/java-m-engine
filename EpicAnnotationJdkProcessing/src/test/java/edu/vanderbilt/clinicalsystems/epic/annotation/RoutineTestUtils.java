@@ -53,7 +53,7 @@ public class RoutineTestUtils {
 		destinationDir.mkdir() ;
 		File packageDir = findOutputFolder( destinationDir, m_resourceBase.getPackage().getName() );
 		try {
-			URL sourceResource = m_resourceBase.getResource( name + ".java");
+			URL sourceResource = m_resourceBase.getResource( name + ".java" );
 			if ( null == sourceResource )
 				throw new IOException("source resource (" + name + ".java) is not available for testing" ) ;
 			process( sourceResource, destinationDir ) ;

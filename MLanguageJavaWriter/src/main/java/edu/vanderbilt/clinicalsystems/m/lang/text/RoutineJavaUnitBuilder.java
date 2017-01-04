@@ -8,12 +8,23 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
 public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
 
+	private final JavaMethodContents m_methodContents ;
+
 	public RoutineJavaUnitBuilder() {
-		super( new RoutineJavaBuilderContextImpl( new JCodeModel() ) ) ;
+		this( new JCodeModel() ) ;
+	}
+	
+	public RoutineJavaUnitBuilder( JavaMethodContents methodContents ) {
+		this( new JCodeModel(), methodContents ) ;
 	}
 	
 	public RoutineJavaUnitBuilder( JCodeModel codeModel ) {
+		this( codeModel, JavaMethodContents.EXECUTABLE ) ;
+	}
+	
+	public RoutineJavaUnitBuilder( JCodeModel codeModel, JavaMethodContents methodContents ) {
 		super( new RoutineJavaBuilderContextImpl( codeModel ) ) ;
+		m_methodContents = methodContents ;
 	}
 	
 	public RoutineJavaUnitBuilder build( String fullyQualifiedPackageName, Routine routine ) throws Exception {
@@ -23,7 +34,9 @@ public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilde
 				: fullyQualifiedPackageName + "." + className
 				;
 		JDefinedClass definedClass = codeModel()._class( fullyQualifiedName, ClassType.CLASS ) ;
-		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context() ) ;
+		context().forEachListener( (el)->el.createdClass(definedClass, routine.name() ) ) ;
+		
+		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context(), m_methodContents ) ;
 		classBuilder.analyze( routine, className ).build( definedClass );
 
 		return this ;

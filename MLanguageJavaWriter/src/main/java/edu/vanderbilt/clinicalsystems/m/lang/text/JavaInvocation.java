@@ -32,6 +32,10 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		this( expr, returningRepresentation.supplier(), parameterRepresentations, additionalParametersRepresentation, context ) ;
 	}
 	
+	public JavaInvocationBuilder chain() {
+		return builder(m_context).on( this ) ;
+	}
+	
 	public JavaInvocation appendArgument( Function<Representation,JavaExpression<?>> f ) {
 		int position = m_arguments.size() ;
 		Representation rep ;
@@ -42,14 +46,15 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		} else {
 			throw new IllegalArgumentException( "attempt to add argument to invocation that only accepts " + m_parameterRepresentations.size() + " parameters") ;
 		}
-		JavaExpression<?> arg = f.apply(rep);
-		m_arguments.add( arg ) ;
-		expr().arg( arg.expr() ) ;
+		JavaExpression<?> arg = f.apply(rep); // acquire it, expecting rep
+		JavaExpression<?> convertedArg = arg.convert(rep,m_context);
+		m_arguments.add( convertedArg ) ; // convert to rep (if not already)
+		expr().arg( convertedArg.expr() ) ;
 		return this ;
 	}
 	
 	public JavaInvocation appendArgument( JavaExpression<?> e ) {
-		return appendArgument( (r)->e.convert(r,m_context) ) ;
+		return appendArgument( (r)->e ) ; // expectation already applied
 	}
 
 	public interface JavaInvocationBuilder {
@@ -60,10 +65,13 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		JavaInvocationBuilder accepting( int argumentCount ) ;
 		JavaInvocationBuilder accepting( Class<?> ... parameterTypes ) ;
 		JavaInvocationBuilder acceptingNothing() ;
-		JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) ;
-		JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) ;
+		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1 ) ;
+		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1, Function<Representation,JavaExpression<?>> argument2 ) ;
+		JavaInvocationBuilder supplying( List<Function<Representation,JavaExpression<?>>> arguments ) ;
 		JavaInvocation build() ;
 		JavaInvocation build( JBlock block ) ;
+		JavaInvocationBuilder buildAnd( JBlock block );
+		JavaInvocationBuilder buildAnd();
 	}
 
 	public static JavaInvocationBuilder builder(final RoutineJavaBuilderContext context) {
@@ -130,17 +138,16 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 	}
 	
 	private static final class JavaInvocationBuilderImpl implements JavaInvocationBuilder {
-		private final RoutineJavaBuilderContext context;
+		private final RoutineJavaBuilderContext m_context;
 		private String m_methodName ;
 		private Class<?> m_declaringClass = null ;
 		private Integer m_numberOfParameters = null ;
 		private List<Class<?>> m_parameterTypes = null ;
 		private JavaExpression<?> m_instance = null ;
-		private List<JavaExpression<?>> m_arguments = null ;
+		private List<Function<Representation,JavaExpression<?>>> m_arguments = null ;
 
-		private JavaInvocationBuilderImpl(
-				RoutineJavaBuilderContext context) {
-			this.context = context;
+		private JavaInvocationBuilderImpl( RoutineJavaBuilderContext context) {
+			m_context = context;
 		}
 		
 		@Override public JavaInvocationBuilder invoke( Method method ) {
@@ -171,7 +178,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				throw new IllegalStateException( "target instance already specified") ;
 			m_instance = instance ;
 			if ( null == m_declaringClass )
-				m_declaringClass = instance.type(context.env()) ;
+				m_declaringClass = instance.type(m_context.env()) ;
 			return this ;
 		}
 
@@ -200,43 +207,56 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 			return this ;
 		}
 
-		@Override public JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) {
-			return supplying( Arrays.asList( arguments ) );
+		@Override public JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1 ) {
+			return supplying( Arrays.asList( argument1 ) );
 		}
 		
-		@Override public JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) {
+		@Override public JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1, Function<Representation,JavaExpression<?>> argument2 ) {
+			return supplying( Arrays.asList( argument1, argument2 ) );
+		}
+		
+		@Override public JavaInvocationBuilder supplying( List<Function<Representation,JavaExpression<?>>> arguments ) {
 			if ( null != m_arguments )
 				throw new IllegalStateException( "arguments already specified") ;
-			m_arguments = new ArrayList<JavaExpression<?>>( arguments ) ;
+			m_arguments = new ArrayList<Function<Representation,JavaExpression<?>>>( arguments ) ;
 			if ( null == m_parameterTypes ) {
 				if ( null != m_numberOfParameters && m_numberOfParameters != arguments.size() )
 					throw new IllegalStateException( "number of parameters already specified with a different value") ;
-				m_parameterTypes = arguments.stream()
-						.map( (e)->e.type(context.env()) )
-						.collect( Collectors.toList() )
-						;
-				m_numberOfParameters = m_parameterTypes.size() ;
+//				m_parameterTypes = arguments.stream()
+//						.map( (f)->f.apply( ??? ) )
+//						.map( (e)->e.type(m_context.env()) )
+//						.collect( Collectors.toList() )
+//						;
+				m_numberOfParameters = arguments.size() ;
 			}
 			return this ;
 		}
-
-		@Override public JavaInvocation build() {
+		
+		private Method determineMethod() {
 			if ( null == m_declaringClass )
 				throw new IllegalArgumentException("missing class") ;
 			if ( null == m_methodName )
 				throw new IllegalArgumentException("missing method name") ;
 			
-			Method method ;
 			if ( null == m_parameterTypes )
-				method = findOnlyMethod(m_declaringClass, m_methodName, m_numberOfParameters) ;
+				return findOnlyMethod(m_declaringClass, m_methodName, m_numberOfParameters) ;
 			else
-				method = findMethod(m_declaringClass, m_methodName, m_parameterTypes) ;
+				return findMethod(m_declaringClass, m_methodName, m_parameterTypes) ;
+		}
+		
+		@Override public JavaInvocationBuilder buildAnd() {
+			JavaInvocation invocation = build();
+			return builder(m_context).on( determineMethod().getReturnType() ).on( invocation ) ;
+		}
+		
+		@Override public JavaInvocation build() {
+			Method method = determineMethod() ;
 			
 			JInvocation invocation ;
 			if ( null != m_instance ) {
 				invocation = JExpr.invoke(m_instance.expr(), method.getName() ) ;
 			} else if ( null != m_declaringClass ) {
-				invocation = context.codeModel().ref(m_declaringClass).staticInvoke( method.getName() ) ;
+				invocation = m_context.codeModel().ref(m_declaringClass).staticInvoke( method.getName() ) ;
 			} else {
 				throw new IllegalArgumentException("missing both instance and declaring class") ;
 			}
@@ -255,29 +275,25 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				additionalParametersRepresentation = null ;
 			}
 			
-			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, context );
+			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, m_context );
 			if ( null != m_arguments )
 				m_arguments.forEach( result::appendArgument ) ;
 			return result ;
 		}
 
+		@Override public JavaInvocationBuilder buildAnd( JBlock block ) {
+			JavaInvocation invocation = build(block);
+			return builder(m_context).on( determineMethod().getReturnType() ).on( invocation ) ;
+		}
+		
 		@Override public JavaInvocation build( JBlock block ) {
-			if ( null == m_declaringClass )
-				throw new IllegalArgumentException("missing class") ;
-			if ( null == m_methodName )
-				throw new IllegalArgumentException("missing method name") ;
-			
-			Method method ;
-			if ( null == m_parameterTypes )
-				method = findOnlyMethod(m_declaringClass, m_methodName, m_numberOfParameters ) ;
-			else
-				method = findMethod(m_declaringClass, m_methodName, m_parameterTypes) ;
+			Method method = determineMethod();
 			
 			JInvocation invocation ;
 			if ( null != m_instance ) {
 				invocation = block.invoke(m_instance.expr(), method.getName() ) ;
 			} else if ( null != m_declaringClass ) {
-				invocation = block.staticInvoke( context.codeModel().ref(m_declaringClass), method.getName() ) ;
+				invocation = block.staticInvoke( m_context.codeModel().ref(m_declaringClass), method.getName() ) ;
 			} else {
 				throw new IllegalArgumentException("missing both instance and declaring class") ;
 			}
@@ -296,7 +312,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				additionalParametersRepresentation = null ;
 			}
 			
-			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, context );
+			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, m_context );
 			if ( null != m_arguments )
 				m_arguments.forEach( result::appendArgument ) ;
 			return result ;

@@ -25,6 +25,8 @@ public interface RoutineJavaBuilderEnvironment {
 	Method methodFor(NativeCommandType nativeCommandType);
 	
 	Method methodFor(BuiltinFunction builtinFunction, Integer numberOfParameters, boolean forAssignment);
+	Method methodForFunctionAssignment();
+	
 	Method methodFor(BuiltinVariable builtinVariable);
 	Method methodFor(OperatorType operatorType);
 	Method methodFor(CommandType commandType);

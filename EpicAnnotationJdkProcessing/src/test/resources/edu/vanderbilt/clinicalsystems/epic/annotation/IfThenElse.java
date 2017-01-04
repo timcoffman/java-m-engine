@@ -8,11 +8,11 @@ import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 @EpicRoutine
 public class IfThenElse {
 	
-	@EpicTag public void loopBody(int i) { }
-	@EpicTag public boolean sometimes() { return true ; }
+	@EpicTag public static void loopBody(int i) { }
+	@EpicTag public static boolean sometimes() { return true ; }
 	
 	@EpicTag
-	public String ifThenElseAssign( int a ) {
+	public static String ifThenElseAssign( int a ) {
 		String z ;
 		if ( a>7 ) z = ">7" ;
 		else z = "<=7" ;
@@ -20,7 +20,7 @@ public class IfThenElse {
 	}
 
 	@EpicTag
-	public String ifThenElseReturn( int a ) {
+	public static String ifThenElseReturn( int a ) {
 		if ( a>7 ) return ">7" ;
 		else return "<=7" ;
 	}

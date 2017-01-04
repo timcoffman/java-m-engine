@@ -177,6 +177,6 @@ public class RoutineTest {
 		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
-		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN abc W $$MYFUNCTION(123,456) D MYFUNCTION(123,456) Q \nMYFUNCTION(x,y)\tN abc Q \n\n") );
+		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN abc W $$MYFUNCTION^MYROUTINE(123,456) D MYFUNCTION^MYROUTINE(123,456) Q \nMYFUNCTION(x,y)\tN abc Q \n\n") );
 	}
 }

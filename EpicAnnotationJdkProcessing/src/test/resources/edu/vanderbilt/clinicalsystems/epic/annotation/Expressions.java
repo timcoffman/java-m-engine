@@ -20,7 +20,7 @@ public class Expressions {
 	 * main entry point, expecting "Q"
 	 */
 	@EpicTag
-	public void main( String x, Integer y ) {
+	public static void main( String x, Integer y ) {
 		/* nothing */
 	}
 
@@ -28,7 +28,7 @@ public class Expressions {
 	 * helper function, expecting "Q s_s"
 	 */
 	@EpicTag
-	public String helper( String s ) {
+	public static String helper( String s ) {
 		return s + s ;
 	}
 	
@@ -36,7 +36,7 @@ public class Expressions {
 	 * helper2 function, expecting "Q b*c+a"
 	 */
 	@EpicTag
-	public double helper2( double a, double b, double c ) {
+	public static double helper2( double a, double b, double c ) {
 		return a + b * c ;
 	}
 	
@@ -44,7 +44,7 @@ public class Expressions {
 	 * helper3 function, expecting "N z S z=$$helper2(1.0,2.0,3.0) Q b*z+a"
 	 */
 	@EpicTag
-	public Float helper3( Float a, Float b, Float c ) {
+	public static Float helper3( Float a, Float b, Float c ) {
 		float z = (float)helper2(1.0,2.0,3.0), k = 99 ; 
 		long t = System.currentTimeMillis() ;
 		return a + b * z ;

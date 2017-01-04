@@ -1,19 +1,18 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
-import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.COLUMN_ALIGN;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.NEWLINE;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.PAGEFEED;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.INTEGER;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
 
-import edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.CarriageReturnCommand;
@@ -27,6 +26,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.PageFeedCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
+import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
 public class GenericBuilder extends CommandJavaStatementBuilder {
@@ -36,8 +36,7 @@ public class GenericBuilder extends CommandJavaStatementBuilder {
 	}
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
-
-		List<JavaExpression<?>> arguments = StreamSupport.stream(expressionList.elements().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
+		List<Function<Representation,JavaExpression<?>>> arguments = analyze(expressionList.elements()) ;
 		return JavaInvocation.builder(context())
 				.invoke( env().methodFor(commandType) )
 				.supplying( arguments )
@@ -48,44 +47,47 @@ public class GenericBuilder extends CommandJavaStatementBuilder {
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, InputOutputList inputOutputList, Block innerBlock ) {
 		
-		List<JavaExpression<?>> arguments = StreamSupport.stream(inputOutputList.elements().spliterator(),false).map( (io)->{
-			return io.visit( new InputOutput.Visitor<JavaExpression<?>>() {
+		List<Function<Representation,JavaExpression<?>>> arguments = StreamSupport.stream(inputOutputList.elements().spliterator(),false).map( (io)->{
+			return io.visit( new InputOutput.Visitor<Function<Representation,JavaExpression<?>>>() {
 
 				@Override
-				public JavaExpression<?> visitInputOutput(InputOutput inputOutput) {
-					return JavaExpression.from( JExpr.lit(inputOutput.toString()), STRING ) ;
+				public Function<Representation,JavaExpression<?>> visitInputOutput(InputOutput inputOutput) {
+					return (r)->JavaExpression.from( JExpr.lit(inputOutput.toString()), STRING ) ;
 				}
 				
-				private JavaExpression<?> invocationFor( ReadWriteCodeType readWriteCodeType, JavaExpression<?> ... arguments ) {
-					return JavaInvocation.builder(context())
-							.invoke(env().methodFor(readWriteCodeType))
-							.supplying(arguments)
+				@Override
+				public Function<Representation,JavaExpression<?>> visitCarriageReturnCommand( CarriageReturnCommand carriageReturnCommand ) {
+					return (r)->JavaInvocation.builder(context())
+							.invoke(env().methodFor(NEWLINE))
+							.acceptingNothing()
 							.build() ;
 				}
 
 				@Override
-				public JavaExpression<?> visitCarriageReturnCommand( CarriageReturnCommand carriageReturnCommand ) {
-					return invocationFor(NEWLINE);
+				public Function<Representation,JavaExpression<?>> visitPageFeedCommand( PageFeedCommand pageFeedCommand ) {
+					return (r)->JavaInvocation.builder(context())
+							.invoke(env().methodFor(PAGEFEED))
+							.acceptingNothing()
+							.build() ;
 				}
 
 				@Override
-				public JavaExpression<?> visitPageFeedCommand( PageFeedCommand pageFeedCommand ) {
-					return invocationFor(PAGEFEED);
+				public Function<Representation,JavaExpression<?>> visitColumnCommand( ColumnCommand columnCommand ) {
+					JavaExpression<?> columnCount = JavaExpression.from( JExpr.lit(columnCommand.column()), INTEGER ) ;
+					return (r)->JavaInvocation.builder(context())
+							.invoke(env().methodFor(PAGEFEED))
+							.supplying( (dc)->columnCount )
+							.build() ;
 				}
 
 				@Override
-				public JavaExpression<?> visitColumnCommand( ColumnCommand columnCommand ) {
-					return invocationFor(COLUMN_ALIGN, JavaExpression.from( JExpr.lit(columnCommand.column()), INTEGER ));
+				public Function<Representation,JavaExpression<?>> visitInputOutputVariable(InputOutputVariable inputOutputVariable) {
+					return (r)->expr( inputOutputVariable.variable(), r ) ;
 				}
 
 				@Override
-				public JavaExpression<?> visitInputOutputVariable(InputOutputVariable inputOutputVariable) {
-					return expr( inputOutputVariable.variable() ) ;
-				}
-
-				@Override
-				public JavaExpression<?> visitOutputExpression(OutputExpression outputExpression) {
-					return expr(outputExpression.expression()) ; 
+				public Function<Representation,JavaExpression<?>> visitOutputExpression(OutputExpression outputExpression) {
+					return (r)->expr( outputExpression.expression(), r ) ; 
 				}
 				
 			} );

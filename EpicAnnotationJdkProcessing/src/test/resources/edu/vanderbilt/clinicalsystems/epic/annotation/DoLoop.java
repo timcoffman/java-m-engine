@@ -6,15 +6,15 @@ package edu.vanderbilt.clinicalsystems.epic.annotation;
 @EpicRoutine
 public class DoLoop {
 	
-	@EpicTag public void loopBody(int i) { }
-	@EpicTag public boolean sometimes() { return true ; }
+	@EpicTag public static void loopBody(int i) { }
+	@EpicTag public static boolean sometimes() { return true ; }
 	
 	/**
 	 * Expect
 	 *  F D loopBody(-1) Q
 	 */
 	@EpicTag
-	public void doOnceLoop() {
+	public static void doOnceLoop() {
 		do {
 			loopBody( -1 ) ;
 		} while ( false ) ;
@@ -25,7 +25,7 @@ public class DoLoop {
 	 *  F  D loopBody(i) Q:sometimes()
 	 */
 	@EpicTag
-	public void doForeverLoop() {
+	public static void doForeverLoop() {
 		do {
 			loopBody( -1 ) ;
 			if ( sometimes() ) break ;
@@ -38,7 +38,7 @@ public class DoLoop {
 	 *  . D loopBody(i)
 	 */
 	@EpicTag
-	public void doWhileLoop() {
+	public static void doWhileLoop() {
 		int i = 0 ;
 		do {
 			loopBody(i) ;

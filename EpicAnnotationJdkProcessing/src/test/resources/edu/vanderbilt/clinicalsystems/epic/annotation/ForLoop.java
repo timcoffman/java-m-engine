@@ -6,13 +6,13 @@ package edu.vanderbilt.clinicalsystems.epic.annotation;
 @EpicRoutine
 public class ForLoop {
 	
-	@EpicTag public void loopBody(int i) { }
+	@EpicTag public static void loopBody(int i) { }
 	
 	/**
 	 * Expect F 1:1:10
 	 */
 	@EpicTag
-	public void forLoopIncrementByOne() {
+	public static void forLoopIncrementByOne() {
 		for( int i = 1 ; i <= 10 ; ++i ) loopBody(i) ;
 	}
 
@@ -20,7 +20,7 @@ public class ForLoop {
 	 * Expect F 1:2:10
 	 */
 	@EpicTag
-	public void forLoopIncrementByTwo() {
+	public static void forLoopIncrementByTwo() {
 		for( int i = 1 ; i <= 10 ; i+=2 ) loopBody(i) ;
 	}
 
@@ -28,7 +28,7 @@ public class ForLoop {
 	 * Expect F 1
 	 */
 	@EpicTag
-	public void forLoopIncrementByOneForever() {
+	public static void forLoopIncrementByOneForever() {
 		for( int i = 1 ; ; ++i ) loopBody(i) ;
 	}
 	
@@ -36,7 +36,7 @@ public class ForLoop {
 	 * Expect F 1:2
 	 */
 	@EpicTag
-	public void forLoopIncrementByTwoForever() {
+	public static void forLoopIncrementByTwoForever() {
 		for( int i = 1 ; ; i+=2 ) loopBody(i) ;
 	}
 	
@@ -44,7 +44,7 @@ public class ForLoop {
 	 * Expect F 1:1:10
 	 */
 	@EpicTag
-	public void forLoopStopNotIncludedIncrementByOne() {
+	public static void forLoopStopNotIncludedIncrementByOne() {
 		for( int i = 0 ; i < 10 ; ++i ) loopBody(i) ;
 	}
 
@@ -52,7 +52,7 @@ public class ForLoop {
 	 * Expect F 1:2:10
 	 */
 	@EpicTag
-	public void forLoopStopNotIncludedIncrementByTwo() {
+	public static void forLoopStopNotIncludedIncrementByTwo() {
 		for( int i = 0 ; i < 10 ; i+=2 ) loopBody(i) ;
 	}
 

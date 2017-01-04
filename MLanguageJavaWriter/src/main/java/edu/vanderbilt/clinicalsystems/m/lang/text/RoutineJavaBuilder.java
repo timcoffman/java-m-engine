@@ -1,6 +1,9 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import java.util.function.Function;
+
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JExpression;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
@@ -9,6 +12,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 
 public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 
+	public enum JavaMethodContents {
+		STUB,
+		EXECUTABLE
+	}
+	
 	private final T m_builderContext ;
 
 	public RoutineJavaBuilder( T builderContext ) {
@@ -18,7 +26,10 @@ public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 	public interface Builder<T> {
 		void build( T location ) ;
 	}
-	
+
+	public interface Binder<T extends JExpression> extends Function<Representation,JavaExpression<T>> {
+	}
+
 	protected T context() { return m_builderContext; }
 	protected RoutineJavaBuilderEnvironment env() { return context().env(); }
 
@@ -51,5 +62,5 @@ public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 		else
 			return false ;
 	}
-
+		
 }

@@ -17,7 +17,7 @@ import edu.vanderbilt.clinicalsystems.m.core.Value;
 public class SampleOne {
 		
 	@EpicTag
-	public void sample() {
+	public static void sample() {
 		int k ;
 		for ( int x = 0 ; x < 10 ; ++x )
 			k = 0 ;

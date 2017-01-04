@@ -1,20 +1,58 @@
 
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import edu.vanderbilt.clinicalsystems.m.core.Value;
 
 public class Inference {
 
-    public double globalInteger;
-    public boolean globalBoolean;
-    public String globalString;
-    public int globalDouble;
+    public static Value globalChannel;
+    public static double globalInteger;
+    public static boolean globalBoolean;
+    public static String globalString;
+    public static int globalDouble;
+
+    /**
+     * INFERENCE; see edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaWriterTest.canInferTypes
+     * Q 
+     * 
+     */
+    public static void main() {
+        return ;
+    }
+
+    /**
+     * inferMethodReturnsVoid; expect void
+     * Q 
+     * 
+     */
+    public static void inferMethodReturnsVoid() {
+        return ;
+    }
+
+    /**
+     * inferMethodReturnsInteger; expect int
+     * Q 1
+     * 
+     */
+    public static int inferMethodReturnsInteger() {
+        return  1;
+    }
+
+    /**
+     * inferMethodReturnsDouble; expect double
+     * Q 3.14159
+     * 
+     */
+    public static double inferMethodReturnsDouble() {
+        return  3.14159D;
+    }
 
     /**
      * inferMethodReturnsString; expect String
-     * 
+     * Q "foobar"
      * 
      */
-    public String inferMethodReturnsString() {
+    public static String inferMethodReturnsString() {
         return "foobar";
     }
 
@@ -22,22 +60,13 @@ public class Inference {
      * inferMethodReturnsValue; expect Value
      * N x
      * S x("foo")="bar"
-     * 
+     * Q x
      * 
      */
-    public String inferMethodReturnsValue() {
+    public static String inferMethodReturnsValue() {
         String x = "";
         x = "bar";
         return x;
-    }
-
-    /**
-     * inferMethodReturnsVoid; expect void
-     * 
-     * 
-     */
-    public void inferMethodReturnsVoid() {
-        return ;
     }
 
     /**
@@ -47,10 +76,10 @@ public class Inference {
      * S localString=3_7
      * S localInteger=3/7
      * S localDouble=3\7
-     * 
+     * Q 
      * 
      */
-    public void inferLocalVariableType() {
+    public static void inferLocalVariableType() {
         boolean localBoolean = false;
         String localString = "";
         double localInteger = 0.0D;
@@ -63,33 +92,15 @@ public class Inference {
     }
 
     /**
-     * inferSecondOrderReturnTypeFromMethod; expect String
-     * 
-     * 
-     */
-    public String inferSecondOrderReturnTypeFromMethod() {
-        return inferMethodReturnsString();
-    }
-
-    /**
-     * INFERENCE; see edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaWriterTest.canInferTypes
-     * 
-     * 
-     */
-    public void main() {
-        return ;
-    }
-
-    /**
      * inferGlobal; expect expect boolean, String, Integer, double
      * S globalBoolean=3!7
      * S globalString=3_7
      * S globalInteger=3/7
      * S globalDouble=3\7
-     * 
+     * Q 
      * 
      */
-    public void inferGlobal() {
+    public static void inferGlobal() {
         globalBoolean = true;
         globalString = ("3"+"7");
         globalInteger = (3.0D/ 7.0D);
@@ -99,29 +110,28 @@ public class Inference {
 
     /**
      * inferSecondOrderReturnTypeFromVariable; expect String
-     * 
+     * Q globalString
      * 
      */
-    public String inferSecondOrderReturnTypeFromVariable() {
+    public static String inferSecondOrderReturnTypeFromVariable() {
         return globalString;
     }
 
     /**
-     * inferMethodReturnsInteger; expect int
-     * 
+     * inferSecondOrderReturnTypeFromMethod; expect String
+     * Q $$inferMethodReturnsString()
      * 
      */
-    public int inferMethodReturnsInteger() {
-        return  1;
+    public static String inferSecondOrderReturnTypeFromMethod() {
+        return inferMethodReturnsString();
     }
 
     /**
-     * inferMethodReturnsDouble; expect double
-     * 
+     * inferTypeFromBuiltinFunctionU globalChannel; method for USE expects a ChannelDirective (i.e. Value)
+     * Q 
      * 
      */
-    public double inferMethodReturnsDouble() {
-        return  3.14159D;
+    public static void inferTypeFromBuiltinFunction() {
     }
 
 }

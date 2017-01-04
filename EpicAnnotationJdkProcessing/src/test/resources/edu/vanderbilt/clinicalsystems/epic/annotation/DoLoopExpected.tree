@@ -10,15 +10,15 @@ CMD: QUIT | 1
 
 TAG: doOnceLoop
 CMD: FOR | (-) {
-  CMD: DO | loopBody^DoLoop/LOCAL( -1 )
+  CMD: DO | loopBody^DoLoop( -1 )
   CMD: QUIT | (-)
 }
 CMD: QUIT | (-)
 
 TAG: doForeverLoop
 CMD: FOR | (-) {
-  CMD: DO | loopBody^DoLoop/LOCAL( -1 )
-  CMD: QUIT : $$sometimes^DoLoop/LOCAL(  ) | (-)
+  CMD: DO | loopBody^DoLoop( -1 )
+  CMD: QUIT : $$sometimes^DoLoop(  ) | (-)
 }
 CMD: QUIT | (-)
 
@@ -26,9 +26,9 @@ TAG: doWhileLoop
 CMD: NEW | i
 CMD: SET | i := 0
 CMD: FOR | (-) {
-  CMD: DO | loopBody^DoLoop/LOCAL( i )
+  CMD: DO | loopBody^DoLoop( i )
   CMD: SET | i := i-1
-  CMD: QUIT : '(i<10) | (-)
+  CMD: QUIT : '( i<10 ) | (-)
 }
 CMD: QUIT | (-)
 

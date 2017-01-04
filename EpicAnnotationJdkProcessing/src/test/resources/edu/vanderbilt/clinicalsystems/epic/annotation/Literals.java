@@ -11,7 +11,7 @@ public class Literals {
 	 *  Q 1
 	 */
 	@EpicTag
-	public boolean returnTrue() {
+	public static boolean returnTrue() {
 		return true ;
 	}
 	
@@ -20,7 +20,7 @@ public class Literals {
 	 *  Q 0
 	 */
 	@EpicTag
-	public boolean returnFalse() {
+	public static boolean returnFalse() {
 		return false ;
 	}
 	

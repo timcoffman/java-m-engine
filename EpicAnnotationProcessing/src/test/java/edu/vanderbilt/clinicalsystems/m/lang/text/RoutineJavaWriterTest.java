@@ -4,14 +4,20 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.ServiceLoader;
 
 import org.junit.Test;
 
 import com.sun.codemodel.CodeWriter;
+import com.sun.codemodel.JAnnotationUse;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JMethod;
 import com.sun.codemodel.writer.FileCodeWriter;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
+import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.epic.lib.Epic;
 import edu.vanderbilt.clinicalsystems.m.Core;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
@@ -67,14 +73,33 @@ public class RoutineJavaWriterTest {
 		}
 	}
 
-//	@Test
+	@Test
 	public void canWriteEpicClass() throws Exception {
+		RoutineJavaBuilderContext.EventListener listener = new RoutineJavaBuilderContext.EventListener() {
+
+			@Override public void createdClass(JDefinedClass definedClass, String routineName) {
+				JAnnotationUse annotation = definedClass.annotate( EpicRoutineLibrary.class ) ;
+				if ( !routineName.equals(definedClass.name() )) {
+					annotation.param("value",routineName) ;
+				}
+			}
+
+			@Override public void createdMethod(JDefinedClass definedClass, JMethod method, String tagName) {
+				JAnnotationUse annotation = method.annotate( EpicTag.class ) ;
+				if ( !tagName.equals(method.name() )) {
+					annotation.param("value",tagName) ;
+				}
+			}
+			
+		} ;
 		Routine routine;
 		try (ObjectInputStream s = new ObjectInputStream( RoutineJavaWriterTest.class.getResourceAsStream("EALIBECF1.ser"))) {
 			routine = (Routine) s.readObject();
 		}
 
-		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder();
+		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder( RoutineJavaUnitBuilder.JavaMethodContents.STUB );
+		routineBuilder.context().listen( new WeakReference<RoutineJavaBuilderContext.EventListener>(listener) );
+		
 		routineBuilder.env().additionalCompatibility( Compatibility.EXTENSION ) ;
 		Core.useLibrariesIn(routineBuilder.env());
 		Epic.useLibrariesIn(routineBuilder.env());

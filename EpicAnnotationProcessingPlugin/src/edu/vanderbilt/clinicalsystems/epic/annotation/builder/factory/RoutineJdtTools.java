@@ -20,8 +20,6 @@ import org.eclipse.jdt.core.dom.*;
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast;
-import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Node;
-import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Variable;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.ElementInterpreter;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 
@@ -52,6 +50,12 @@ public class RoutineJdtTools extends RoutineTools {
 		} catch ( CoreException ex ) {
 			report(reportType, message + " at " + node.toString() );
 		}
+	}
+
+	@Override
+	public boolean isPartOfCompilationUnit(Element element) {
+//		m_compilationUnit ;
+		return false ; // placeholder; 
 	}
 	
 	@Override
@@ -139,7 +143,7 @@ public class RoutineJdtTools extends RoutineTools {
 	}
 	
 	@Override
-	public IdentifierResolution resolveIdentifier(javax.lang.model.element.Name name, Node node) {
+	public IdentifierResolution resolveIdentifier(javax.lang.model.element.Name name, Ast.Node node) {
 		// TODO Auto-generated method stub
 		return null;
 	}	
@@ -175,6 +179,7 @@ public class RoutineJdtTools extends RoutineTools {
 		@Override public TypeMirror type() { return declaredType() ; }
 		@Override public TypeMirror declaredType() { return typeMirrorFor( m_binding.getType() ) ; }
 		@Override public <R, P> R accept(Visitor<R, P> visitor, P parameter) { return visitor.visit(this,parameter) ; }
+		@Override public Object constantValue() { return m_binding.getConstantValue() ; }
 	}
 	
 	private class MethodBindingResolutionImpl extends BindingResolutionImpl<IMethodBinding> implements MethodResolution {
@@ -529,6 +534,8 @@ public class RoutineJdtTools extends RoutineTools {
 //	}
 	private class DoStatementImpl extends ASTNodeWrapper<DoStatement> implements Ast.DoWhileLoop {
 		public DoStatementImpl(DoStatement node) { super(node) ; }
+		@Override public Ast.Statement statement() { return wrap( m_astNode.getBody() ) ; }
+		@Override public Ast.Expression condition() { return wrap( m_astNode.getExpression() ); }
 	}
 	private class EmptyStatementImpl extends ASTNodeWrapper<EmptyStatement> implements Ast.EmptyStatement {
 		public EmptyStatementImpl(EmptyStatement node) { super(node) ; }
@@ -643,7 +650,7 @@ public class RoutineJdtTools extends RoutineTools {
 		public MethodDeclarationImpl(MethodDeclaration node) { super(node) ; }
 		@Override public Ast.Block body() { return wrap( m_astNode.getBody() ) ; }
 		@Override public TypeMirror returnType() { return elements().getTypeElement( m_astNode.getReturnType2().resolveBinding().getQualifiedName() ).asType() ; }
-		@Override public List<? extends Variable> parameters() { return wrapVariables( m_astNode.parameters() ) ; }
+		@Override public List<? extends Ast.Variable> parameters() { return wrapVariables( m_astNode.parameters() ) ; }
 	}
 	private class MethodInvocationImpl extends ASTNodeWrapper<MethodInvocation> implements Ast.MethodInvocation {
 		public MethodInvocationImpl(MethodInvocation node) { super(node) ; }

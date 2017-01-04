@@ -62,8 +62,43 @@ public class JavaExpression<T extends JExpression> {
 						.invoke("toString")
 						.acceptingNothing()
 						.build() ;
+			case INTEGER:
+				return JavaInvocation.builder(context)
+						.on( this )
+						.invoke("toInt")
+						.acceptingNothing()
+						.build() ;
+			case NUMERIC:
+			case DECIMAL:
+				return JavaInvocation.builder(context)
+						.on( this )
+						.invoke("toDouble")
+						.acceptingNothing()
+						.build() ;
+			case BOOLEAN:
+				return JavaInvocation.builder(context)
+						.on( this )
+						.invoke("toBoolean")
+						.acceptingNothing()
+						.build() ;
 			default:
 				return this ;
+			}
+		case NUMERIC:
+		case DECIMAL:
+			switch ( toRepresentation ) {
+			case STRING:
+				return JavaInvocation.builder(context)
+					.on( String.class )
+					.invoke( "valueOf" )
+					.accepting( Double.TYPE )
+					.supplying( (r)->this )
+					.build() ;
+			case NUMERIC:
+			case DECIMAL:
+			case INTEGER:
+			default:
+				return this;
 			}
 		default:
 			return this ;

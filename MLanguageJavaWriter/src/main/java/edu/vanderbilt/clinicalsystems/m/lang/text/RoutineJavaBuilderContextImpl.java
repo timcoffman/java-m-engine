@@ -1,9 +1,12 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import java.lang.ref.Reference;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JExpr;
@@ -18,6 +21,7 @@ class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 	private final JCodeModel m_codeModel;
 	private final RoutineJavaBuilderEnvironment m_environment ;
 	private JExpression m_nullExpr ;
+	private final Set<Reference<EventListener>> m_listeners = new HashSet<Reference<EventListener>>();
 	
 	public RoutineJavaBuilderContextImpl( JCodeModel codeModel ) {
 		this( codeModel, new RoutineJavaBuilderEnvironmentImpl() ) ;
@@ -26,6 +30,19 @@ class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 	public RoutineJavaBuilderContextImpl( JCodeModel codeModel, RoutineJavaBuilderEnvironment environment ) {
 		m_codeModel = codeModel ;
 		m_environment = environment ;
+	}
+
+	@Override public void listen( Reference<EventListener> listener ) { m_listeners.add( listener ) ; }
+	@Override public void remove( EventListener listener ) { m_listeners.removeIf( (r)->listener == r.get() || null == r.get() ) ; }
+	@Override public void forEachListener( Consumer<EventListener> action ) {
+		Iterator<Reference<EventListener>> i = m_listeners.iterator() ;
+		while ( i.hasNext() ) {
+			EventListener listener = i.next().get() ;
+			if ( null == listener )
+				i.remove(); 
+			else
+				action.accept(listener);
+		}
 	}
 	
 	@Override public JCodeModel codeModel() { return m_codeModel; }
@@ -80,6 +97,9 @@ class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 	}
 	
 	@Override public String symbolForIdentifier( String variableName ) {
+		if ( null == variableName )
+			return null ;
+		
 		String symbol = variableName
 				.replaceAll("[%]", "\\$")
 				.replaceAll("[^$a-zA-Z0-9]", "_")

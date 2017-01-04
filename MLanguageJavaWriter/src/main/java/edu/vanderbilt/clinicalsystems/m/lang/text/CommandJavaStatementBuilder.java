@@ -1,6 +1,12 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
+import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.VALUE_INDEX;
+import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
+
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JStatement;
@@ -17,6 +23,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.VariableList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public abstract class CommandJavaStatementBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	private final RoutineJavaExpressionBuilder m_expressionBuilder ;
@@ -167,4 +174,46 @@ public abstract class CommandJavaStatementBuilder extends RoutineJavaBuilder<Rou
 	protected JavaExpression<?> expr( Expression expression, Representation representation ) {
 		return m_expressionBuilder.build(expression, representation);
 	}
+
+	protected Function<Representation,JavaExpression<?>> analyze( Expression expression ) {
+		return (r)->expr(expression,r) ;
+	}
+	
+	protected List<Function<Representation,JavaExpression<?>>> analyze( Iterable<Expression> expressions ) {
+		return StreamSupport.stream(expressions.spliterator(),false).map( this::analyze ).collect( Collectors.toList() ) ;
+	}
+
+	
+	protected KeyApplier keyApplier( VariableReference variable ) {
+		return new KeyApplierImpl(variable) ;
+	}
+
+	protected JavaExpression<?> applyKeys( VariableReference variable, JavaExpression<?> target ) {
+		return keyApplier(variable).apply(target) ;
+	}
+	
+	protected interface KeyApplier {
+		boolean hasKeys() ;
+		JavaExpression<?> apply( JavaExpression<?> target );
+	}
+	
+	private class KeyApplierImpl implements KeyApplier {
+		private List<JavaExpression<?>> m_keys;
+		public KeyApplierImpl( VariableReference variable ) {
+			m_keys = StreamSupport.stream(variable.keys().spliterator(),true).map( (e)->expr(e,STRING) ).collect( Collectors.toList() ) ;
+		}
+		@Override
+		public boolean hasKeys() { return !m_keys.isEmpty() ; }
+		@Override
+		public JavaExpression<?> apply( JavaExpression<?> target ) {
+			return m_keys.stream().reduce( target, (t,k)->
+				JavaInvocation.builder(context())
+					.on( t )
+					.invoke( env().methodFor(VALUE_INDEX) )
+					.supplying( (r)->k )
+					.build()
+			) ;
+		}
+	}
+
 }

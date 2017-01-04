@@ -1,11 +1,12 @@
 package edu.vanderbilt.clinicalsystems.m.core.lib;
 
-import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.PAGEFEED;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.COLUMN_ALIGN;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.NEWLINE;
+import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType.PAGEFEED;
 
 import java.util.List;
 
+import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Command;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Library;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.ReadWriteCode;
@@ -31,5 +32,9 @@ public class ReadWrite {
 	public interface ChannelDirective { int channel() ; List<ChannelParameter> parameters() ; String namespace() ; }
 	
 	@Command(CommandType.USE) public static native void use( ChannelDirective ... channelDirectives ) ;
+	@Command(CommandType.USE) public static native void use( Value channel ) ;
+	@Command(CommandType.USE) public static native void use( String channel ) ;
+	@Command(CommandType.USE) public static native void use( int channel ) ;
+	@Command(CommandType.USE) public static native void use( double channel ) ;
 	
 }

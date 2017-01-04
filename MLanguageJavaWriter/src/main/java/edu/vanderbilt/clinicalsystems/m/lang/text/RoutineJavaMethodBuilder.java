@@ -1,6 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import java.io.IOException;
+import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
+
 import java.io.Writer;
 import java.util.Iterator;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 
 public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
+	
 	private final SymbolUsage m_classSymbolUsage ;
 
 	public RoutineJavaMethodBuilder( SymbolUsage classSymbolUsage, RoutineJavaBuilderClassContext builderContext ) {
@@ -26,24 +28,6 @@ public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuil
 	}
 	
 	private void buildComments( final JDocComment javadoc, Iterator<RoutineElement> elementIterator ) {
-		Writer docWriter = new Writer() {
-			private final StringBuffer m_lineBuffer = new StringBuffer();
-			@Override public void write(char[] cbuf, int off, int len) throws IOException {
-				for ( int i = 0; i < len ; ++i ) {
-					char c = cbuf[off+i] ;
-					m_lineBuffer.append(c) ;
-					if ( c == '\n' )
-						flush() ;
-				}
-			}
-			@Override public void flush() throws IOException {
-				if ( m_lineBuffer.length() != 0 ) {
-					javadoc.append( m_lineBuffer.toString() ) ;
-					m_lineBuffer.setLength(0);
-				}
-			}
-			@Override public void close() throws IOException { flush() ; }
-		} ;
 		RoutineNativeFormatter routineFormatter = new RoutineNativeFormatter();
 		routineFormatter.options().setCommandsPerLineLimit(1);
 		routineFormatter.options().setCommentsPerLineLimit(1);
@@ -51,14 +35,15 @@ public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuil
 		routineFormatter.options().setWriteAbbreviatedBuiltinFunctionSymbols(true);
 		routineFormatter.options().setWriteAbbreviatedBuiltinVariableSymbols(true);
 		routineFormatter.options().setWriteAbbreviatedCommandSymbols(true);
-		RoutineWriter writer = new RoutineLinearWriter(docWriter, routineFormatter ) ;
 		
-		try {
+		try ( Writer docWriter = new JavaDocRoutineWriter(javadoc) ) {
+			RoutineWriter writer = new RoutineLinearWriter(docWriter, routineFormatter ) ;
+			
 			while ( elementIterator.hasNext() ) {
 				RoutineElement element = elementIterator.next() ;
 				element.write(writer);
 				if ( endOfMethod(element) )
-					break ; ;
+					break ;
 			}
 		} catch ( Throwable ex ) {
 			javadoc.append( ex.getClass().getSimpleName() ) ;
@@ -113,7 +98,8 @@ public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuil
 		
 		for ( ParameterName parameterName : tag.parameterNames() ) {
 			String symbol = context().symbolForIdentifier( parameterName.name() );
-			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ) ;
+//			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ) ;
+			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElse( NATIVE ) ) ;
 			method.param( JMod.FINAL, parameterType, parameterName.name() ) ;
 		}
 		

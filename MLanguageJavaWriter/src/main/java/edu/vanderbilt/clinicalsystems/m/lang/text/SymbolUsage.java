@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -24,6 +26,7 @@ public class SymbolUsage {
 		
 		public Collection<Supplier<Optional<Representation>>> usedAs() { return m_usedAs; }
 		public Collection<Supplier<Optional<Representation>>> usedAs(Supplier<Optional<Representation>> usedAs) {
+			if ( m_usedAs.contains(usedAs) ) return m_usedAs ; // common case is Representation::supplier
 			Collection<Supplier<Optional<Representation>>> oldValue = new ArrayList<Supplier<Optional<Representation>>>( m_usedAs ) ;
 			m_usedAs.add( usedAs ) ;
 			return oldValue ;
@@ -85,7 +88,7 @@ public class SymbolUsage {
 	}
 	
 	public boolean declared(String symbol, boolean checkParent) {
-		return m_used.containsKey( symbol ) || !checkParent || !m_parent.isPresent() || m_parent.get().declared(symbol,true) ;
+		return m_used.containsKey( symbol ) || (checkParent && m_parent.map( (p)->p.declared(symbol,true) ).orElse(false) ) ;
 	}
 	
 	private class SymbolImplication implements Supplier<Optional<Representation>> {
@@ -122,11 +125,31 @@ public class SymbolUsage {
 //		} ;
 //	}
 
+	private static ThreadLocal<Stack<Usage>> m_symbolImplicationStack = new ThreadLocal<Stack<Usage>>() {
+		@Override protected Stack<Usage> initialValue() { return new Stack<Usage>() ; }
+	};
+	
+	private <T> Optional<Supplier<T>> preventingRecursion( Usage usage, Function<Usage,Supplier<T>> action ) {
+		Stack<Usage> stack = m_symbolImplicationStack.get();
+		if ( stack.contains(usage) )
+			return Optional.empty() ; /* recursive */
+		stack.push(usage) ;
+		try {
+			return Optional.of( action.apply(usage) ) ;
+		} finally {
+			stack.pop() ;
+		}
+	}
+	
 	private Supplier<Optional<Representation>> impliedRepresentation(Usage usage) {
-		if ( usage.indexedByKey() || usage.passedByReference() )
-			return NATIVE.supplier() ;
-		else
-			return impliedRepresentation( usage.usedAs() );
+		return preventingRecursion( usage, (u)->{
+
+			if ( u.indexedByKey() || u.passedByReference() )
+				return NATIVE.supplier() ;
+			else
+				return impliedRepresentation( u.usedAs() );
+
+		}).orElse( ()->Optional.empty() );
 	}
 	
 	private Supplier<Optional<Representation>> commonRepresentation( Collection<Supplier<Optional<Representation>>> representations ) {

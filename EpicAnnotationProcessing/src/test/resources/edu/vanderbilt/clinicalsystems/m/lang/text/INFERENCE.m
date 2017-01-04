@@ -39,3 +39,10 @@ inferSecondOrderReturnTypeFromVariable ; expect String
 inferSecondOrderReturnTypeFromMethod ; expect String
 	QUIT $$inferMethodReturnsString()
 
+inferTypeFromBuiltinFunction
+	USE globalChannel ; method for USE expects a ChannelDirective (i.e. Value)
+	QUIT
+
+inferMethodReturnTypeFromBuiltinFunction ; expect Value
+	QUIT globalChannel
+
