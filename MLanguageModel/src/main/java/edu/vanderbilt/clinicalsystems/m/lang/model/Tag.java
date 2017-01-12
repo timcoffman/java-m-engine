@@ -36,7 +36,7 @@ public class Tag implements RoutineElement {
 
 	@Override
 	public String toString() {
-		return m_name + "(" + m_parameterNames.stream().map((p)->p.toString()).collect(Collectors.joining(",")) + ")";
+		return m_name + "(" + m_parameterNames.stream().map(Object::toString).collect(Collectors.joining(",")) + "):";
 	}
 
 	@Override

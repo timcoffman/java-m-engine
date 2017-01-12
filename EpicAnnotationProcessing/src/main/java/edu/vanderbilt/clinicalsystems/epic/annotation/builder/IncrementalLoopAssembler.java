@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Binary;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Unary;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator.Listener;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.RoutineDependency;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
@@ -23,8 +25,8 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	public IncrementalLoopAssembler( RoutineTools routineTools ) { super(routineTools) ; }
 	
 	@Override
-	public void assemble(Ast.ForLoop forLoopNode, Block block) {
-		try ( BlockManager blockManager = new BlockManager(block) ) {
+	public void assemble(Ast.ForLoop forLoopNode, Block block, Listener delegate) {
+		try ( BlockManager blockManager = new BlockManager(block, delegate) ) {
 	
 			ForLoopConfiguration config = extractForLoopConfiguration( forLoopNode ) ;
 			if ( config.complete() ) {
@@ -37,7 +39,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				Expression loopStep = config.loopVariableStep() ;
 				Optional<Expression> loopStop = config.loopVariableCondition().map( (b)->tools().expressions().generate( b.rightOperand(), blockManager ) ) ;
 	
-				Block forLoopBlock = wrapInsideInlineBlock( tools().blocks().generate( forLoopNode.statement(), null ) ) ;
+				Block forLoopBlock = wrapInsideInlineBlock( tools().blocks().generate( forLoopNode.statement(), delegate ) ) ;
 				
 				blockManager.appendElement( new Command( CommandType.FOR, new LoopDefinition(loopVar, loopStart, loopStop.orElse(null), loopStep ), forLoopBlock ) ) ;
 				
@@ -54,13 +56,13 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				
 				
 				for (Ast.Statement initializer : forLoopNode.initializer()) {
-					blockManager.appendElements( tools().blocks().generate( initializer, null ) ) ;
+					blockManager.appendElements( tools().blocks().generate( initializer, delegate ) ) ;
 				}
 				
-				Block bodyBlock = tools().blocks().generate( forLoopNode.statement(), null ) ;
+				Block bodyBlock = tools().blocks().generate( forLoopNode.statement(), delegate ) ;
 				
 				Block conditionBlock = new MultilineBlock() ;
-				try ( BlockManager conditionBlockManager = new BlockManager(conditionBlock) ) {
+				try ( BlockManager conditionBlockManager = new BlockManager(conditionBlock, delegate) ) {
 					Expression condition = tools().expressions().generate( forLoopNode.condition(), conditionBlockManager ) ;
 					conditionBlockManager.appendElement( new Command( condition.inverted(), CommandType.QUIT, Argument.NOTHING ) ) ;
 				}
@@ -68,8 +70,8 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				
 				for (Ast.ExpressionStatement updater : forLoopNode.update()) {
 					Block updaterBlock = new MultilineBlock() ;
-					try ( BlockManager updaterBlockManager = new BlockManager(updaterBlock) ) {
-						updaterBlockManager.appendElements( tools().blocks().generate( updater, null ) ) ;
+					try ( BlockManager updaterBlockManager = new BlockManager(updaterBlock, delegate) ) {
+						updaterBlockManager.appendElements( tools().blocks().generate( updater, updaterBlockManager ) ) ;
 					}
 					bodyBlock.appendElements( updaterBlock );
 				}
@@ -204,6 +206,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 
 	private static final Generator.Listener LISTENER_IGNORING_SIDE_EFFECTS = new Generator.Listener() {
 		@Override public void generateSideEffect( Generator.Listener.Location location, RoutineElement element ) { /* ignore */ }
+		@Override public void publishDependency(RoutineDependency dependency) { /* ignore */ }
 	} ;
 
 	private boolean extractUpdateToVariable( Ast.ForLoop forLoopNode, ForLoopConfiguration config ) {

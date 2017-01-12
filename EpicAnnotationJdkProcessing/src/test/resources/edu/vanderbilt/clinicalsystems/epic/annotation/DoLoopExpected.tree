@@ -28,7 +28,7 @@ CMD: SET | i := 0
 CMD: FOR | (-) {
   CMD: DO | loopBody^DoLoop( i )
   CMD: SET | i := i-1
-  CMD: QUIT : '( i<10 ) | (-)
+  CMD: QUIT : i'<10 | (-)
 }
 CMD: QUIT | (-)
 

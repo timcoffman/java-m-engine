@@ -3,12 +3,15 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
@@ -21,7 +24,9 @@ import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.LoopHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.MergeHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.OutputHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.ReturnHandler;
+import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
+import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinSystemVariableReference;
@@ -30,6 +35,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandParser;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandParserFactory;
@@ -99,14 +106,14 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		
 		if ( null != command.condition() ) {
 			try {
-				if ( !evaluate( command.condition() ).toBoolean() )
+				if ( !evaluate( command.condition() ).toConstant().toBoolean() )
 					return ExecutionResult.CONTINUE;
 			} catch ( EngineException ex ) {
-				return caughtException(ex);
+				return caughtError(ex);
 			}
 		}
 		
-		StandardExecutor handler ; 
+		Executor handler ; 
 		switch ( command.commandType() ) {
 		case NEW:     handler = new DeclarationHandler(this) ; break ;
 		case SET:     handler = new AssignmentHandler (this) ; break ;
@@ -173,17 +180,17 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 					return interpretExpression( variableName ).visit( new Expression.Visitor<Node>() {
 
 						@Override public Node visitExpression(Expression expression) {
-							caughtException( new EngineException(ErrorCode.SYNTAX_ERROR,"code",variableName) );
+							caughtError( new EngineException(ErrorCode.SYNTAX_ERROR,"code",variableName) );
 							return null ;
 						}
 						
 						@Override
 						public Node visitVariableReference( VariableReference variable) {
 							try { return findNode( variable ); }
-							catch ( EngineException ex ) { caughtException(ex) ; return null ; }
+							catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 						}
 					}) ;
-				} catch ( EngineException ex ) { caughtException(ex) ; return null ; }
+				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 			}
 			
 			@Override public Node visitDirectVariableReference(DirectVariableReference variable) {
@@ -214,7 +221,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		if ( null == node )
 			throwException() ;
 		for ( Expression key : variable.keys() )
-			node = node.get( evaluate(key).value() ) ;
+			node = node.get( evaluate(key).toConstant().value() ) ;
 		return node ;
 	}
 	
@@ -223,7 +230,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		return m_currentInputOutputDevice ;
 	}
 	
-	private Constant resultOrException( Constant result ) throws EngineException {
+	private EvaluationResult resultOrException( EvaluationResult result ) throws EngineException {
 		if ( null == result  )
 			throwException();
 		return result ;
@@ -257,20 +264,20 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 	}
 	
 	@Override
-	public Constant evaluate( Expression expression ) throws EngineException {
-		return resultOrException( expression.visit( new Expression.Visitor<Constant>() {
+	public EvaluationResult evaluate( Expression expression ) throws EngineException {
+		return resultOrException( expression.visit( new Expression.Visitor<EvaluationResult>() {
 
-			@Override public Constant visitExpression(Expression expression) {
+			@Override public EvaluationResult visitExpression(Expression expression) {
 				throw new UnsupportedOperationException(expression.getClass().getSimpleName() + " not supported") ;
 			}
 
-			@Override public Constant visitConstant(Constant constant) {
-				return constant;
+			@Override public EvaluationResult visitConstant(Constant constant) {
+				return EvaluationResult.fromConstant(constant);
 			}
 			
-			@Override public Constant visitVariableReference(VariableReference variable) {
-				try { return Constant.from( findNode( variable ).value() ) ; }
-				catch ( EngineException ex ) { caughtException(ex) ; return null ; }
+			@Override public EvaluationResult visitVariableReference(VariableReference variable) {
+				try { return EvaluationResult.fromConstant( Constant.from( findNode( variable ).value() ) ) ; }
+				catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 			}
 			
 			private double requireDouble(Constant c) throws EngineException {
@@ -278,28 +285,73 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				catch ( NumberFormatException ex ) { throw new EngineException(ErrorCode.NOT_A_NUMBER, "text", c.toString() ) ; } 
 			}
 			
-			@Override public Constant visitBinaryOperation( BinaryOperation operation ) {
-				try { 
-				Constant lhs = evaluate( operation.leftHandSide()  ) ;
-				Constant rhs = evaluate( operation.rightHandSide() ) ;
-				switch ( operation.operator() ) {
-					case ADD:
-						return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
-					case SUBTRACT:
-						return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
-					case MULTIPLY:
-						return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
-					case DIVIDE:
-						return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
-					case EQUALS:
-						return Constant.from( lhs.equals(rhs) ) ;
-					default:
-						throw new EngineException(ErrorCode.UNSUPPORTED_FEATURE, "code", operation.operator().canonicalSymbol(), "feature", operation.operator().getClass().getSimpleName() ) ;
-				}
-				} catch ( EngineException ex ) { caughtException(ex) ; return null ; }
+			private boolean requireBoolean(Constant c) throws EngineException {
+				try { return c.toBoolean() ; }
+				catch ( NumberFormatException ex ) { throw new EngineException(ErrorCode.NOT_A_BOOLEAN, "text", c.toString() ) ; } 
 			}
-						
-			@Override public Constant visitBuiltinFunctionCall( BuiltinFunctionCall functionCall ) {
+			
+			private Constant evaluateBinaryOperation( OperatorType operatorType, Constant lhs, Constant rhs ) throws EngineException {
+				switch ( operatorType ) {
+				case ADD:
+					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
+				case SUBTRACT:
+					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
+				case MULTIPLY:
+					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
+				case DIVIDE:
+					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
+				case EQUALS:
+					return Constant.from( lhs.equals(rhs) ) ;
+				case GREATER_THAN:
+					return Constant.from( lhs.compareTo(rhs) > 0 ) ;
+				case NOT_GREATER_THAN:
+					return Constant.from( lhs.compareTo(rhs) <= 0 ) ;
+				case LESS_THAN:
+					return Constant.from( lhs.compareTo(rhs) < 0 ) ;
+				case NOT_LESS_THAN:
+					return Constant.from( lhs.compareTo(rhs) >= 0 ) ;
+				default:
+					throw new EngineException(ErrorCode.UNSUPPORTED_FEATURE, "code", operatorType.canonicalSymbol(), "feature", operatorType.getClass().getSimpleName() ) ;
+				}
+			}
+			
+			@Override public EvaluationResult visitBinaryOperation( BinaryOperation operation ) {
+				try { 
+					Constant lhs = evaluate( operation.leftHandSide()  ).toConstant() ;
+					Constant rhs = evaluate( operation.rightHandSide() ).toConstant() ;
+					return EvaluationResult.fromConstant( evaluateBinaryOperation(operation.operator(), lhs, rhs)) ;
+				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+			}
+
+			private Constant evaluateUnaryOperation( OperatorType operatorType, Constant operand ) throws EngineException {
+				switch ( operatorType ) {
+				case ADD:
+					return operand;
+				case SUBTRACT:
+					return Constant.from( - requireDouble(operand) ) ;
+				case NOT:
+					return Constant.from( ! requireBoolean(operand) ) ;
+				default:
+					throw new EngineException(ErrorCode.UNSUPPORTED_FEATURE, "code", operatorType.canonicalSymbol(), "feature", operatorType.getClass().getSimpleName() ) ;
+				}
+			}
+			
+			@Override public EvaluationResult visitUnaryOperation( UnaryOperation operation ) {
+				try { 
+					Constant operand = evaluate( operation.operand() ).toConstant();
+					return EvaluationResult.fromConstant( evaluateUnaryOperation(operation.operator(), operand) ) ;
+				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+			}
+			
+			@Override public EvaluationResult visitRoutineFunctionCall( RoutineFunctionCall functionCall ) {
+				Long argumentCount = StreamSupport.stream(functionCall.arguments().spliterator(),false).collect(Collectors.counting());
+				try {
+					FunctionHandler handler = functionHandlerForTagReference( functionCall.tagReference(), argumentCount.intValue() );
+					return handler.call( functionCall.arguments() ) ;
+				} catch (EngineException ex) { caughtError(ex) ; return null ; }
+			}
+			
+			@Override public EvaluationResult visitBuiltinFunctionCall( BuiltinFunctionCall functionCall ) {
 				FunctionHandler handler ;
 				try { 
 				switch ( functionCall.builtinFunction() ) {
@@ -310,7 +362,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 					throw new EngineException(ErrorCode.UNSUPPORTED_FEATURE, "code", functionCall.builtinFunction().canonicalSymbol(), "feature", functionCall.builtinFunction().getClass().getSimpleName() ) ;
 				}
 				return handler.call( functionCall.arguments() );
-				} catch ( EngineException ex ) { caughtException(ex) ; return null ; }
+				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 			}
 
 			
@@ -318,23 +370,63 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 	}
 
 	private interface FunctionHandler {
-		Constant call( Iterable<Expression> arguments ) throws EngineException ;
+		EvaluationResult call( Iterable<Expression> arguments ) throws EngineException ;
 	}
 
 	private class OrderFunctionHandler implements FunctionHandler {
 
-		@Override public Constant call(Iterable<Expression> arguments) throws EngineException {
+		@Override public EvaluationResult call(Iterable<Expression> arguments) throws EngineException {
 			Iterator<Expression> args = arguments.iterator();
 			VariableReference subscriptedVar = (VariableReference)args.next();
-			boolean forward = args.hasNext() ? evaluate(args.next()).representsNumber(1) : true ;
+			boolean forward = args.hasNext() ? evaluate(args.next()).toConstant().representsNumber(1) : true ;
 
 			if ( !subscriptedVar.keys().iterator().hasNext() )
 				throw new EngineException(ErrorCode.SYNTAX_ERROR, "code", subscriptedVar.toString() ) ;
 
 			Node node = findNode( subscriptedVar.parent() ) ;
-			String key = evaluate( subscriptedVar.finalKey() ).value() ;
+			String key = evaluate( subscriptedVar.finalKey() ).toConstant().value() ;
 			String resultKey = forward ? node.keyFollowing(key) : node.keyPreceding(key) ;
-			return Constant.from( resultKey );
+			return EvaluationResult.fromConstant( Constant.from( resultKey ) );
+		}
+		
+	}
+	
+	private FunctionHandler functionHandlerForTagReference( TagReference tagRef, int argumentCount ) throws EngineException {
+		CompiledRoutine compiledRoutine = globalContext().compiledRoutine( tagRef.routineName() );
+		if ( null == compiledRoutine )
+			throw new EngineException(ErrorCode.MISSING_ROUTINE, "routine", tagRef.routineName() ) ;
+		
+		CompiledTag compiledTag = compiledRoutine.compiledTag( tagRef.tagName(), argumentCount ) ;
+		if ( null == compiledTag )
+			throw new EngineException(ErrorCode.MISSING_TAG, "routine", compiledRoutine.name(), "tag", tagRef.tagName() ) ;
+		
+		return new TaggedRoutineFunctionHandler( compiledTag ) ;
+	}
+	
+	private class TaggedRoutineFunctionHandler implements FunctionHandler {
+
+		private final CompiledTag m_compiledTag;
+
+		public TaggedRoutineFunctionHandler(CompiledTag compiledRoutine) {
+			m_compiledTag = compiledRoutine ;
+		}
+
+		@Override
+		public EvaluationResult call(Iterable<Expression> arguments) throws EngineException {
+			List<EvaluationResult> argumentValues = new ArrayList<EvaluationResult>() ;
+			for ( Expression expression : arguments )
+				argumentValues.add( evaluate(expression) ) ;
+			
+			ExecutionFrame callFrame = createChildFrame();
+			ExecutionResult executionResult = m_compiledTag.execute(callFrame,argumentValues);
+			switch ( executionResult ) {
+			case ERROR:
+				throw callFrame.error() ;
+			case QUIT:
+				return callFrame.result() ;
+			default:
+				throw new IllegalStateException( "function call cannot result in " + executionResult ) ;
+			}
 		}
 		
 	}

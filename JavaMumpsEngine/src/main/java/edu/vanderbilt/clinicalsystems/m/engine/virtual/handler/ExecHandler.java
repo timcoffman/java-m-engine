@@ -18,7 +18,7 @@ public class ExecHandler extends CommandHandler {
 	
 	@Override protected ExecutionResult handle( ExpressionList expressionList, Block block ) throws EngineException {
 		for ( Expression expression : expressionList.elements() )
-			interpretAndExecute( evaluate( expression ).value() ) ;
+			interpretAndExecute( evaluate( expression ).toConstant().value() ) ;
 		return ExecutionResult.CONTINUE ;
 	}
 

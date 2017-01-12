@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Command;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.Library;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeType;
@@ -198,7 +198,7 @@ class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment
 	@Override public RoutineJavaBuilderEnvironmentImpl use( Class<?> environmentClass ) {
 		return this
 			.useAnnotated( environmentClass, NativeType.class, this::useNativeType )
-			.useAnnotated( environmentClass, Library.class, this::useLibrary )
+			.useAnnotated( environmentClass, RoutineUnit.class, this::useLibrary )
 			.useResolvers( environmentClass )
 			;
 	}
@@ -241,8 +241,8 @@ class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment
 		m_methods.put( methodName, method ) ;
 	}
 	
-	private void useLibrary(Class<?> environmentClass, Library libraryAnnotation ) {
-		String name = Library.DEFAULT_NAME.equals(libraryAnnotation.value()) ? environmentClass.getSimpleName() : libraryAnnotation.value() ;
+	private void useLibrary(Class<?> environmentClass, RoutineUnit libraryAnnotation ) {
+		String name = RoutineUnit.DEFAULT_NAME.equals(libraryAnnotation.value()) ? environmentClass.getSimpleName() : libraryAnnotation.value() ;
 		useLibrary(environmentClass, name);
 	}
 	

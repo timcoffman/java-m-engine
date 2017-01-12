@@ -37,8 +37,8 @@ public class AssignmentHandler extends CommandHandler {
 			}
 			
 			@Override public ExecutionResult visitVariableReference(VariableReference variable) {
-				try { frame().findNode( variable ).assign( frame().evaluate( assignment.source() ).value() ) ; return ExecutionResult.CONTINUE ; }
-				catch ( EngineException ex ) { return caughtException(ex) ; }
+				try { frame().findNode( variable ).assign( frame().evaluate( assignment.source() ).toConstant().value() ) ; return ExecutionResult.CONTINUE ; }
+				catch ( EngineException ex ) { return caughtError(ex) ; }
 			}
 
 			@Override public ExecutionResult visitBuiltinFunctionCall(BuiltinFunctionCall builtinFunctionCall) {

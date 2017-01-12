@@ -22,14 +22,15 @@ public class TagReference extends Expression {
 		
 		if ( null == m_tagName ) {
 			
-			return "^" + m_routineName ;
+			return m_routineName ;
 			
+		} else if ( null == m_tagName ) {
+				
+			return m_tagName ;
+				
 		} else {
 			
-			return
-					m_tagName
-					+ (null != m_routineName ? m_routineName + "^" : "") 
-					;
+			return m_tagName + "^" + m_routineName ;
 		}
 	}
 	

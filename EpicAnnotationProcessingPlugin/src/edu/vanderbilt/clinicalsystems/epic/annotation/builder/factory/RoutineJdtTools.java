@@ -331,7 +331,7 @@ public class RoutineJdtTools extends RoutineTools {
 				@Override public boolean visit( ContinueStatement node ) { provide( visitor.visitContinue( wrap(node), parameter() ) ); return false ; }
 //				@Override public boolean visit( CreationReference node ) { provide( visitor.visitCreationReference( wrap(node), parameter() ) ); return false ; }
 //				@Override public boolean visit( Dimension node ) { provide( visitor.visitDimension( wrap(node), parameter() ) ); return false ; }
-//				@Override public boolean visit( DoStatement node ) { provide( visitor.visitDoStatement( wrap(node), parameter() ) ); return false ; }
+				@Override public boolean visit( DoStatement node ) { provide( visitor.visitDoWhileLoop( wrap(node), parameter() ) ); return false ; }
 				@Override public boolean visit( EmptyStatement node ) { provide( visitor.visitEmptyStatement( wrap(node), parameter() ) ); return false ; }
 				@Override public boolean visit( EnhancedForStatement node ) { provide( visitor.visitEnhancedForLoop( wrap(node), parameter() ) ); return false ; }
 //				@Override public boolean visit( EnumConstantDeclaration node ) { provide( visitor.visitEnumConstantDeclaration( wrap(node), parameter() ) ); return false ; }

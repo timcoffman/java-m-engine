@@ -49,10 +49,9 @@ public abstract class FunctionCall extends Expression {
 	@Override
 	protected String unformattedRepresentation() {
 		return
-				(m_returning == Returning.SOME_VALUE ? "? = " : "") +
 				unformattedFunctionName() +
 				"(" +
-				StreamSupport.stream(arguments().spliterator(), false).map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ")) +
+				StreamSupport.stream(arguments().spliterator(), false).map(Expression::unformattedRepresentation).collect(Collectors.joining(", ")) +
 				")"
 				;
 	}

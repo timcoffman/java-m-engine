@@ -18,6 +18,6 @@ public class ReturnHandler extends CommandHandler {
 	}
 	
 	@Override protected ExecutionResult handle( ExpressionList expressionList, Block block ) throws EngineException {
-		return produceResult( evaluate( expressionList.elements() ) ) ;
+		return producedResult( evaluate( expressionList.elements() ) ) ;
 	}
 }

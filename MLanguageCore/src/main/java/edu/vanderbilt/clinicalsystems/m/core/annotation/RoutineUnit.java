@@ -1,4 +1,4 @@
-package edu.vanderbilt.clinicalsystems.epic.annotation;
+package edu.vanderbilt.clinicalsystems.m.core.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,10 +7,10 @@ import java.lang.annotation.Target;
 
 @Target( { ElementType.TYPE } )
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EpicRoutineLibrary {
-	
-	public String value() default DEFAULT_NAME ;
-	public boolean implicit() default false ;
+public @interface RoutineUnit {
+
+	public String value() default DEFAULT_NAME;
 	
 	public static final String DEFAULT_NAME = "---" ;
+	
 }

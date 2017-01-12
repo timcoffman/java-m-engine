@@ -3,9 +3,11 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 import java.util.Comparator;
 import java.util.TreeMap;
 
+import edu.vanderbilt.clinicalsystems.m.lang.model.DefaultCollator;
+
 public class TreeNodeMap implements NodeMap {
 	
-	private static final Comparator<? super String> COLLATOR = new MLanguageCollator() ;
+	private static final Comparator<? super String> COLLATOR = new DefaultCollator() ;
 	
 	public interface Entry extends Comparable<Entry> {
 		String key() ;

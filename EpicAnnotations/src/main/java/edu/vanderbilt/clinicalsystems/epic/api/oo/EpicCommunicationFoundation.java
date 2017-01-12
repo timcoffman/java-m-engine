@@ -2,21 +2,21 @@ package edu.vanderbilt.clinicalsystems.epic.api.oo;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicProvided;
 import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRef;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
 
-@EpicRoutineLibrary()
+@RoutineUnit()
 public class EpicCommunicationFoundation {
 	
 	public interface Dictionary {
 	}
 	
 	public interface Element {
-		@EpicTag("zECFGet") Value getValue(String propertyName ) ;
-		@EpicTag("zECFGet") Value getValue(String propertyName, @EpicRef Value more ) ;
-		@EpicTag("zECFGet") Element getElement(String propertyName ) ;
-		@EpicTag("zECFGet") Dictionary getDictonary(String propertyName ) ;
+		@RoutineTag("zECFGet") Value getValue(String propertyName ) ;
+		@RoutineTag("zECFGet") Value getValue(String propertyName, @EpicRef Value more ) ;
+		@RoutineTag("zECFGet") Element getElement(String propertyName ) ;
+		@RoutineTag("zECFGet") Dictionary getDictonary(String propertyName ) ;
 	};
 
 	@EpicProvided

@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
 import java.util.Iterator;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator.Listener;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
@@ -15,10 +16,10 @@ public class ConditionalFlowAssembler extends FlowAssembler<Ast.If>{
 	public ConditionalFlowAssembler( RoutineTools routineTools ) { super(routineTools) ; }
 	
 	@Override
-	public void assemble(Ast.If ifNode, Block block) {
-		try ( BlockManager blockManager = new BlockManager(block) ) {
+	public void assemble(Ast.If ifNode, Block block, Listener delegate) {
+		try ( BlockManager blockManager = new BlockManager(block, delegate) ) {
 			Expression condition = tools().expressions().generate( ifNode.condition(), blockManager ) ;
-			Block thenBlock = tools().blocks().generate( ifNode.thenStatement(), null ) ;
+			Block thenBlock = tools().blocks().generate( ifNode.thenStatement(), delegate ) ;
 			
 			Command onlyThenCommand = consistsOfSingleCommand(thenBlock) ;
 			if ( null != onlyThenCommand && null == ifNode.elseStatement() ) {
@@ -30,8 +31,8 @@ public class ConditionalFlowAssembler extends FlowAssembler<Ast.If>{
 		}
 			
 		if ( null != ifNode.elseStatement() ) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
-				Block elseBlock = tools().blocks().generate( ifNode.elseStatement(), null ) ;
+			try ( BlockManager blockManager = new BlockManager(block, delegate) ) {
+				Block elseBlock = tools().blocks().generate( ifNode.elseStatement(), delegate ) ;
 				Block inlineBlock = wrapInsideInlineBlock( elseBlock ) ;
 				blockManager.appendElement( new Command( CommandType.ELSE, Argument.NOTHING, inlineBlock ) ) ;
 			}

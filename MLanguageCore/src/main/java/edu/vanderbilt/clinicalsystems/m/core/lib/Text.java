@@ -10,11 +10,11 @@ import java.util.function.Consumer;
 
 import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.Library;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Operator;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 
-@Library
+@RoutineUnit
 public class Text {
 
 	@Function(ASCII) public static native int ascii( String characters ) ; 

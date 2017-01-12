@@ -10,9 +10,9 @@ public class TaggedRoutineCallList extends ElementListArgument<TaggedRoutineCall
 	
 	private static final long serialVersionUID = 1L;
 
-	public TaggedRoutineCallList( TaggedRoutineCall ... variables ) { super( Arrays.asList(variables) ) ; }
+	public TaggedRoutineCallList( TaggedRoutineCall ... taggedRoutineCalls ) { super( Arrays.asList(taggedRoutineCalls) ) ; }
 
-	public TaggedRoutineCallList( List<? extends TaggedRoutineCall> declarations ) { super(declarations) ; }
+	public TaggedRoutineCallList( List<? extends TaggedRoutineCall> taggedRoutineCalls ) { super(taggedRoutineCalls) ; }
 
 
 	@Override

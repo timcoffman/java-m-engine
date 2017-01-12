@@ -1,9 +1,12 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model.expression;
 
+import java.util.Comparator;
+
+import edu.vanderbilt.clinicalsystems.m.lang.model.DefaultCollator;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriter;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
-public class Constant extends Expression {
+public class Constant extends Expression implements Comparable<Constant> {
 	
 	private static final long serialVersionUID = 1L;
 
@@ -12,6 +15,8 @@ public class Constant extends Expression {
 	public static final Constant NULL = new Constant() ; 
 	public static final Constant FALSE = new Constant(ConstantSupport.FALSE_VALUE) ; 
 	public static final Constant TRUE = new Constant(ConstantSupport.TRUE_VALUE) ;
+
+	private static final Comparator<? super String> COLLATOR = new DefaultCollator() ;
 	
 	public Constant() {
 		this(ConstantSupport.NULL_VALUE) ;
@@ -96,6 +101,11 @@ public class Constant extends Expression {
 			return new Constant( "-" + m_value ); // with a new minus
 	}
 	
+	@Override
+	public int compareTo(Constant constant) {
+		return COLLATOR.compare(this.m_value, constant.m_value);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if ( null == obj ) {

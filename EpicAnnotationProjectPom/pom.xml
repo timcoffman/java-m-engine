@@ -215,6 +215,11 @@
 				<artifactId>JavaMumpsEngine</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>EpicAnnotationJunit</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		
 		
 			<dependency>

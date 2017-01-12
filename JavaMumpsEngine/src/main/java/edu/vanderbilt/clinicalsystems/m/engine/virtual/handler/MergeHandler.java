@@ -40,7 +40,7 @@ public class MergeHandler extends CommandHandler {
 			
 			@Override public ExecutionResult visitVariableReference(VariableReference variable) {
 				try { return merge( frame().findNode( variable ), assignment.source() ) ; }
-				catch ( EngineException ex ) { return caughtException(ex) ; }
+				catch ( EngineException ex ) { return caughtError(ex) ; }
 			}
 
 			@Override public ExecutionResult visitBuiltinFunctionCall(BuiltinFunctionCall builtinFunctionCall) {
@@ -61,7 +61,7 @@ public class MergeHandler extends CommandHandler {
 			@Override
 			public ExecutionResult visitVariableReference( VariableReference variable ) {
 				try { return merge( dstNode, frame().findNode( variable ) ) ; }
-				catch ( EngineException ex ) { return caughtException(ex) ; }
+				catch ( EngineException ex ) { return caughtError(ex) ; }
 			}
 			
 		}) ;

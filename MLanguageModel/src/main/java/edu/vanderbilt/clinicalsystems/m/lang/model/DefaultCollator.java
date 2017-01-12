@@ -1,10 +1,10 @@
-package edu.vanderbilt.clinicalsystems.m.engine.virtual;
+package edu.vanderbilt.clinicalsystems.m.lang.model;
 
 import java.util.Comparator;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConstantSupport;
 
-public class MLanguageCollator implements Comparator<String> {
+public class DefaultCollator implements Comparator<String> {
 
 	@Override
 	public int compare(String lhs, String rhs) {

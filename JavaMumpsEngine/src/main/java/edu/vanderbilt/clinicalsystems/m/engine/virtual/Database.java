@@ -24,11 +24,11 @@ public class Database extends TreeNodeMap implements Installer {
 
 	private RoutineNativeFormatter m_routineFormatter ;
 	
-	private final Map<String,Routine> m_compiledRoutines = new HashMap<String, Routine>(); 
+	private final Map<String,CompiledRoutine> m_compiledRoutines = new HashMap<String, CompiledRoutine>(); 
 
 	private GlobalContext m_globalContext = new GlobalContext() {
 
-		@Override public Routine compiledRoutine(String routineName) {
+		@Override public CompiledRoutine compiledRoutine(String routineName) {
 			return m_compiledRoutines.get( routineName );
 		}
 
@@ -38,7 +38,6 @@ public class Database extends TreeNodeMap implements Installer {
 		}
 		
 	} ;
-	
 	public Database() {
 		m_routineFormatter = new RoutineNativeFormatter() ;
 		m_routineFormatter.options().setCommandsPerLineLimit(1); 
@@ -68,8 +67,9 @@ public class Database extends TreeNodeMap implements Installer {
 							}
 						try {
 							Routine routine = interpretRoutine( sb.toString() ) ;
-							m_compiledRoutines.put( routine.name(), routine ) ;
-							get( Integer.toString(0) ).assign( compiledRoutineValue(routine) );
+							CompiledNativeRoutine compiledRoutine = new CompiledNativeRoutine( routine );
+							m_compiledRoutines.put( routine.name(), compiledRoutine ) ;
+							get( Integer.toString(0) ).assign( compiledRoutine.compiledRepresentation() );
 						} catch (EngineException ex) { throw new RuntimeException(ex); }
 					}
 		
@@ -109,23 +109,24 @@ public class Database extends TreeNodeMap implements Installer {
 	public Node get(BuiltinSystemVariable builtinSystemVariable) { return get( makeKey(builtinSystemVariable) ); }
 	public Node  at(BuiltinSystemVariable builtinSystemVariable) { return  at( makeKey(builtinSystemVariable) ); }
 	
-	private String compiledRoutineValue( Routine routine ) {
-		return routine.name() + "<" + routine.hashCode() + ">";
-	}
-	
 	@Override
 	public void install( Routine routine ) throws RoutineWriterException {
-		m_compiledRoutines.put( routine.name(), routine ) ;
+		CompiledRoutine compiledRoutine = new CompiledNativeRoutine(routine);
+		m_compiledRoutines.put( routine.name(), compiledRoutine ) ;
 		
 		Node routinesNode = get( BuiltinSystemVariable.ROUTINE ) ;
 		Node routineNode = routinesNode.get( routine.name() ) ;
 		
 		StringWriter sw = new StringWriter() ;
-		routine.write( new RoutineLinearWriter( sw, m_routineFormatter) ) ;
+		try {
+			routine.write( new RoutineLinearWriter( sw, m_routineFormatter) ) ;
+		} catch ( Throwable ex ) {
+			/* just stop writing */
+		}
 		String[] lines = sw.toString().split("\\r*\\n") ;
 		
 		routineNode.dropAll() ;
-		routineNode.get( Integer.toString(0) ).assign( compiledRoutineValue(routine) );
+		routineNode.get( Integer.toString(0) ).assign( compiledRoutine.compiledRepresentation() );
 		if ( null != lines ) {
 			for ( int i = 0 ; i < lines.length ; ++i )
 				routineNode.get( Integer.toString(i+1) ).assign( lines[i] );
@@ -133,7 +134,18 @@ public class Database extends TreeNodeMap implements Installer {
 	}
 	
 	@Override
-	public Routine lookup( String routineName ) {
+	public void install( Class<?> type, String routineName ) throws RoutineWriterException {
+		CompiledRoutine compiledRoutine = new CompiledJavaClassRoutine( type, routineName );
+		m_compiledRoutines.put( routineName, compiledRoutine ) ;
+
+		Node routinesNode = get( BuiltinSystemVariable.ROUTINE ) ;
+		Node routineNode = routinesNode.get( routineName ) ;
+		routineNode.dropAll() ;
+		routineNode.get( Integer.toString(0) ).assign( compiledRoutine.compiledRepresentation() );
+	}
+	
+	@Override
+	public CompiledRoutine lookup( String routineName ) {
 		return m_compiledRoutines.get( routineName ) ;
 	}
 

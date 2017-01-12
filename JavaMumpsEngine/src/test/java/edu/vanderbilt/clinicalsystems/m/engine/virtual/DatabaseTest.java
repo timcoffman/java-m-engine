@@ -337,7 +337,7 @@ public class DatabaseTest {
 		assertThat( routineNode.firstKey(), equalTo("0") ) ;
 		assertThat( routineNode.lastKey(),  equalTo("3") ) ; /* as defined, three lines (1..3) */
 		
-		Routine routine = m_db.lookup( "TESTROUTINE" ) ;
+		CompiledRoutine routine = m_db.lookup( "TESTROUTINE" ) ;
 		assertThat( routine, notNullValue() ) ;
 		
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );

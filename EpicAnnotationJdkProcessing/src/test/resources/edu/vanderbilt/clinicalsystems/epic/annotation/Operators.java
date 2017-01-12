@@ -1,17 +1,18 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutine;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+
 /**
  *  Operators Sample
  */
-@EpicRoutine
+@RoutineUnit
 public class Operators {
 	
 	/**
 	 * Expect Q +x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int prefixPlus(int x) {
 		return +x ;
 	}
@@ -19,7 +20,7 @@ public class Operators {
 	/**
 	 * Expect Q -x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int prefixMinus(int x) {
 		return -x ;
 	}
@@ -27,7 +28,7 @@ public class Operators {
 	/**
 	 * Expect Q x  S x=x+1
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int postfixIncrement(int x) {
 		return x++ ;
 	}
@@ -35,7 +36,7 @@ public class Operators {
 	/**
 	 * Expect S x=x+1 Q x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int prefixIncrement(int x) {
 		return ++x ;
 	}
@@ -43,7 +44,7 @@ public class Operators {
 	/**
 	 * Expect Q x  S x=x-1
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int postfixDecrement(int x) {
 		return x-- ;
 	}
@@ -51,7 +52,7 @@ public class Operators {
 	/**
 	 * Expect S x=x-1 Q x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int prefixDecrement(int x) {
 		return --x ;
 	}
@@ -59,7 +60,7 @@ public class Operators {
 	/**
 	 * Expect S x=x+7 Q x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int assignmentPlus(int x) {
 		return x += 7 ;
 	}
@@ -67,7 +68,7 @@ public class Operators {
 	/**
 	 * Expect S x=x-7 Q x
 	 */
-	@EpicTag
+	@RoutineTag
 	public static int assignmentMinus(int x) {
 		return x -= 7 ;
 	}

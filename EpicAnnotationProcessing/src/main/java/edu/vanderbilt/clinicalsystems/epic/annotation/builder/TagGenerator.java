@@ -3,13 +3,11 @@ package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
@@ -22,15 +20,6 @@ public class TagGenerator extends Generator<MultilineBlock,ExecutableElement> {
 		
 	public TagGenerator(RoutineTools builderTools) {
 		super( builderTools ) ;
-	}
-	
-	private String determineTagName(Element sourceType) {
-		EpicTag tagAnnotation = sourceType.getAnnotation( EpicTag.class ) ;
-		if ( null == tagAnnotation )
-			return sourceType.getSimpleName().toString() ;
-		if ( EpicTag.DEFAULT_NAME.equals( tagAnnotation.value() ) )
-			return sourceType.getSimpleName().toString() ;
-		return tagAnnotation.value();
 	}
 	
 	@Override
@@ -53,7 +42,7 @@ public class TagGenerator extends Generator<MultilineBlock,ExecutableElement> {
 		
 		MultilineBlock block = new MultilineBlock() ;
 		
-		String tagName = determineTagName( tagSourceMethod ) ;
+		String tagName = RoutineTools.determineTagName( tagSourceMethod ) ;
 		block.appendElement( new Tag( tagName, parameterNames ) );
 		List<String> comments = tools().commentsOnElement( tagSourceMethod );
 		if ( comments.isEmpty() ) {
@@ -64,7 +53,7 @@ public class TagGenerator extends Generator<MultilineBlock,ExecutableElement> {
 		}
 		block.appendElement( new Comment( "Generated-From: " + tagSourceMethod.getReturnType() + " " + tagSourceMethod.toString() ) );
 
-		block.appendElements( tools().blocks().generate( tools().getMethod( tagSourceMethod ).body(), null ) );
+		block.appendElements( tools().blocks().generate( tools().getMethod( tagSourceMethod ).body(), listener ) );
 		
 		TypeMirror mirrorForReturnType = tagSourceMethod.getReturnType() ;
 		if ( mirrorForReturnType.getKind() == TypeKind.VOID ) {

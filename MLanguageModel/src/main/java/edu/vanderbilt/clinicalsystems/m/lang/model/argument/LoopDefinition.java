@@ -22,7 +22,6 @@ public class LoopDefinition extends Argument {
 	public LoopDefinition( DirectVariableReference destination, Expression start, Expression stop, Expression step ) {
 		Objects.requireNonNull( destination ) ;
 		Objects.requireNonNull( start ) ;
-		Objects.requireNonNull( step ) ;
 		m_destination = destination ;
 		m_start = start ;
 		m_stop = stop ;

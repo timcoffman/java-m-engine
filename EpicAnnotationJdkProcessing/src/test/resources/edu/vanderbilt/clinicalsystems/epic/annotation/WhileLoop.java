@@ -1,17 +1,20 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+
 /**
  *  ForLoop Sample
  */
-@EpicRoutine
+@RoutineUnit
 public class WhileLoop {
 	
-	@EpicTag public static void loopBody(int i) { }
+	@RoutineTag public static void loopBody(int i) { }
 	
 	/**
 	 * Expect F 1:1:10
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopIncrementByOne() {
 		for( int i = 1 ; i <= 10 ; ++i ) loopBody(i) ;
 	}
@@ -19,7 +22,7 @@ public class WhileLoop {
 	/**
 	 * Expect F 1:2:10
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopIncrementByTwo() {
 		for( int i = 1 ; i <= 10 ; i+=2 ) loopBody(i) ;
 	}
@@ -27,7 +30,7 @@ public class WhileLoop {
 	/**
 	 * Expect F 1
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopIncrementByOneForever() {
 		for( int i = 1 ; ; ++i ) loopBody(i) ;
 	}
@@ -35,7 +38,7 @@ public class WhileLoop {
 	/**
 	 * Expect F 1:2
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopIncrementByTwoForever() {
 		for( int i = 1 ; ; i+=2 ) loopBody(i) ;
 	}
@@ -43,7 +46,7 @@ public class WhileLoop {
 	/**
 	 * Expect F 1:1:10
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopStopNotIncludedIncrementByOne() {
 		for( int i = 0 ; i < 10 ; ++i ) loopBody(i) ;
 	}
@@ -51,7 +54,7 @@ public class WhileLoop {
 	/**
 	 * Expect F 1:2:10
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void forLoopStopNotIncludedIncrementByTwo() {
 		for( int i = 0 ; i < 10 ; i+=2 ) loopBody(i) ;
 	}

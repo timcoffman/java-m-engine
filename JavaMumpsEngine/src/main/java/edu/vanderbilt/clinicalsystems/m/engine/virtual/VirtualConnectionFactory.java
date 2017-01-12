@@ -35,7 +35,7 @@ public class VirtualConnectionFactory implements ConnectionFactory {
 			if ( m_connections.isEmpty() )
 				stop() ;
 		}
-			
+		
 		public void stop() {
 			/* nothing to stop */
 		}

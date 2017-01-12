@@ -37,7 +37,7 @@ TAG: forLoopStopNotIncludedIncrementByOne
 CMD: NEW | i
 CMD: SET | i := 0
 CMD: FOR | (-) {
-  CMD: QUIT : '( i<10 ) | (-)
+  CMD: QUIT : i'<10 | (-)
   CMD: DO | (-)
   {
     CMD: DO | loopBody^WhileLoop( i )
@@ -50,7 +50,7 @@ TAG: forLoopStopNotIncludedIncrementByTwo
 CMD: NEW | i
 CMD: SET | i := 0
 CMD: FOR | (-) {
-  CMD: QUIT : '( i<10 ) | (-)
+  CMD: QUIT : i'<10 | (-)
   CMD: DO | (-)
   {
     CMD: DO | loopBody^WhileLoop( i )

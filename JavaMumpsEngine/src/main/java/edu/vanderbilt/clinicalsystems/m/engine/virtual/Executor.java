@@ -2,7 +2,6 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 
 public interface Executor {
 
@@ -16,6 +15,9 @@ public interface Executor {
 	ExecutionResult execute( Command command ) ;
 	
 	EngineException error() ;
-	Constant result();
+	EvaluationResult result();
+
+	ExecutionResult caughtError(EngineException ex);
+	ExecutionResult producedResult(EvaluationResult result);
 
 }

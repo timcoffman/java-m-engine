@@ -1,5 +1,6 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator.Listener;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
@@ -14,12 +15,12 @@ public class ConditionalLoopAssembler extends FlowAssembler<Ast.WhileLoop> {
 	}
 
 	@Override
-	public void assemble(Ast.WhileLoop whileLoopNode, Block block) {
+	public void assemble(Ast.WhileLoop whileLoopNode, Block block, Listener delegate) {
 		
-		Block bodyBlock = tools().blocks().generate( whileLoopNode.statement(), null ) ;
+		Block bodyBlock = tools().blocks().generate( whileLoopNode.statement(), delegate ) ;
 		
 		Block conditionBlock = new MultilineBlock() ;
-		try ( BlockManager conditionBlockManager = new BlockManager(conditionBlock) ) {
+		try ( BlockManager conditionBlockManager = new BlockManager(conditionBlock, delegate) ) {
 			Expression condition = tools().expressions().generate(whileLoopNode.condition(), conditionBlockManager) ;
 			conditionBlockManager.prependElement( new Command(condition.inverted(), CommandType.QUIT, Argument.NOTHING ));
 		}

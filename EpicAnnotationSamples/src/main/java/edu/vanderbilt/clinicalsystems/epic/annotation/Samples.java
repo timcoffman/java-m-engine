@@ -9,8 +9,10 @@ import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundatio
 import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFSetElmt;
 import edu.vanderbilt.clinicalsystems.epic.api.oo.EpicCommunicationFoundation;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 
-@EpicRoutine
+@RoutineUnit
 public class Samples {
 	
 	public Samples() {
@@ -24,32 +26,32 @@ public class Samples {
 	public void methodThatsNotATag() {
 	}
 	
-	@EpicTag
-	public void tagWithNoParameters() {
+	@RoutineTag
+	public static void tagWithNoParameters() {
 	}
 
-	@EpicTag
-	public void tagWithStringParameter( String x ) {
+	@RoutineTag
+	public static void tagWithStringParameter( String x ) {
 	}
 
-	@EpicTag
-	public void tagWithIntegerParameter( int x ) {
+	@RoutineTag
+	public static void tagWithIntegerParameter( int x ) {
 	}
 
-	@EpicTag
-	public void tagWithDoubleParameter( double x ) {
+	@RoutineTag
+	public static void tagWithDoubleParameter( double x ) {
 	}
 
-	@EpicTag
-	public void tagWithValueParameter( Value x ) {
+	@RoutineTag
+	public static void tagWithValueParameter( Value x ) {
 	}
 
-	@EpicTag
-	public void tagWithOtherParameter( System x ) {
+	@RoutineTag
+	public static void tagWithOtherParameter( System x ) {
 	}
 
-	@EpicTag
-	public void unaryOperators() {
+	@RoutineTag
+	public static void unaryOperators() {
 		int prefixPlus = 0 ;
 		int prefixMinus = 0 ;
 		int postfixIncrement = 0 ;
@@ -65,8 +67,16 @@ public class Samples {
 		x = --prefixDecrement ;
 	}
 
-	@EpicTag
-	public void loops() {
+	@RoutineTag
+	public static int basicSummationLoop( int start, int increment, int stop) {
+		int s = 0 ;
+		for ( int x = start ; x <= stop ; x+=increment )
+			s += x ;
+		return s ;
+	}
+
+	@RoutineTag
+	public static void loops() {
 		int k ;
 		for ( int x = 1 ; ; x+=7 )
 			break ;
@@ -105,8 +115,8 @@ public class Samples {
 	    q
      */
 	
-	@EpicTag
-	public void MyService() {
+	@RoutineTag
+	public static void MyService() {
 		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
 		int ecfLine ;
 		//
@@ -130,8 +140,8 @@ public class Samples {
 	    }
 	}
 	
-	@EpicTag
-	public void MyService2() {
+	@RoutineTag
+	public static void MyService2() {
 		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
 		int ecfLine ;
 		//
@@ -155,7 +165,7 @@ public class Samples {
 	    }
 	}
 	
-//	@EpicTag
+//	@RoutineTag
 //	public void MyService3() {
 //		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
 //		int ecfLine ;
@@ -181,8 +191,8 @@ public class Samples {
 	/**
 	 * helper4 function, expecting "N z I a>7 S z=">7"\nE  S z="<=7""
 	 */
-	@EpicTag
-	public String helper4( int a ) {
+	@RoutineTag
+	public static String helper4( int a ) {
 		String z ;
 		if ( a>7 ) z = ">7" ;
 		else z = "<=7" ;
@@ -192,32 +202,32 @@ public class Samples {
 	/**
 	 * main entry point, expecting "Q"
 	 */
-	@EpicTag
-	public void main( String x, Integer y ) {
+	@RoutineTag
+	public static void main( String x, Integer y ) {
 		/* nothing */
 	}
 
 	/**
 	 * helper function, expecting "Q s_s"
 	 */
-	@EpicTag
-	public String helper( String s ) {
+	@RoutineTag
+	public static String helper( String s ) {
 		return s + s ;
 	}
 	
 	/**
 	 * helper2 function, expecting "Q b*c+a"
 	 */
-	@EpicTag
-	public double helper2( double a, double b, double c ) {
+	@RoutineTag
+	public static double helper2( double a, double b, double c ) {
 		return a + b * c ;
 	}
 	
 	/**
 	 * helper3 function, expecting "N z S z=$$helper2(1.0,2.0,3.0) Q b*z+a"
 	 */
-	@EpicTag
-	public Float helper3( Float a, Float b, Float c ) {
+	@RoutineTag
+	public static Float helper3( Float a, Float b, Float c ) {
 		float z = (float)helper2(1.0,2.0,3.0), k = 99 ; 
 		long t = System.currentTimeMillis() ;
 		return a + b * z ;
@@ -233,11 +243,11 @@ public class Samples {
 	  
 	   */
 	
-	@EpicInject public EpicCommunicationFoundation.Request request ;
-	@EpicInject public EpicCommunicationFoundation.Response response ;
+	@EpicInject public static EpicCommunicationFoundation.Request request ;
+	@EpicInject public static EpicCommunicationFoundation.Response response ;
 	
-	@EpicTag("UpdateNames")
-	public void updatesNames() {
+	@RoutineTag("UpdateNames")
+	public static void updatesNames() {
 		for ( int ln=1 ; ln <= zECFNumElmts("Employees",null); ++ln  ) {
 			Value employee = zECFGetElmt( "Employees", null, ln ) ;
 			Value id = zECFGet( "Id", employee  ) ;

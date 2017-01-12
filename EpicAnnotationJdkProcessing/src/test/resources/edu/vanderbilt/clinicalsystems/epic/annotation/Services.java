@@ -9,10 +9,12 @@ import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundatio
 import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFSetElmt;
 import edu.vanderbilt.clinicalsystems.epic.api.oo.EpicCommunicationFoundation;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 /**
  *  sample service
  */
-@EpicRoutine
+@RoutineUnit
 public class Services {
 	
 	/*
@@ -33,7 +35,7 @@ public class Services {
 	    q
      */
 	
-	@EpicTag
+	@RoutineTag
 	public static void MyService() {
 		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
 		int ecfLine ;
@@ -58,7 +60,7 @@ public class Services {
 	    }
 	}
 	
-//	@EpicTag
+//	@RoutineTag
 //	public void MyService3() {
 //		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
 //		int ecfLine ;
@@ -94,7 +96,7 @@ public class Services {
 	@EpicInject public EpicCommunicationFoundation.Request request ;
 	@EpicInject public EpicCommunicationFoundation.Response response ;
 	
-	//@EpicTag("UpdateNames")
+	//@RoutineTag("UpdateNames")
 	public static void updatesNames() {
 		for ( int ln=1 ; ln <= zECFNumElmts("Employees",null); ++ln  ) {
 			Value employee = zECFGetElmt( "Employees", null, ln ) ;

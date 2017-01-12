@@ -3,7 +3,6 @@ package edu.vanderbilt.clinicalsystems.m.lang.model.expression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
@@ -73,7 +72,7 @@ public abstract class VariableReference extends Expression {
 				+
 				m_referenceStyle.unformattedRepresentation()
 				+
-				"(" + StreamSupport.stream(m_keys.spliterator(), false).map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ")) + ")"
+				(m_keys.isEmpty() ? "" : m_keys.stream().map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ","(",")")))
 				;
 	}
 	

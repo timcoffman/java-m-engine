@@ -1,0 +1,20 @@
+{
+TAG: Example
+CMD: QUIT | (-)
+
+TAG: summation( start, step, stop )
+CMD: NEW | s
+CMD: SET | s := 0
+CMD: NEW | i
+CMD: SET | i := start
+CMD: FOR | (-) {
+  CMD: QUIT : i>stop | (-)
+  CMD: DO | (-)
+  {
+    CMD: SET | s := s+i
+    CMD: SET | i := i+step
+  }
+}
+CMD: QUIT | s
+
+}

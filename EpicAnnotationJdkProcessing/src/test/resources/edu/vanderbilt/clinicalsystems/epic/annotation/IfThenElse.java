@@ -1,17 +1,18 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
 
 /**
  *  Conditional Block Sample
  */
-@EpicRoutine
+@RoutineUnit
 public class IfThenElse {
 	
-	@EpicTag public static void loopBody(int i) { }
-	@EpicTag public static boolean sometimes() { return true ; }
+	@RoutineTag public static void loopBody(int i) { }
+	@RoutineTag public static boolean sometimes() { return true ; }
 	
-	@EpicTag
+	@RoutineTag
 	public static String ifThenElseAssign( int a ) {
 		String z ;
 		if ( a>7 ) z = ">7" ;
@@ -19,7 +20,7 @@ public class IfThenElse {
 		return z ;
 	}
 
-	@EpicTag
+	@RoutineTag
 	public static String ifThenElseReturn( int a ) {
 		if ( a>7 ) return ">7" ;
 		else return "<=7" ;

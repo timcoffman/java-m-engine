@@ -24,7 +24,7 @@ public class EngineException extends Exception {
 	
 	private static String formatMessage( ErrorCode errorCode, Map<String,String> context ) {
 		StringBuffer sb = new StringBuffer() ;
-		Matcher m = Pattern.compile("(\\{[^\\}]+\\})").matcher( errorCode.messageFormat() ) ;
+		Matcher m = Pattern.compile("\\{([^\\}]+)\\}").matcher( errorCode.messageFormat() ) ;
 		while ( m.find() ) {
 			String value = context.get( m.group(1) ) ;
 			if ( null == value )

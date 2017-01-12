@@ -1,16 +1,19 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+
 /**
  *  DoLoop Sample
  */
-@EpicRoutine
+@RoutineUnit
 public class Literals {
 	
 	/**
 	 * Expect
 	 *  Q 1
 	 */
-	@EpicTag
+	@RoutineTag
 	public static boolean returnTrue() {
 		return true ;
 	}
@@ -19,7 +22,7 @@ public class Literals {
 	 * Expect
 	 *  Q 0
 	 */
-	@EpicTag
+	@RoutineTag
 	public static boolean returnFalse() {
 		return false ;
 	}

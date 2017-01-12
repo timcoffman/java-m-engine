@@ -5,12 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target( { ElementType.TYPE } )
+@Target( { ElementType.METHOD } )
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Library {
-
-	public String value() default DEFAULT_NAME;
+public @interface RoutineTag {
+	
+	public String value() default DEFAULT_NAME ;
 	
 	public static final String DEFAULT_NAME = "---" ;
-	
 }

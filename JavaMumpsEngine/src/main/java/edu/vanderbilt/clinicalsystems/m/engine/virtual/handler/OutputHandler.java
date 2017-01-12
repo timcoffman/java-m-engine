@@ -77,9 +77,9 @@ public class OutputHandler extends CommandHandler {
 
 	protected ExecutionResult write( Expression expression ) {
 		try {
-			return write( frame().evaluate( expression ).value() ) ;
+			return write( frame().evaluate( expression ).toConstant().value() ) ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 	
@@ -97,7 +97,7 @@ public class OutputHandler extends CommandHandler {
 			
 			return ExecutionResult.CONTINUE ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 	
@@ -111,7 +111,7 @@ public class OutputHandler extends CommandHandler {
 			
 			return ExecutionResult.CONTINUE ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 	
@@ -125,7 +125,7 @@ public class OutputHandler extends CommandHandler {
 			
 			return ExecutionResult.CONTINUE ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 	
@@ -139,7 +139,7 @@ public class OutputHandler extends CommandHandler {
 			
 			return ExecutionResult.CONTINUE ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 	

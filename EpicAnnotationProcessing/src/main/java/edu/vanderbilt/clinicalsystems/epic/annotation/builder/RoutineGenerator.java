@@ -1,13 +1,12 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
-import java.lang.reflect.Modifier;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.ReportType;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
@@ -21,7 +20,7 @@ public class RoutineGenerator extends Generator<Routine,TypeElement> {
 	public RoutineGenerator(RoutineTools builderTools) { super(builderTools) ; }
 	
 	@Override
-	public Routine generate(TypeElement annotatedType, Listener routineListener) {
+	public Routine generate(TypeElement annotatedType, Listener routineListener ) {
 		Routine routine = new Routine() ;
 		
 		routine.appendElement( new Tag( annotatedType.getSimpleName().toString() ) );
@@ -31,7 +30,7 @@ public class RoutineGenerator extends Generator<Routine,TypeElement> {
 		
 		for (Element element : annotatedType.getEnclosedElements()) {
 
-			final EpicTag epicTag = element.getAnnotation( EpicTag.class ) ;
+			final RoutineTag epicTag = element.getAnnotation( RoutineTag.class ) ;
 			if ( null == epicTag )
 				continue ;
 			

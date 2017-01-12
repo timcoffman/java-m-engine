@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
@@ -85,7 +86,9 @@ public abstract class Block implements RoutineElement {
 	public boolean isEmpty() { return m_elements.isEmpty() ; }
 	
 	@Override
-	public String toString() { return "{ ... " + m_elements.size() + " ... }"; }
+	public String toString() {
+		return "{\n" + m_elements.stream().map(Object::toString).map((s)->"\t"+s+"\n").collect(Collectors.joining()) + "}\n";
+	}
 
 	private void postProcess() {
 		clearTagPositionCache() ;

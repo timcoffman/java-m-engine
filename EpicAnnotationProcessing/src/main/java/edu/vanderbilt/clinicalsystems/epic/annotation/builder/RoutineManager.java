@@ -7,7 +7,8 @@ public class RoutineManager extends RoutineElementsManager {
 
 	private final Routine m_routine ;
 	
-	public RoutineManager( Routine routine ) {
+	public RoutineManager( Routine routine, Generator.Listener delegate ) {
+		super(delegate) ;
 		m_routine = routine ;
 	}
 	

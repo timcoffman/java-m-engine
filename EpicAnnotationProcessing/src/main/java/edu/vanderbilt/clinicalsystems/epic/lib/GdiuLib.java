@@ -1,8 +1,8 @@
 package edu.vanderbilt.clinicalsystems.epic.lib;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 
-@EpicRoutineLibrary("GDIULIB")
+@RoutineUnit("GDIULIB")
 public class GdiuLib {
 
 }

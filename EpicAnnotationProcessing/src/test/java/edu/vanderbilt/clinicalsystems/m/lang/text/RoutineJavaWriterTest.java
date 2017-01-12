@@ -16,8 +16,8 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.writer.FileCodeWriter;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 import edu.vanderbilt.clinicalsystems.epic.lib.Epic;
 import edu.vanderbilt.clinicalsystems.m.Core;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
@@ -78,14 +78,14 @@ public class RoutineJavaWriterTest {
 		RoutineJavaBuilderContext.EventListener listener = new RoutineJavaBuilderContext.EventListener() {
 
 			@Override public void createdClass(JDefinedClass definedClass, String routineName) {
-				JAnnotationUse annotation = definedClass.annotate( EpicRoutineLibrary.class ) ;
+				JAnnotationUse annotation = definedClass.annotate( RoutineUnit.class ) ;
 				if ( !routineName.equals(definedClass.name() )) {
 					annotation.param("value",routineName) ;
 				}
 			}
 
 			@Override public void createdMethod(JDefinedClass definedClass, JMethod method, String tagName) {
-				JAnnotationUse annotation = method.annotate( EpicTag.class ) ;
+				JAnnotationUse annotation = method.annotate( RoutineTag.class ) ;
 				if ( !tagName.equals(method.name() )) {
 					annotation.param("value",tagName) ;
 				}

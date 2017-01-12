@@ -1,11 +1,11 @@
 package edu.vanderbilt.clinicalsystems.epic.api;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 
-@EpicRoutineLibrary("%Zefnlib")
+@RoutineUnit("%Zefnlib")
 public class FoundationsCore {
 
-	@EpicTag("up") public static native String up( String str ) ;
+	@RoutineTag("up") public static native String up( String str ) ;
 	
 }

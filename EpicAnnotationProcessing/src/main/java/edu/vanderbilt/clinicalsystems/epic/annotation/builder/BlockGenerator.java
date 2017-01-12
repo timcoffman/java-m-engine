@@ -1,6 +1,7 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -9,7 +10,6 @@ import javax.lang.model.type.TypeMirror;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.DoWhileLoop;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.EmptyStatement;
-import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.MemberSelect;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.MethodResolution;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
@@ -56,17 +56,17 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
 	@Override
 	public Block generate(Ast.Statement statement, Listener listener) {
-		if ( null != listener )
-			throw new IllegalArgumentException( "listener must be null; " + this.getClass().getSimpleName() + " never generates side-effects and ignores listener" ) ;
+//		if ( null != listener )
+//			throw new IllegalArgumentException( "listener must be null; " + this.getClass().getSimpleName() + " never generates side-effects and ignores listener" ) ;
 		Block block = new MultilineBlock() ;
 		if ( statement instanceof Ast.Block ) {
 			for ( Ast.Statement s : ((Ast.Block)statement).statements() ) {
 				
-				s.accept( new StatementInterpreter(), block ) ;
+				s.accept( new StatementInterpreter(listener), block ) ;
 				
 			}
 		} else {
-			statement.accept( new StatementInterpreter(), block) ;
+			statement.accept( new StatementInterpreter(listener), block) ;
 		}
 		
 		return block ;
@@ -74,7 +74,13 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
 	private final class StatementInterpreter extends Ast.Interpreter<Void, Block> {
 
-		public StatementInterpreter() { super(tools()) ; }
+		private final Generator.Listener m_delegate ;
+		
+		public StatementInterpreter(Generator.Listener delegate) {
+			super(tools()) ;
+			Objects.requireNonNull(delegate) ;
+			m_delegate = delegate ;
+		}
 		
 		@Override protected Void unsupportedNodeTypeResult(Ast.Node node, Block block) {
 			report(RoutineTools.ReportType.ERROR, node.getClass().getSimpleName() + " not supported yet", node);
@@ -83,7 +89,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		
 		@Override
 		public Void visitExpression(Ast.Expression expression, Block block) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				tools().expressions().generate( expression, blockManager ) ;
 				// only side-effects
 			}
@@ -98,7 +104,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 
 		@Override
 		public Void visitReturn(Ast.Return returnNode, Block block) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				blockManager.appendElement( new Command( CommandType.QUIT, new ExpressionList( tools().expressions().generate(returnNode.expression(),blockManager) ) ) );
 			}
 			return null ;
@@ -107,7 +113,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		
 		@Override
 		public Void visitUnary(Ast.Unary unaryNode, Block block) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				DirectVariableReference variableReference = (DirectVariableReference)tools().expressions().generate( unaryNode.expression(), blockManager ) ;
 				Expression source ;
 				switch ( unaryNode.operationType() ) {
@@ -130,7 +136,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		
 		@Override
 		public Void visitBinary(Ast.Binary binaryNode, Block block) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				DirectVariableReference variableReference = (DirectVariableReference)tools().expressions().generate( binaryNode.leftOperand(), blockManager ) ;
 				Expression operand = tools().expressions().generate( binaryNode.leftOperand(), blockManager ) ;
 				Expression source ;
@@ -160,11 +166,11 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				
 				@Override
 				public Void visitMethodInvocation(Ast.MethodInvocation methodInvocationNode, Block block) {
-					if ( assembleNativeCommand(methodInvocationNode, block) ) {
+					if ( assembleNativeCommand(methodInvocationNode, block, m_delegate) ) {
 						/* ok, all done */
 						return null ;
 					} else {
-						try ( BlockManager blockManager = new BlockManager(block) ) {
+						try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 							FunctionCall functionCall = (FunctionCall)tools().expressions().generate( methodInvocationNode, blockManager ) ;
 							if ( FunctionCall.Returning.SOME_VALUE == functionCall.returning() ) {
 								blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(DirectVariableReference.DEFAULT_TEMP_VARIABLE), functionCall)) ) );
@@ -204,7 +210,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				report(RoutineTools.ReportType.WARNING, "a local variable or parameter must be a String, int, double, @NativeType ( e.g. Value ), or @NativeWrapperType", variableNode);
 			}
 
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				String variableName = variableNode.name().toString();
 				DirectVariableReference variableRef = new DirectVariableReference(Scope.LOCAL, variableName );
 				DirectVariableReference[] variables = new DirectVariableReference[] { variableRef } ;
@@ -223,25 +229,25 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		
 		@Override
 		public Void visitWhileLoop(Ast.WhileLoop whileLoop, Block block) {
-			m_conditionalLoopAssembler.assemble( whileLoop, block ) ;
+			m_conditionalLoopAssembler.assemble( whileLoop, block, m_delegate ) ;
 			return null ;
 		}
 
 		@Override
 		public Void visitForLoop(Ast.ForLoop forLoop, Block block) {
-			m_incrementalLoopAssembler.assemble( forLoop, block ) ;
+			m_incrementalLoopAssembler.assemble( forLoop, block, m_delegate ) ;
 			return null ;
 		}
 		
 		@Override
 		public Void visitDoWhileLoop(DoWhileLoop doLoop, Block block) {
-			m_postConditionalLoopAssembler.assemble( doLoop, block ) ;
+			m_postConditionalLoopAssembler.assemble( doLoop, block, m_delegate ) ;
 			return null ;
 		}
 
 		@Override
 		public Void visitBreak(Ast.Break breakNode, Block block) {
-			try ( RoutineElementsManager blockManager = new BlockManager(block) ) {
+			try ( RoutineElementsManager blockManager = new BlockManager(block, m_delegate) ) {
 				blockManager.appendElement( new Command( CommandType.QUIT, Argument.NOTHING ) ) ;
 			}
 			return null ;
@@ -249,13 +255,13 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 
 		@Override
 		public Void visitIf(Ast.If ifNode, Block block) {
-			m_conditionalFlowAssembler.assemble( ifNode, block ) ;
+			m_conditionalFlowAssembler.assemble( ifNode, block, m_delegate ) ;
 			return null ;
 		}
 
 		@Override
 		public Void visitBlock(Ast.Block blockNode, Block block) {
-			try ( BlockManager blockManager = new BlockManager(block) ) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				blockManager.appendElements( tools().blocks().generate(blockNode,blockManager) );
 			}
 			return null ;
@@ -264,7 +270,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	}
 	
 	
-	private boolean assembleNativeCommand( Ast.MethodInvocation methodInvocationNode, Block block )  {
+	private boolean assembleNativeCommand( Ast.MethodInvocation methodInvocationNode, Block block, Generator.Listener delegate )  {
 		MethodResolution methodInvocationTarget = tools().resolveMethodInvocationTarget( methodInvocationNode );
 		if ( null == methodInvocationTarget ) {
 			report( RoutineTools.ReportType.ERROR, "failed to resolve method", methodInvocationNode ) ;
@@ -275,7 +281,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		if ( null != nativeCommandAnnotation ) {
 			switch ( nativeCommandAnnotation.value() ) {
 			case VALUE_ASSIGN:
-				assembleValueAssignment( methodInvocationNode.methodSelect(), methodInvocationNode.arguments().get(0), block ) ;
+				assembleValueAssignment( methodInvocationNode.methodSelect(), methodInvocationNode.arguments().get(0), block, delegate ) ;
 				return true ;
 			case EXTENSION:
 				assembleExtension( (ExecutableElement)methodInvocationTarget, methodInvocationNode, block ) ;
@@ -345,24 +351,30 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 //		return variableRef ;
 //	}
 	
-	private void assembleValueAssignment(Ast.Expression target, Ast.Expression sourceArgument, Block block) {
-		try ( BlockManager blockManager = new BlockManager(block) ) {
+	private void assembleValueAssignment(Ast.Expression target, Ast.Expression sourceArgument, Block block, Generator.Listener delegate) {
+		try ( BlockManager blockManager = new BlockManager(block, delegate) ) {
 			Expression source = tools().expressions().generate( sourceArgument, blockManager );
+			
 			VariableReference variableRef = target.accept( new Ast.Interpreter<VariableReference, Listener>(tools()) {
 
 				@Override
 				public VariableReference visitExpression(Ast.Expression expressionNode, Listener listener) {
 					return super.visitExpression(expressionNode, listener);
 				}
+				
+				@Override
+				public VariableReference visitMethodInvocation( Ast.MethodInvocation methodInvocationNode, Listener listener) {
+					return (VariableReference) tools().expressions().generate( methodInvocationNode, listener ) ;
+				}
 
 				@Override
-				public VariableReference visitMemberSelect( MemberSelect memberSelectNode, Listener listener) {
+				public VariableReference visitMemberSelect( Ast.MemberSelect memberSelectNode, Listener listener) {
 					return (VariableReference)tools().expressions().generate( memberSelectNode.expression(), listener ) ;
 				}
 				
 			}, blockManager ) ;
-			
 			blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), source) ) ) );
+			
 		}
 	}
 

@@ -60,9 +60,15 @@ public class RoutineTestUtils {
 			
 			URL actualResourceMLanguage = new File( packageDir, name + ".m" ).toURI().toURL();
 			URL actualResourceTree = new File( packageDir, name + ".tree" ).toURI().toURL();
+			URL actualMetaTree = new File( packageDir, name + ".xml" ).toURI().toURL();
 			
 			assertThat( actualResourceMLanguage, notNullValue() ) ;
 			assertThat( actualResourceTree, notNullValue() ) ;
+			assertThat( actualMetaTree, notNullValue() ) ;
+			
+			try ( java.util.Scanner s = new java.util.Scanner( actualMetaTree.openStream() ) ) {
+				System.out.println( s.useDelimiter("\\A").next() ) ;
+			}
 			
 			URL expectedResourceMLanguage = m_resourceBase.getResource( name + "Expected.m");
 			URL expectedResourceTree = m_resourceBase.getResource( name + "Expected.tree");

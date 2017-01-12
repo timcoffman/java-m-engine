@@ -1,15 +1,15 @@
 package edu.vanderbilt.clinicalsystems.epic.lib;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 
-@EpicRoutineLibrary("%Zefnlib")
+@RoutineUnit("%Zefnlib")
 public class ZefnLib {
 
-	@EpicTag("zGtTmpGlo") public static native String acquirePrivateTempGlobal() ;
-	@EpicTag("%zRelTmpGlo") public static native String releasePrivateTempGlobal( String name ) ;
+	@RoutineTag("zGtTmpGlo") public static native String acquirePrivateTempGlobal() ;
+	@RoutineTag("%zRelTmpGlo") public static native String releasePrivateTempGlobal( String name ) ;
 	
-	@EpicTag("zGtTmpGloShrd") public static native String acquireSharedTempGlobal() ;
-	@EpicTag("%zRelTmpGloShrd") public static native String releaseSharedTempGlobal( String name ) ;
+	@RoutineTag("zGtTmpGloShrd") public static native String acquireSharedTempGlobal() ;
+	@RoutineTag("%zRelTmpGloShrd") public static native String releaseSharedTempGlobal( String name ) ;
 	
 }

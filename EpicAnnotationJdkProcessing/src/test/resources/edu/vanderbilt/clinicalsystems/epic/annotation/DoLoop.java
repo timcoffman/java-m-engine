@@ -1,19 +1,22 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+
 /**
  *  DoLoop Sample
  */
-@EpicRoutine
+@RoutineUnit
 public class DoLoop {
 	
-	@EpicTag public static void loopBody(int i) { }
-	@EpicTag public static boolean sometimes() { return true ; }
+	@RoutineTag public static void loopBody(int i) { }
+	@RoutineTag public static boolean sometimes() { return true ; }
 	
 	/**
 	 * Expect
 	 *  F D loopBody(-1) Q
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void doOnceLoop() {
 		do {
 			loopBody( -1 ) ;
@@ -24,7 +27,7 @@ public class DoLoop {
 	 * Expect
 	 *  F  D loopBody(i) Q:sometimes()
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void doForeverLoop() {
 		do {
 			loopBody( -1 ) ;
@@ -37,7 +40,7 @@ public class DoLoop {
 	 *  N i S i=0 F  Q:'(i<10) D
 	 *  . D loopBody(i)
 	 */
-	@EpicTag
+	@RoutineTag
 	public static void doWhileLoop() {
 		int i = 0 ;
 		do {

@@ -21,6 +21,7 @@
 		<!--
 		<module>EpicAnnotationProcessingPlugin</module>
 		-->
+		<module>EpicAnnotationJunit</module>
 		<module>EpicAnnotationSamples</module>
 	</modules>
 	

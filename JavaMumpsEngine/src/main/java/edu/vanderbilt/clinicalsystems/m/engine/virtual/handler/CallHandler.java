@@ -1,17 +1,22 @@
 package edu.vanderbilt.clinicalsystems.m.engine.virtual.handler;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.CommandHandler;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.CompiledRoutine;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.CompiledTag;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.EvaluationResult;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.ExecutionFrame;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
-import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
-import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 
 public class CallHandler extends CommandHandler {
 
@@ -20,7 +25,9 @@ public class CallHandler extends CommandHandler {
 	}
 	
 	@Override protected ExecutionResult handle( Nothing nothing, Block block ) throws EngineException {
-		return execute( block.elements().iterator() ) ;
+		try ( ExecutionFrame frame = frame().createChildFrame() ) {
+			return executeElementsIn( block.elements().iterator(), frame) ;
+		}
 	}
 
 	@Override protected ExecutionResult handle( TaggedRoutineCallList taggedRoutineCallList, Block block ) throws EngineException {
@@ -37,20 +44,30 @@ public class CallHandler extends CommandHandler {
 		String tagName = taggedRoutineCall.tagReference().tagName();
 		String routineName = taggedRoutineCall.tagReference().routineName();
 		
-		Routine routine = frame().globalContext().compiledRoutine( routineName ) ;
-		if ( null == routine )
+		CompiledRoutine compiledRoutine = frame().globalContext().compiledRoutine( routineName ) ;
+		if ( null == compiledRoutine )
 			throw new EngineException(ErrorCode.MISSING_ROUTINE,"routine",routineName) ;
 		
-		Iterator<RoutineElement> elementIterator = routine.findTagByName( tagName == null ? routineName : tagName ) ;
-		if ( !elementIterator.hasNext() )
+		Long argumentCount = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),false).collect(Collectors.counting());
+		CompiledTag compiledTag = compiledRoutine.compiledTag(tagName, argumentCount.intValue() );
+		if ( null == compiledTag )
 			throw new EngineException(ErrorCode.MISSING_TAG,"tag",tagName,"routine",routineName) ;
 
-		return execute( elementIterator ) ;
-	}
-
-	private ExecutionResult execute( Iterator<RoutineElement> elementIterator ) throws EngineException {
 		try ( ExecutionFrame frame = frame().createChildFrame() ) {
-			return executeElementsIn(elementIterator,frame) ;
+			List<EvaluationResult> arguments = new ArrayList<EvaluationResult>() ;
+			for ( Expression expression : taggedRoutineCall.arguments() )
+				arguments.add( evaluate(expression) ) ;
+			
+			ExecutionResult result = compiledTag.execute( frame, arguments ) ;
+			switch ( result ) {
+			case QUIT:
+				producedResult(frame.result()) ;
+				return ExecutionResult.CONTINUE ;
+			case ERROR:
+				return caughtError(frame.error());
+			default:
+				return result ;
+			}
 		}
 	}
 

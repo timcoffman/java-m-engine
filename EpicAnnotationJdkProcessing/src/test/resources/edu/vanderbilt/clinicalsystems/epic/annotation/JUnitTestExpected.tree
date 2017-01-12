@@ -1,0 +1,13 @@
+{
+TAG: JUnitTest
+CMD: QUIT | (-)
+
+TAG: assertSomething
+CMD: NEW | actual
+CMD: SET | actual := $$summation^Example( 1, 1, 3 )
+CMD: NEW | expected
+CMD: SET | expected := 1+2+3
+CMD: DO | assertThat^Assert( actual, $$equalTo^CoreMatchers( expected ) )
+CMD: QUIT | (-)
+
+}

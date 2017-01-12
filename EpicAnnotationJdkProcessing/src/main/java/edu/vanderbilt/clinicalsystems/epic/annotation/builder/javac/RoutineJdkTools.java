@@ -126,6 +126,22 @@ public class RoutineJdkTools extends RoutineTools {
 		public TypeMirror visitLiteral(LiteralTree literalTree, Void parameter) {
 			return determineTypeOfLiteral(literalTree);
 		}
+
+		@Override
+		public TypeMirror visitBinary(BinaryTree binaryTree, Void parameter) {
+			switch( binaryTree.getKind() ) {
+			case PLUS:
+			case MINUS:
+			case MULTIPLY:
+			case DIVIDE:
+				TypeMirror leftType = binaryTree.getLeftOperand().accept( this, parameter ) ;
+				TypeMirror rightType = binaryTree.getRightOperand().accept( this, parameter ) ;
+				return leftType ;
+			default:				
+				return super.visitBinary(binaryTree, parameter);
+			}
+		}
+		
 	}
 	
 	public TypeMirror determineType( ExpressionTree expressionTree ) {
@@ -327,9 +343,12 @@ public class RoutineJdkTools extends RoutineTools {
 			
 		} else {
 		
-			TypeElement implicitlyImportedElement ;
-			implicitlyImportedElement = elements().getTypeElement("java.lang." + name) ;
-			return resolutionForTypeElement( implicitlyImportedElement ) ;
+			for ( String packageName : new String[] { "java.lang", path.getCompilationUnit().getPackageName().toString() } ) {
+				TypeElement implicitlyImportedElement = elements().getTypeElement( packageName + "." + name) ;
+				if ( null != implicitlyImportedElement )
+					return resolutionForTypeElement( implicitlyImportedElement ) ;
+			}
+			throw new IllegalArgumentException( "\"" + name + "\" not implicitly imported" ) ; 
 		}
 	}
 

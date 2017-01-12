@@ -1,9 +1,9 @@
 
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 
-@EpicRoutineLibrary("EALIBECF1")
+@RoutineUnit("EALIBECF1")
 public class Ealibecf1 {
 
 

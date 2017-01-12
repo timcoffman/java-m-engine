@@ -27,7 +27,7 @@ public class InputOutputHandler extends OutputHandler {
 			
 			return ExecutionResult.CONTINUE ;
 		} catch ( EngineException ex ) {
-			return caughtException(ex) ;
+			return caughtError(ex) ;
 		}
 	}
 

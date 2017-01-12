@@ -41,6 +41,14 @@ public class BinaryOperation extends Operation {
 			return new BinaryOperation(m_leftHandSide.inverted(), OperatorType.AND, m_rightHandSide.inverted()) ;
 		} else if ( operator() == OperatorType.AND ) {
 			return new BinaryOperation(m_leftHandSide.inverted(), OperatorType.OR, m_rightHandSide.inverted()) ;
+		} else if ( operator() == OperatorType.GREATER_THAN ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.NOT_GREATER_THAN, m_rightHandSide) ;
+		} else if ( operator() == OperatorType.LESS_THAN ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.NOT_LESS_THAN, m_rightHandSide) ;
+		} else if ( operator() == OperatorType.NOT_LESS_THAN ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.LESS_THAN, m_rightHandSide) ;
+		} else if ( operator() == OperatorType.NOT_GREATER_THAN ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.GREATER_THAN, m_rightHandSide) ;
 		} else {
 			return super.inverted() ;
 		}

@@ -1,8 +1,7 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.RoutineDependency;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
-
-
 
 public abstract class Generator<E,T> extends Builder {
 
@@ -11,6 +10,8 @@ public abstract class Generator<E,T> extends Builder {
 	public interface Listener {
 		enum Location { BEFORE_EXPRESSION, AFTER_EXPRESSION } ; 
 		void generateSideEffect( Location location, RoutineElement element ) ;
+		
+		void publishDependency( RoutineDependency dependency ) ;
 	}
 	
 	public abstract E generate( T source, Listener listener ) ;

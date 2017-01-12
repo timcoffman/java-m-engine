@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.VariableDeclarationsExpression;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator.Listener.Location;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.IdentifierResolution;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.MethodResolution;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.ReportType;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TaggedRoutineDependency;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TypeResolution;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.VariableResolution;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
@@ -19,6 +22,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
@@ -107,7 +111,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //					
 //					Library libraryAnnotation = resolvedIdentifier.getAnnotation( Library.class ) ;
 //					NativeType nativeTypeAnnotation = resolvedIdentifier.getAnnotation( NativeType.class ) ;
-//					EpicRoutineLibrary epicRoutineLibraryAnnotation = resolvedIdentifier.getAnnotation( EpicRoutineLibrary.class ) ;
+//					Library epicRoutineLibraryAnnotation = resolvedIdentifier.getAnnotation( Library.class ) ;
 //					if ( null != libraryAnnotation ) {
 //						/* OK */
 //					} else if ( null != nativeTypeAnnotation ) {
@@ -115,7 +119,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //					} else if ( null != epicRoutineLibraryAnnotation ) {
 //						/* OK */
 //					} else {
-//						tools().reportError( "type without a Library or EpicRoutineLibrary cannot be used", identifierNode ) ;
+//						tools().reportError( "type without a Library or Library cannot be used", identifierNode ) ;
 //					}
 //					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
 //					
@@ -127,13 +131,13 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //				public VariableReference visitMethod(Ast.Method method, Listener listener) {
 //					
 //					Function functionAnnotation = resolvedIdentifier.getAnnotation( Function.class ) ;
-//					EpicTag epicTagAnnotation = resolvedIdentifier.getAnnotation( EpicTag.class ) ;
+//					RoutineTag epicTagAnnotation = resolvedIdentifier.getAnnotation( RoutineTag.class ) ;
 //					if ( null != functionAnnotation ) {
 //						/* OK */
 //					} else if ( null != epicTagAnnotation ) {
 //						/* OK */
 //					} else {
-//						tools().reportError( "type without a Function or EpicTag cannot be used", identifierNode ) ;
+//						tools().reportError( "type without a Function or RoutineTag cannot be used", identifierNode ) ;
 //					}
 //					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
 //
@@ -182,13 +186,13 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //				@Override
 //				public VariableReference visitExecutable(ExecutableType declaredType, Listener listener) {
 //					Function functionAnnotation = declaredType.getAnnotation( Function.class ) ;
-//					EpicTag epicTagAnnotation = declaredType.getAnnotation( EpicTag.class ) ;
+//					RoutineTag epicTagAnnotation = declaredType.getAnnotation( RoutineTag.class ) ;
 //					if ( null != functionAnnotation ) {
 //						/* OK */
 //					} else if ( null != epicTagAnnotation ) {
 //						/* OK */
 //					} else {
-//						reportError( "type without a Function or EpicTag cannot be used", identifierTree ) ;
+//						reportError( "type without a Function or RoutineTag cannot be used", identifierTree ) ;
 //					}
 //					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
 //				}
@@ -199,6 +203,28 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		@Override
 		public Expression visitParenthesized(Ast.Parenthesized parenthesizedNode, Listener listener) {
 			return parenthesizedNode.expression().accept(this,listener) ;
+		}
+
+		@Override
+		public Expression visitVariablesExpression( VariableDeclarationsExpression variablesExpressionNode, Listener listener) {
+			if ( variablesExpressionNode.variables().isEmpty() )
+				throw new IllegalArgumentException("no variables to declare and optionally initialize") ;
+			DirectVariableReference variableRef = null ;
+			for ( Ast.Variable variableNode : variablesExpressionNode.variables() ) {
+				String variableName = variableNode.name().toString();
+				variableRef = new DirectVariableReference(Scope.LOCAL, variableName );
+				DirectVariableReference[] variables = new DirectVariableReference[] { variableRef } ;
+				listener.generateSideEffect( Location.BEFORE_EXPRESSION, new Command( CommandType.NEW, new DeclarationList(variables) ) ) ;
+				if ( null != variableNode.initializer() ) {
+					Expression initialExpression = tools().expressions().generate(variableNode.initializer(),listener);
+					if ( initialExpression instanceof Constant && initialExpression.equals("") ) {
+						/* initialization to literal empty string can be suppressed in the Epic environment */
+					} else {
+						listener.generateSideEffect( Location.BEFORE_EXPRESSION, new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableRef), initialExpression ) ) ) ) ;
+					}
+				}
+			}
+			return variableRef ;
 		}
 
 		@Override
@@ -261,16 +287,13 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 
 		@Override
 		public Expression visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
-			TagReference tagRef ;
 			Expression instance = tools().expressions().generate( memberSelectNode.expression(), listener );
-			
+		
 			/*
 			 * may be an annotated native function
 			 */
 			
-			
-			tagRef = new TagReference( memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName() ) ;
-			return tagRef;
+			return new TagReference( memberSelectNode.identifier().toString(), ((DirectVariableReference)instance).variableName() ) ;
 		}
 		
 		
@@ -288,7 +311,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			throw new IllegalArgumentException( "exceeded maximum expression depth" ) ;
 		try {
 			tl_generationDepth.set( generationDepth + 1 );
-			return expressionTree.accept( new ExpressionInterpreter(), listener ) ;
+			return expressionTree.accept( new ExpressionInterpreter(), listener ).simplified() ;
 		} finally {
 			tl_generationDepth.set( generationDepth );
 		}
@@ -337,10 +360,10 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 				report( RoutineTools.ReportType.ERROR, "unrecognized native function", methodInvocationNode ) ;
 			}
 		}
-			
-		String tagName = tools().tagName( methodInvocationTarget.declaration() ) ;
-		String routineName = tools().routineName( methodInvocationTarget.declaration() ) ;
-		TagReference tagRef = new TagReference( tagName, routineName ) ;
+		
+		TaggedRoutineDependency taggedRoutineDependency = tools().resolveDependency( methodInvocationTarget.declaration() ) ;
+		listener.publishDependency( taggedRoutineDependency );
+		TagReference tagRef = new TagReference( taggedRoutineDependency.tagName(), taggedRoutineDependency.routineName() ) ;
 		FunctionCall.Returning returning ;
 		if ( tools().isTypeOfAnything( methodInvocationTarget.returnType() ) )
 			returning = FunctionCall.Returning.SOME_VALUE ;
@@ -478,7 +501,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			return new BinaryOperation(lhs, OperatorType.NOT_LESS_THAN, rhs) ;
 			
 		case MODULO:
-			return new UnaryOperation(OperatorType.NOT, new BinaryOperation(lhs, OperatorType.MODULO, rhs) ) ;
+			return new BinaryOperation(lhs, OperatorType.MODULO, rhs) ;
 		default:
 			report(RoutineTools.ReportType.ERROR, "does not support " + binaryNode.operationType(), binaryNode);
 			return InvalidExpression.instance("unrecognized binary operation " + binaryNode.operationType() ) ;

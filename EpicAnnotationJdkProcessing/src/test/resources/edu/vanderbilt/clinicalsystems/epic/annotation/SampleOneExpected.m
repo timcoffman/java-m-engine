@@ -7,7 +7,7 @@ sample;
 	;Generated-From: void sample()
 	NEW k,x
 	SET x=0
-	FOR  QUIT:'(x<10)  DO 
+	FOR  QUIT:x'<10  DO 
 	. SET k=0
 	. SET x=x+1
 	QUIT ;method returns void

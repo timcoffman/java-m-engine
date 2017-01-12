@@ -1,14 +1,15 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -20,9 +21,9 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeType;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeWrapperType;
 
 public abstract class RoutineTools {
@@ -108,6 +109,60 @@ public abstract class RoutineTools {
 		report( reportType, message, element );
 	}
 	
+	public interface RoutineDependency {
+		String routineName() ;
+		TypeElement dependsOnType() ;
+	}
+	
+	public interface TaggedRoutineDependency extends RoutineDependency {
+		String tagName() ;
+		ExecutableElement dependsOnMethod() ;
+	}
+	
+	public RoutineDependency resolveDependency( Element element ) {
+		return element.accept( new ElementInterpreter<RoutineDependency,Void>(this) {
+			@Override public RoutineDependency visitType(TypeElement element, Void parameter) { return resolveDependency(element) ; }
+			@Override public RoutineDependency visitExecutable(ExecutableElement element, Void parameter) { return resolveDependency(element) ; }
+		}, null) ;
+	}
+	
+	public RoutineDependency resolveDependency( TypeElement element ) {
+		String routineName = determineRoutineName(element) ;
+		return new RoutineDependencyImpl(element, routineName) ;
+	}
+	
+	public TaggedRoutineDependency resolveDependency( ExecutableElement element ) {
+		RoutineDependency routineDependency = resolveDependency(element.getEnclosingElement()) ;
+		String tagName = determineTagName(element) ;
+		return new TaggedRoutineDependencyImpl(routineDependency, element, tagName) ;
+	}
+
+	private static class RoutineDependencyImpl implements RoutineTools.RoutineDependency {
+		private final TypeElement m_dependsOnType ;
+		private final String m_routineName ;
+		public RoutineDependencyImpl(TypeElement dependsOnType, String routineName) {
+			m_dependsOnType = dependsOnType;
+			m_routineName = routineName;
+		}
+		@Override public String routineName() { return m_routineName; }
+		@Override public TypeElement dependsOnType() { return m_dependsOnType; }
+		@Override public int hashCode() { return m_dependsOnType.getQualifiedName().toString().hashCode() ^ m_routineName.hashCode() ; }
+	}
+	
+	private static class TaggedRoutineDependencyImpl extends RoutineDependencyImpl implements RoutineTools.TaggedRoutineDependency {
+		private final ExecutableElement m_dependsOnMethod ;
+		private final String m_tagName ;
+		public TaggedRoutineDependencyImpl( RoutineDependency routineDependency, ExecutableElement dependsOnMethod, String tagName) {
+			super(routineDependency.dependsOnType(), routineDependency.routineName()) ;
+			m_dependsOnMethod = dependsOnMethod ;
+			m_tagName = tagName ;
+		}
+		@Override public String tagName() { return m_tagName; }
+		@Override public ExecutableElement dependsOnMethod() { return m_dependsOnMethod; }
+		@Override public int hashCode() { return super.hashCode() ^ m_dependsOnMethod.getSimpleName().toString().hashCode() ^ m_tagName.hashCode() ; }
+	}
+	
+
 	protected List<String> commentsOnElement(Element element) {
 		String comment = m_processingEnv.getElementUtils().getDocComment( element ) ;
 		if ( null == comment )
@@ -120,7 +175,7 @@ public abstract class RoutineTools {
 	}
 
 	public boolean isLibraryType(Element element) {
-		EpicRoutineLibrary libraryAnnotation = element.asType().getAnnotation(EpicRoutineLibrary.class) ;
+		RoutineUnit libraryAnnotation = element.asType().getAnnotation(RoutineUnit.class) ;
 		return null != libraryAnnotation ;
 	}
 
@@ -209,31 +264,42 @@ public abstract class RoutineTools {
 		return types().isAssignable( typeMirror, m_mirrorForString );
 	}
 
-	public String tagName(Element element) {
-		EpicTag epicTagAnnotation = element.getAnnotation( EpicTag.class ) ;
-		if ( null != epicTagAnnotation && !EpicTag.DEFAULT_NAME.equals(epicTagAnnotation.value()) ) {
-			return epicTagAnnotation.value() ;
-		} else {
-			return element.getSimpleName().toString() ;
-		}
+	public static String determineTagName(ExecutableElement sourceMethod) {
+		RoutineTag tagAnnotation = sourceMethod.getAnnotation( RoutineTag.class ) ;
+		return determineTagName( tagAnnotation, sourceMethod.getSimpleName().toString() ) ;
+	}
+	
+	public static String determineTagName(Method sourceMethod) {
+		RoutineTag tagAnnotation = sourceMethod.getAnnotation( RoutineTag.class ) ;
+		return determineTagName( tagAnnotation, sourceMethod.getName() ) ;
+	}
+	
+	public static String determineTagName(RoutineTag tagAnnotation, String sourceSimpleName) {
+		if ( null == tagAnnotation )
+			return sourceSimpleName ;
+		if ( RoutineTag.DEFAULT_NAME.equals( tagAnnotation.value() ) )
+			return sourceSimpleName ;
+		return tagAnnotation.value();
 	}
 
-	public String routineName(Element element) {
-		if ( element.getKind() != ElementKind.CLASS ) {
-			Element enclosingElement = element.getEnclosingElement() ;
-			if ( null != enclosingElement )
-				return routineName(enclosingElement) ;
-			else
-				return null ;
-		}
-		EpicRoutineLibrary epicRoutineLibraryAnnotation = element.getAnnotation( EpicRoutineLibrary.class ) ;
-		if ( null != epicRoutineLibraryAnnotation && !EpicRoutineLibrary.DEFAULT_NAME.equals(epicRoutineLibraryAnnotation.value()) ) {
-			return epicRoutineLibraryAnnotation.value() ;
-		} else {
-			return element.getSimpleName().toString() ;
-		}
+	public static String determineRoutineName(TypeElement sourceType) {
+		RoutineUnit routineAnnotation = sourceType.getAnnotation( RoutineUnit.class ) ;
+		return determineRoutineName( routineAnnotation, sourceType.getSimpleName().toString() ) ;
 	}
-
+	
+	public static String determineRoutineName(Class<?> sourceType) {
+		RoutineUnit routineAnnotation = sourceType.getAnnotation( RoutineUnit.class ) ;
+		return determineRoutineName( routineAnnotation, sourceType.getSimpleName() ) ;
+	}
+	
+	public static String determineRoutineName(RoutineUnit routineAnnotation, String typeSimpleName) {
+		if ( null == routineAnnotation )
+			return typeSimpleName ;
+		if ( RoutineUnit.DEFAULT_NAME.equals( routineAnnotation.value() ) )
+			return typeSimpleName ;
+		return routineAnnotation.value();
+	}
+	
 //	public RoutineAccess routineAccess(Element element ) {
 //		if ( isPartOfCompilationUnit(element) )
 //			return RoutineAccess.LOCAL ;
@@ -246,7 +312,7 @@ public abstract class RoutineTools {
 //				return null ;
 //		}
 //		
-//		EpicRoutineLibrary epicRoutineLibraryAnnotation = element.getAnnotation( EpicRoutineLibrary.class ) ;
+//		Library epicRoutineLibraryAnnotation = element.getAnnotation( Library.class ) ;
 //		if ( null != epicRoutineLibraryAnnotation && epicRoutineLibraryAnnotation.implicit() ) {
 //			return RoutineAccess.IMPLICIT ;
 //		} else {
@@ -296,6 +362,7 @@ public abstract class RoutineTools {
 	}
 	
 	protected TypeResolution resolutionForTypeElement( TypeElement typeElement ) {
+		Objects.requireNonNull( typeElement ) ;
 		return new TypeResolutionImpl( typeElement ) ;
 	}
 	

@@ -2,30 +2,30 @@ package edu.vanderbilt.clinicalsystems.epic.lib;
 
 import java.lang.reflect.Method;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.Library;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderEnvironment;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderEnvironment.Resolver;
 
-@EpicRoutineLibrary
+@RoutineUnit
 public class Epic {
 
 	private static class EpicLibraryResolver implements Resolver {
 
 		@Override public String namedLibrary(Class<?> environmentClass) {
-			EpicRoutineLibrary libraryAnnotation = environmentClass.getAnnotation( EpicRoutineLibrary.class ) ;
+			RoutineUnit libraryAnnotation = environmentClass.getAnnotation( RoutineUnit.class ) ;
 			if ( null == libraryAnnotation )
 				return null ;
-			String name = Library.DEFAULT_NAME.equals(libraryAnnotation.value()) ? environmentClass.getSimpleName() : libraryAnnotation.value() ;
+			String name = RoutineUnit.DEFAULT_NAME.equals(libraryAnnotation.value()) ? environmentClass.getSimpleName() : libraryAnnotation.value() ;
 			return name ;
 		}
 		
 		@Override public String namedMethod(Method method) {
-			EpicTag methodAnnotation = method.getAnnotation( EpicTag.class ) ;
+			RoutineTag methodAnnotation = method.getAnnotation( RoutineTag.class ) ;
 			if ( null == methodAnnotation )
 				return null ;
-			String name = Library.DEFAULT_NAME.equals(methodAnnotation.value()) ? method.getName() : methodAnnotation.value() ;
+			String name = RoutineUnit.DEFAULT_NAME.equals(methodAnnotation.value()) ? method.getName() : methodAnnotation.value() ;
 			return name ;
 		}
 	}

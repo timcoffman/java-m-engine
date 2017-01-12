@@ -39,4 +39,5 @@ public class Routine implements Serializable {
 	
 	public void write( RoutineWriter writer ) throws RoutineWriterException { writer.write(this); }
 	
+	@Override public String toString() { return "Routine "  + (m_block.isEmpty() ? "<unnamed>" : "\"" + name() + "\"") + " " + m_block.toString() ; } 
 }

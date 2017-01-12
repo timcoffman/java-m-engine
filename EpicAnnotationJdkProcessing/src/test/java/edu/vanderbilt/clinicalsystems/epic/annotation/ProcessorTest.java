@@ -68,4 +68,14 @@ public class ProcessorTest {
 		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Services" ) ;
 	}
 	
+	@Test
+	public void canProcessExample() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Example" ) ;
+	}
+	
+	@Test
+	public void canProcessJunitTest() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("JUnitTest" ) ;
+	}
+	
 }
