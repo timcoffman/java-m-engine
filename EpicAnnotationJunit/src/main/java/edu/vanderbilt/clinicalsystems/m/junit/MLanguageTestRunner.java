@@ -20,6 +20,7 @@ import org.junit.runners.model.Statement;
 import org.xml.sax.SAXException;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.CompiledRoutine;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Executor.ExecutionResult;
@@ -40,6 +41,9 @@ public class MLanguageTestRunner extends BlockJUnit4ClassRunner {
 	public MLanguageTestRunner(Class<?> type) throws InitializationError {
 		super(type);
 		
+		if ( !type.isAnnotationPresent(RoutineUnit.class) )
+			throw new IllegalArgumentException( "test class " + type.getName() + " is run with " + MLanguageTestRunner.class.getSimpleName() + " but is not annotated with " + RoutineUnit.class.getName() ) ;
+		
 		ServiceLoader<RoutineParserFactory> routineParserLoader = ServiceLoader.load( RoutineParserFactory.class ) ;
 		m_parserFactory = routineParserLoader.iterator().next();
 		
@@ -55,40 +59,47 @@ public class MLanguageTestRunner extends BlockJUnit4ClassRunner {
 	private void install( Class<?> type, String routineName ) {
 		
 		CompiledRoutine compiledRoutine = m_db.lookup(routineName) ;
-		if ( compiledRoutine == null ) {
+		if ( compiledRoutine != null )
+			return ;
 		
-			URL testClassRoutineSource = type.getResource( routineName + ".m" ) ;
-			if ( null != testClassRoutineSource ) {
-				try ( InputStream testClassRoutineStream = testClassRoutineSource.openStream() ) {
+		if ( type.isAnnotationPresent(RoutineUnit.class) ) {
+			URL testClassRoutineLocation = type.getResource( routineName + ".m" ) ;
+			if ( null == testClassRoutineLocation )
+//				throw new RuntimeException( "missing resource \"" + routineName + ".m\" for " + type.getName() ) ;
+				installNativeJavaRoutine( type, routineName ) ;
+			else
+				installTranslatedRoutine( type, routineName, testClassRoutineLocation ) ;
+		} else {
+			installNativeJavaRoutine( type, routineName ) ;
+		}
+	}
 		
-					Routine routine = parseRoutine( testClassRoutineStream ) ;
-					m_db.install(routine);
-					
-				} catch (IOException ex) {
-					throw new RuntimeException( ex );
-				} catch (RoutineWriterException ex) {
-					throw new RuntimeException( ex );
-				}
-				
-				installDependencies( type, routineName ) ;
-			} else {
-				
-				try {
-					m_db.install( type, routineName );
-				} catch (RoutineWriterException ex) {
-					throw new RuntimeException( ex );
-				}
-			}
+	private void installTranslatedRoutine( Class<?> type, String routineName, URL testClassRoutineLocation ) {
+		try ( InputStream testClassRoutineStream = testClassRoutineLocation.openStream() ) {
+			
+			Routine routine = parseRoutine( testClassRoutineStream ) ;
+			m_db.install(routine);
+			
+		} catch (IOException ex) {
+			throw new RuntimeException( ex );
+		} catch (RoutineWriterException ex) {
+			throw new RuntimeException( ex );
+		}
+		
+		installDependencies( type, routineName ) ;
+	}
+	
+	private void installNativeJavaRoutine( Class<?> type, String routineName ) {
+		try {
+			m_db.install( type, routineName );
+		} catch (RoutineWriterException ex) {
+			throw new RuntimeException( ex );
 		}
 	}
 	
-	private void installDependencies( Class<?> type, String routineName ) {
-
-		Map<String,String> dependencies = new HashMap<String, String>();
-		
-		try ( InputStream testClassMetaStream = type.getResourceAsStream( routineName + ".xml" ) ) {
-			if ( null == testClassMetaStream )
-				throw new RuntimeException( "missing resource \"" + routineName + ".xml\" for " + type.getName() ) ;
+	private Map<String,String> lookupDependencies( Class<?> type, String routineName, URL testClassMetaLocation ) {
+		Map<String,String> dependencies = new HashMap<String, String>() ;
+		try ( InputStream testClassMetaStream = testClassMetaLocation.openStream() ) {
 
 			javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance() ;
 			javax.xml.parsers.DocumentBuilder documentBuilder = factory.newDocumentBuilder() ;
@@ -108,6 +119,16 @@ public class MLanguageTestRunner extends BlockJUnit4ClassRunner {
 			throw new RuntimeException( ex );
 		}
 
+		return dependencies ;
+	}
+	
+	private void installDependencies( Class<?> type, String routineName ) {
+
+		URL testClassMetaLocation = type.getResource( routineName + ".xml" ) ;
+		if ( null == testClassMetaLocation )
+			throw new RuntimeException( "missing resource \"" + routineName + ".xml\" for " + type.getName() ) ;
+		Map<String,String> dependencies = lookupDependencies( type, routineName, testClassMetaLocation );
+		
 		for ( Map.Entry<String,String> entry : dependencies.entrySet() ) {
 			try {
 				install( Class.forName( entry.getValue()), entry.getKey() ) ;

@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -17,9 +16,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.dom.*;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRoutineLibrary;
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicTag;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Visitor;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.ElementInterpreter;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 
@@ -103,43 +101,39 @@ public class RoutineJdtTools extends RoutineTools {
 		}
 
 		@Override
+		public boolean visit(NumberLiteral literal) {
+			provide( determineTypeOfLiteral( wrap(literal) ) );
+			return false ;
+		}
+		
+		@Override
 		public boolean visit(NullLiteral literal) {
 			provide( determineTypeOfLiteral( wrap(literal) ) );
 			return false ;
 		}
+
+		@Override
+		public boolean visit(InfixExpression node) {
+			provide( determineType(node.getLeftOperand()) );
+			return false ;
+		}
+		
+		@Override
+		public boolean visit(PrefixExpression node) {
+			provide( determineType(node.getOperand()) );
+			return false ;
+		}
+		
+		@Override
+		public boolean visit(PostfixExpression node) {
+			provide( determineType(node.getOperand()) );
+			return false ;
+		}
+		
 	}
 	
 	public TypeMirror determineType( Expression expression ) {
 		return new ExpressionTypeDeterminer().acceptWithParameter(null, expression ) ;
-	}
-
-	@Override
-	public String tagName(Element element) {
-		EpicTag epicTagAnnotation = element.getAnnotation( EpicTag.class ) ;
-		if ( null != epicTagAnnotation && !EpicTag.DEFAULT_NAME.equals(epicTagAnnotation.value()) ) {
-			return epicTagAnnotation.value() ;
-		} else {
-			return element.getSimpleName().toString() ;
-		}
-	}
-
-	@Override
-	public String routineName(Element element) {
-		if ( element.getKind() != ElementKind.CLASS ) {
-			Element enclosingElement = element.getEnclosingElement() ;
-			if ( null != enclosingElement )
-				return routineName(enclosingElement) ;
-			else
-				return null ;
-		}
-		EpicRoutineLibrary epicRoutineLibraryAnnotation = element.getAnnotation( EpicRoutineLibrary.class ) ;
-		if ( null != epicRoutineLibraryAnnotation && epicRoutineLibraryAnnotation.implicit() ) {
-			return null ; // none needed for implicit libraries
-		} else if ( null != epicRoutineLibraryAnnotation && !EpicRoutineLibrary.DEFAULT_NAME.equals(epicRoutineLibraryAnnotation.value()) ) {
-			return epicRoutineLibraryAnnotation.value() ;
-		} else {
-			return element.getSimpleName().toString() ;
-		}
 	}
 	
 	@Override
@@ -157,9 +151,16 @@ public class RoutineJdtTools extends RoutineTools {
 		public BindingResolutionImpl(T binding) { m_binding = binding ; }
 		protected TypeMirror typeMirrorFor( ITypeBinding typeBinding ) {
 			if ( typeBinding.isPrimitive() ) {
-				return types().getPrimitiveType( TypeKind.valueOf(typeBinding.getQualifiedName().toUpperCase())) ;
+				TypeKind typeKind = TypeKind.valueOf(typeBinding.getQualifiedName().toUpperCase());
+				switch ( typeKind ) {
+				case VOID:
+				case NONE:
+					return types().getNoType( typeKind ) ;
+				default:
+					return types().getPrimitiveType( typeKind) ;
+				}
 			} else {
-				return elements().getTypeElement( typeBinding.getQualifiedName() ).asType() ;
+				return elements().getTypeElement( typeBinding.getBinaryName() ).asType() ;
 			}
 		}
 		
@@ -579,9 +580,24 @@ public class RoutineJdtTools extends RoutineTools {
 		public ImportDeclarationImpl(ImportDeclaration node) { super(node) ; }
 	}
 	private class InfixExpressionImpl extends ASTNodeWrapper<InfixExpression> implements Ast.Binary {
-		public InfixExpressionImpl(InfixExpression node) { super(node) ; }
-		@Override public Ast.Expression leftOperand() { return wrap( m_astNode.getLeftOperand() ) ; }
-		@Override public Ast.Expression rightOperand() { return wrap( m_astNode.getRightOperand() ) ; }
+		private final int m_extendedOperandLevel ;
+		public InfixExpressionImpl(InfixExpression node) { this(node,node.hasExtendedOperands() ? node.extendedOperands().size()-1 : -1 ) ; }
+		private InfixExpressionImpl(InfixExpression node, int extendedOperandLevel) { super(node) ; m_extendedOperandLevel = extendedOperandLevel ; }
+		@Override public Ast.Expression leftOperand() {
+			if ( m_extendedOperandLevel < 0 )
+				return wrap( m_astNode.getLeftOperand() ) ;
+			else
+				return new InfixExpressionImpl(m_astNode, m_extendedOperandLevel-1 ) ;
+		}
+		@Override public Ast.Expression rightOperand() {
+			if ( m_extendedOperandLevel < 0 )
+				return wrap( m_astNode.getRightOperand() ) ;
+			else
+				return wrap( (Expression)m_astNode.extendedOperands().get(m_extendedOperandLevel) ) ;
+		}
+		@Override public <R, P> R accept(Visitor<R, P> visitor, P parameter) {
+			return visitor.visitBinary( this, parameter) ;
+		}
 		@Override public Ast.Binary.OperationType operationType() {
 			InfixExpression.Operator operator = m_astNode.getOperator() ;
 			if ( operator == InfixExpression.Operator.PLUS )

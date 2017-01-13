@@ -17,7 +17,7 @@ public class SamplesTest {
 	@RoutineTag
 	@Test
 	public void canPerformBasicSummationLoop() {
-		int actual = Samples.basicSummationLoop(1, 1, 3) ; 
+		int actual = Samples.basicSummationLoop(1, 1, 3) ;
 		int expected = 1 + 2 + 3;
 		assertThat( actual, equalTo(expected) ) ;
 		

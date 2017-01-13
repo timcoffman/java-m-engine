@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -11,7 +12,6 @@ import java.util.stream.Collectors;
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Executor.ExecutionResult;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 
 class CompiledJavaClassRoutine implements CompiledRoutine {
 	
@@ -57,16 +57,6 @@ class CompiledJavaClassRoutine implements CompiledRoutine {
 
 	private class CompiledJavaMethodTag implements CompiledTag {
 
-		private final class JavaObjectWrapper extends Constant {
-			private static final long serialVersionUID = 1L;
-			private final Object m_object ;
-			
-			public JavaObjectWrapper(Object obj) {
-				super(obj.toString()) ;
-				m_object = obj ;
-			}
-		}
-
 		private final Method m_method ;
 		private final String m_tagName;
 
@@ -92,6 +82,8 @@ class CompiledJavaClassRoutine implements CompiledRoutine {
 
 		@Override
 		public ExecutionResult execute( ExecutionFrame frame, List<EvaluationResult> arguments ) {
+			if ( Modifier.isNative( m_method.getModifiers() ) )
+				return frame.caughtError( new EngineException(ErrorCode.JAVA_METHOD_NOT_IMPLEMENTED, "class", m_method.getDeclaringClass().getName(), "method", m_method.getName() ) ) ;
 			Object[] javaArguments = new Object[m_method.getParameterCount()];
 			Iterator<EvaluationResult> argumentIterator = arguments.iterator() ;
 			for ( int i = 0 ; i < javaArguments.length ; ++i ) {

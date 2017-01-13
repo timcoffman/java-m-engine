@@ -13,6 +13,7 @@ public enum ErrorCode {
 	NOT_A_BOOLEAN("CANNOT_CONVERT_TO_BOOLEAN","\"{text}\" does not represent a boolean"),
 	UNSUPPORTED_FEATURE("UNSUPPORTED_FEATURE","{feature} \"{code}\" not supported at this time"),
 	INFINITE_LOOP("INFINITE_LOOP","loop block never exits"),
+	JAVA_METHOD_NOT_IMPLEMENTED("JAVA_NATIVE","java method {class}.{method}(...) not implemented"),
 	JAVA_EXCEPTION("JAVA","java exception");
 	
 	private final String m_code;

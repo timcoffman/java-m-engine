@@ -156,6 +156,27 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		}
 
 		@Override
+		public Void visitAssignment(Ast.Assignment assignmentNode, Block block) {
+			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
+				DirectVariableReference variableReference = (DirectVariableReference)tools().expressions().generate( assignmentNode.variable(), blockManager ) ;
+				Expression operand = tools().expressions().generate( assignmentNode.expression(), blockManager ) ;
+				Expression source ;
+				switch ( assignmentNode.assignmentType() ) {
+				case PLUS_ASSIGNMENT:
+					source = new BinaryOperation(variableReference, OperatorType.ADD, operand );
+					break ;
+				case MINUS_ASSIGNMENT:
+					source = new BinaryOperation(variableReference, OperatorType.SUBTRACT, operand );
+					break ;
+				default:
+					return super.visitAssignment(assignmentNode, block) ;
+				}
+				blockManager.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap(variableReference), source)) ) );
+			}
+			return null ;
+		}
+
+		@Override
 		public Void visitExpressionStatement(Ast.ExpressionStatement expressionStatementNode, Block block) {
 			return expressionStatementNode.expression().accept( new Ast.Interpreter<Void,Block>(tools()) {
 
