@@ -32,11 +32,15 @@ class CompiledNativeRoutine implements CompiledRoutine {
 
 	@Override
 	public CompiledTag compiledTag(String tagName, int parameterCount) {
-		Iterator<RoutineElement> elementIterator = m_routine.findTagByName(tagName);
-		if ( elementIterator.hasNext() )
-			return new CompiledNativeTag((Tag)elementIterator.next());
-		else
-			return null ;
+		if ( null == tagName ) {
+			return new CompiledNativeTag((Tag)m_routine.root().elements().iterator().next());
+		} else {
+			Iterator<RoutineElement> elementIterator = m_routine.findTagByName(tagName);
+			if ( elementIterator.hasNext() )
+				return new CompiledNativeTag((Tag)elementIterator.next());
+			else
+				return null ;
+		}
 	}
 
 	private class CompiledNativeTag implements CompiledTag {

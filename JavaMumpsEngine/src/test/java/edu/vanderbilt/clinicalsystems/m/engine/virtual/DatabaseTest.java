@@ -28,6 +28,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.InlineBlock;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
+import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
@@ -47,6 +48,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableRef
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall.Returning;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 
@@ -105,6 +107,13 @@ public class DatabaseTest {
 		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall(tagRef ) ;
 		TaggedRoutineCallList taggedRoutineCallList = new TaggedRoutineCallList( taggedRoutineCall ) ;
 		Command command = new Command( CommandType.DO, taggedRoutineCallList ) ;
+		return command ;
+	}
+	
+	private Command makeTaggedFunctionCallCommand( String tagName, String routineName, Expression ... parameters ) {
+		TagReference tagRef = new TagReference(tagName, routineName) ;
+		RoutineFunctionCall routineFunctionCall = new RoutineFunctionCall(tagRef,Returning.SOME_VALUE,Expression.list(parameters)) ;
+		Command command = new Command( CommandType.QUIT, new ExpressionList(routineFunctionCall) ) ;
 		return command ;
 	}
 	
@@ -276,7 +285,7 @@ public class DatabaseTest {
 		
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
 		
-		assertThat( result, equalTo(ExecutionResult.QUIT) );
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("X").value(), equalTo("123") ) ;
 	}
 	
@@ -297,7 +306,7 @@ public class DatabaseTest {
 		
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( "testtag", "TESTROUTINE" ) );
 		
-		assertThat( result, equalTo(ExecutionResult.QUIT) );
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("X").value(), equalTo("456") ) ;
 	}
 	
@@ -310,10 +319,10 @@ public class DatabaseTest {
 				)
 			);
 		
-		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
+		ExecutionResult result = m_cxn.execute( makeTaggedFunctionCallCommand( null, "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
-		assertThat( m_cxn.result(), equalTo( Constant.from(123) ) ) ;
+		assertThat( m_cxn.result(), equalTo( EvaluationResult.fromConstant(Constant.from(123)) ) ) ;
 	}
 	
 	@Test
@@ -321,7 +330,7 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( new Command( CommandType.QUIT, new ExpressionList(new BuiltinVariableReference(BuiltinVariable.HOROLOG) ) ) ) ;
 		assertThat( result, equalTo(ExecutionResult.QUIT) );
 		assertThat( m_cxn.result(), notNullValue() ) ;
-		assertThat( m_cxn.result(), not(equalTo("")) ) ;
+		assertThat( m_cxn.result(), not(equalTo(EvaluationResult.fromConstant(Constant.from("")))) ) ;
 	}
 	
 	@Test
@@ -341,7 +350,7 @@ public class DatabaseTest {
 		assertThat( routine, notNullValue() ) ;
 		
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
-		assertThat( result, equalTo(ExecutionResult.QUIT) );
+		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("Y").value(), equalTo("123") ) ;
 		
 	}

@@ -38,6 +38,14 @@ public abstract class EvaluationResult {
 			else
 				throw new UnsupportedOperationException( m_constant + " cannot be converted to a " + ofType) ;
 		}
+		
+		@Override public boolean equals(Object obj) {
+			if ( null == obj ) return false ;
+			if ( this == obj ) return true ;
+			if ( !(obj instanceof EvaluationResult) ) return false ;
+			EvaluationResult evalResult = (EvaluationResult)obj ;
+			return m_constant.equals( evalResult.toConstant() ) ;
+		}
 	}
 	
 	private static class JavaEvaluationResult extends EvaluationResult {
@@ -58,6 +66,14 @@ public abstract class EvaluationResult {
 				return Constant.from( (Double)m_object ) ;
 			else
 				throw new UnsupportedOperationException( m_object + " cannot be converted to a Constant" ) ;
+		}
+		
+		@Override public boolean equals(Object obj) {
+			if ( null == obj ) return false ;
+			if ( this == obj ) return true ;
+			if ( !(obj instanceof EvaluationResult) ) return false ;
+			EvaluationResult evalResult = (EvaluationResult)obj ;
+			return m_object.equals( evalResult.toObject( m_object.getClass() ) ) ;
 		}
 	}
 	
