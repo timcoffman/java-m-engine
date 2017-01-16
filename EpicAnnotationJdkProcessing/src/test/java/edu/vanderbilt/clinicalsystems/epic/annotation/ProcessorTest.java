@@ -29,6 +29,11 @@ public class ProcessorTest {
 	}
 	
 	@Test
+	public void canProcessBuiltinFunctions() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("BuiltinFunctions" ) ;
+	}
+	
+	@Test
 	public void canProcessLiterals() throws URISyntaxException, IOException {
 		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Literals" ) ;
 	}

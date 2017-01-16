@@ -142,7 +142,10 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				Expression source ;
 				switch ( binaryNode.operationType() ) {
 				case PLUS_ASSIGNMENT:
-					source = new BinaryOperation(variableReference, OperatorType.ADD, operand );
+					if ( tools().isTypeOfString( binaryNode.leftOperand() ) )
+						source = new BinaryOperation(variableReference, OperatorType.CONCAT, operand );
+					else
+						source = new BinaryOperation(variableReference, OperatorType.ADD, operand );
 					break ;
 				case MINUS_ASSIGNMENT:
 					source = new BinaryOperation(variableReference, OperatorType.SUBTRACT, operand );
@@ -163,7 +166,10 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				Expression source ;
 				switch ( assignmentNode.assignmentType() ) {
 				case PLUS_ASSIGNMENT:
-					source = new BinaryOperation(variableReference, OperatorType.ADD, operand );
+					if ( tools().isTypeOfString( assignmentNode.variable() ) )
+						source = new BinaryOperation(variableReference, OperatorType.CONCAT, operand );
+					else
+						source = new BinaryOperation(variableReference, OperatorType.ADD, operand );
 					break ;
 				case MINUS_ASSIGNMENT:
 					source = new BinaryOperation(variableReference, OperatorType.SUBTRACT, operand );

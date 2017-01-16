@@ -41,7 +41,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	
 				Block forLoopBlock = wrapInsideInlineBlock( tools().blocks().generate( forLoopNode.statement(), delegate ) ) ;
 				
-				blockManager.appendElement( new Command( CommandType.FOR, new LoopDefinition(loopVar, loopStart, loopStop.orElse(null), loopStep ), forLoopBlock ) ) ;
+				blockManager.appendElement( new Command( CommandType.FOR, new LoopDefinition(loopVar, loopStart, loopStep, loopStop.orElse(null) ), forLoopBlock ) ) ;
 				
 			} else {
 				
@@ -64,7 +64,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 				Block conditionBlock = new MultilineBlock() ;
 				try ( BlockManager conditionBlockManager = new BlockManager(conditionBlock, delegate) ) {
 					Expression condition = tools().expressions().generate( forLoopNode.condition(), conditionBlockManager ) ;
-					conditionBlockManager.appendElement( new Command( condition.inverted(), CommandType.QUIT, Argument.NOTHING ) ) ;
+					conditionBlockManager.appendElement( new Command( condition.inverted().simplified(), CommandType.QUIT, Argument.NOTHING ) ) ;
 				}
 				bodyBlock.prependElements(conditionBlock);
 				

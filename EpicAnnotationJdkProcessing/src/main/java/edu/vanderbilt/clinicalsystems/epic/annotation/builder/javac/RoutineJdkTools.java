@@ -389,14 +389,6 @@ public class RoutineJdkTools extends RoutineTools {
 		return null ;
 	}
 
-	private TypeMirror determineTypeOfName( Name name, TypeMirror typeMirror ) {
-		Element typeElement = types().asElement(typeMirror);
-		for ( Element enclosedElement : typeElement.getEnclosedElements() )
-			if ( name.equals( enclosedElement.getSimpleName() ) ) 
-				return ((ExecutableElement)enclosedElement).getReturnType() ;
-		return null ;
-	}
-
 	@Override
 	public MethodResolution resolveMethodInvocationTarget( Ast.MethodInvocation methodInvocationNode ) {
 		return resolveMethodInvocationTarget( this.<MethodInvocationTree>unwrap( methodInvocationNode ) ) ;

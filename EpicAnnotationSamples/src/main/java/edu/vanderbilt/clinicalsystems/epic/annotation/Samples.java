@@ -11,6 +11,7 @@ import edu.vanderbilt.clinicalsystems.epic.api.oo.EpicCommunicationFoundation;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.lib.Text;
 
 @RoutineUnit
 public class Samples {
@@ -73,6 +74,28 @@ public class Samples {
 		for ( int x = start ; x <= stop ; x+=increment )
 			s += x ;
 		return s ;
+	}
+	
+	@RoutineTag
+	/**
+	 * SET key=$ORDER(x(""))
+	 */
+	public static String basicSort( String source, String delimiter) {
+		int n = Text.occurrencesPlusOne(source,delimiter) ;
+		if ( n == 1 )
+			return source ;
+		Value x = Value.nullValue();
+		for ( int i = 1; i <= n ; ++i )
+			x.get( Text.piece(source, delimiter, i) ).assign( 1 ) ;
+		
+		String result = "" ;
+		String key = x.nextKey("") ;
+		while ( key != "" ) {
+			if ( result != "" ) result += delimiter ;
+			result += key ;
+			key = x.nextKey(key) ;
+		}
+		return result ;
 	}
 
 	@RoutineTag

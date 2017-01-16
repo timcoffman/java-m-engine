@@ -23,6 +23,13 @@ public abstract class StandardExecutor implements Executor {
 		return ExecutionResult.ERROR ;
 	}
 
+	@Override
+	public StandardExecutor clear() {
+		m_result = null ;
+		m_exception = null ;
+		return this ;
+	}
+	
 	protected void throwException() throws EngineException {
 		if ( null == m_exception )
 			throw new RuntimeException( "cannot throw EngineException; none were caught" ) ;

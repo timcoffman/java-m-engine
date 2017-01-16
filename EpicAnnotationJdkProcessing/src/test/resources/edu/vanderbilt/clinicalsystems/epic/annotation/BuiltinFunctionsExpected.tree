@@ -1,0 +1,9 @@
+{
+TAG: BuiltinFunctions
+CMD: QUIT | (-)
+
+TAG: doOccurrencesPlusOne( source, delimiter )
+CMD: QUIT | $LENGTH( source, delimiter )
+
+
+}

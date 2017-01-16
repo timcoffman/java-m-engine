@@ -20,4 +20,6 @@ public interface Executor {
 	ExecutionResult caughtError(EngineException ex);
 	ExecutionResult producedResult(EvaluationResult result);
 
+	Executor clear();
+
 }

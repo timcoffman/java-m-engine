@@ -8,10 +8,9 @@ import static edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction.PIECE;
 
 import java.util.function.Consumer;
 
-import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Operator;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 
 @RoutineUnit
@@ -42,7 +41,7 @@ public class Text {
 
 	@Operator(OperatorType.FOLLOWS) public static native boolean follows( String leftHandSide, String rightHandSide ) ;
 
-	@Function(LENGTH) public native static int length( Value value ) ;
-	@Function(LENGTH) public native static int occurrences( Value searched, Value sought ) ;
+	@Function(LENGTH) public native static int length( String searched ) ;
+	@Function(LENGTH) public native static int occurrencesPlusOne( String searched, String sought ) ;
 
 }

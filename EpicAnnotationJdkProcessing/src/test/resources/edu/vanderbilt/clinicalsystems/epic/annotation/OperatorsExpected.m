@@ -3,6 +3,13 @@ Operators;Operators Sample
 	;Generated-On  : Thu Oct 27 15:39:41 CDT 2016
 	;Generated-From: edu.vanderbilt.clinicalsystems.epic.annotation.Operators
 	QUIT 
+concatenation(x);Expect Q x_"abc"
+	;Generated-From: String concatentation(String)
+	QUIT x_"abc";;#eof#
+assignmentConcatenation(x);Expect S x=x_"abc" Q x
+	;Generated-From: String assignmentConcatenation(String)
+	SET x=x_"abc"
+	QUIT x;;#eof#
 prefixPlus(x);Expect Q +x
 	;Generated-From: int prefixPlus(int)
 	QUIT +x;;#eof#

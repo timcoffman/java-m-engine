@@ -18,7 +18,16 @@ public class SamplesTest {
 	@Test
 	public void canPerformBasicSummationLoop() {
 		int actual = Samples.basicSummationLoop(1, 1, 3) ;
-		int expected = 1 + 2 + 3;
+		int expected = 1 + 2 + 3 ;
+		assertThat( actual, equalTo(expected) ) ;
+		
+	}
+	
+	@RoutineTag
+	@Test
+	public void canPerformBasicSort() {
+		String actual = Samples.basicSort("c;d;b;a",";") ;
+		String expected = "a;b;c;d" ;
 		assertThat( actual, equalTo(expected) ) ;
 		
 	}

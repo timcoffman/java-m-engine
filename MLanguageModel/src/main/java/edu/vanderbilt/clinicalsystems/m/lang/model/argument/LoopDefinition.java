@@ -19,7 +19,7 @@ public class LoopDefinition extends Argument {
 	private final Expression m_step ;
 	private final Expression m_stop ;
 	
-	public LoopDefinition( DirectVariableReference destination, Expression start, Expression stop, Expression step ) {
+	public LoopDefinition( DirectVariableReference destination, Expression start, Expression step, Expression stop ) {
 		Objects.requireNonNull( destination ) ;
 		Objects.requireNonNull( start ) ;
 		m_destination = destination ;
@@ -45,7 +45,7 @@ public class LoopDefinition extends Argument {
 
 	@Override
 	protected String unformattedRepresentation() {
-		return "from " + m_start + " by " + m_step + " to " + (null == m_stop ? "inf" : m_stop);
+		return m_destination + " from " + m_start + (null == m_step ? "" : (" by " + m_step + (null == m_stop ? " forever" : " to " + m_stop)));
 	}
 
 }

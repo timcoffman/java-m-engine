@@ -24,6 +24,7 @@ import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.LoopHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.MergeHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.OutputHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.ReturnHandler;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
@@ -292,6 +293,8 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			
 			private Constant evaluateBinaryOperation( OperatorType operatorType, Constant lhs, Constant rhs ) throws EngineException {
 				switch ( operatorType ) {
+				case CONCAT:
+					return Constant.from( lhs.value() + rhs.value() ) ;
 				case ADD:
 					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
 				case SUBTRACT:
@@ -302,6 +305,8 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 					return Constant.from( requireDouble(lhs) + requireDouble(rhs) ) ;
 				case EQUALS:
 					return Constant.from( lhs.equals(rhs) ) ;
+				case NOT_EQUALS:
+					return Constant.from( !lhs.equals(rhs) ) ;
 				case GREATER_THAN:
 					return Constant.from( lhs.compareTo(rhs) > 0 ) ;
 				case NOT_GREATER_THAN:
@@ -358,6 +363,12 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				case ORDER:
 					handler = new OrderFunctionHandler() ;
 					break ;
+				case LENGTH:
+					handler = new LengthFunctionHandler() ;
+					break ;
+				case PIECE:
+					handler = new PieceFunctionHandler() ;
+					break ;
 				default:
 					throw new EngineException(ErrorCode.UNSUPPORTED_FEATURE, "code", functionCall.builtinFunction().canonicalSymbol(), "feature", functionCall.builtinFunction().getClass().getSimpleName() ) ;
 				}
@@ -385,10 +396,109 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 
 			Node node = findNode( subscriptedVar.parent() ) ;
 			String key = evaluate( subscriptedVar.finalKey() ).toConstant().value() ;
-			String resultKey = forward ? node.keyFollowing(key) : node.keyPreceding(key) ;
+			String resultKey ;
+			if ( node.isEmpty() ) {
+				resultKey = "" ;
+			} else if ( forward ) {
+				resultKey = node.keyFollowing(key) ;
+			} else {
+				resultKey = node.keyPreceding(key) ;
+			}
 			return EvaluationResult.fromConstant( Constant.from( resultKey ) );
 		}
 		
+	}
+	
+	private class LengthFunctionHandler implements FunctionHandler {
+		
+		@Override public EvaluationResult call(Iterable<Expression> arguments) throws EngineException {
+			Iterator<Expression> args = arguments.iterator();
+			String searched = evaluate(args.next()).toConstant().value() ;
+			if ( args.hasNext() ) {
+				/* two arguments */
+				String sought = evaluate(args.next()).toConstant().value() ;
+				int count = numberOfOccurrances( searched, sought ) ;
+				return EvaluationResult.fromConstant( Constant.from( count ) ) ;
+			} else {
+				/* one argument */
+				int length = stringLength( searched ) ;
+				return EvaluationResult.fromConstant( Constant.from( length ) ) ;
+			}
+		}
+	
+		private int stringLength( String searched ) {
+			return searched.length() ;
+		}
+		
+		private int numberOfOccurrances( String searched, String sought ) {
+			int count = 0 ;
+			if ( !searched.isEmpty() ) {
+				int position = 0 ;
+				while ( position >= 0 ) {
+					++count ;
+					position = searched.indexOf(sought, position) ;
+					if ( position >= 0 )
+						position+=sought.length();
+				}
+			}
+			return count ;
+		}
+		
+	}
+	
+	private class PieceFunctionHandler implements FunctionHandler {
+		
+		@Override public EvaluationResult call(Iterable<Expression> arguments) throws EngineException {
+			Iterator<Expression> args = arguments.iterator();
+			String searched = evaluate(args.next()).toConstant().value() ;
+			String sought = evaluate(args.next()).toConstant().value() ;
+			long start = 1 ;
+			long stop = 1 ;
+			if ( args.hasNext() ) {
+				start = evaluate(args.next()).toConstant().toLong() ;
+				if ( args.hasNext() ) {
+					stop = evaluate(args.next()).toConstant().toLong() ;
+				} else {
+					stop = start ;
+				}
+			}
+			if ( sought.isEmpty() && stop-start > 0 )
+				throw new EngineException( ErrorCode.ILLEGAL_ARGUMENT, "function", BuiltinFunction.PIECE.canonicalSymbol(), "argument", "delimiter", "value", sought ) ;
+			
+			String substring = nthSubstring( searched, sought, start-1, stop-1 );
+			
+			return EvaluationResult.fromConstant( Constant.from( substring ) ) ;
+		}
+	
+		private String nthSubstring( String searched, String sought, long start, long stop ) {
+			if ( stop < start )
+				return "" ;
+			
+			/*         "ABC::DEF::GHI"
+			 *          |  | |  | |  |
+			 * start ...0  | 1  | 2  3...
+			 *          |  |    |    |
+			 * stop ...-1  0    1    2... 
+			 */
+			
+			int startPosition = 0 ;
+			int stopPosition = 0 ;
+			int count = 0 ;
+			while ( count <= stop ) {
+				stopPosition = searched.indexOf( sought, stopPosition + sought.length() ) ;
+				if ( stopPosition < 0 ) {
+					stopPosition = searched.length() ;
+					if ( count < start )
+						startPosition = stopPosition ;
+					break ;
+				}
+				if ( count < start )
+					startPosition = stopPosition + sought.length() ;
+				++count ;
+			}
+			
+			return searched.substring(startPosition, stopPosition) ;
+		}
 	}
 	
 	private FunctionHandler functionHandlerForTagReference( TagReference tagRef, int argumentCount ) throws EngineException {

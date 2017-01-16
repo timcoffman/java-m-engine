@@ -10,6 +10,22 @@ import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
 public class Operators {
 	
 	/**
+	 * Expect Q x_"abc"
+	 */
+	@RoutineTag
+	public static String concatenation(String x) {
+		return x + "abc" ;
+	}
+	
+	/**
+	 * Expect S x=x_"abc" Q x
+	 */
+	@RoutineTag
+	public static String assignmentConcatenation(String x) {
+		return x += "abc"  ;
+	}
+	
+	/**
 	 * Expect Q +x
 	 */
 	@RoutineTag

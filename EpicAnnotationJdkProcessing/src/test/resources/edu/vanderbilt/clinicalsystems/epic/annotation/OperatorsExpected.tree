@@ -2,6 +2,13 @@
 TAG: Operators
 CMD: QUIT | (-)
 
+TAG: concatenation( x )
+CMD: QUIT | x_"abc"
+
+TAG: assignmentConcatenation( x )
+CMD: SET | x := x_"abc"
+CMD: QUIT | x
+
 TAG: prefixPlus( x )
 CMD: QUIT | +x
 

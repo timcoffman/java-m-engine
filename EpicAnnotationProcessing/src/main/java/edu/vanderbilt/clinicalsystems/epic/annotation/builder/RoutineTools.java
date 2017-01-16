@@ -209,6 +209,14 @@ public abstract class RoutineTools {
 		}, null) ;
 	}
 
+	public TypeMirror determineTypeOfName( Name name, TypeMirror typeMirror ) {
+		Element typeElement = types().asElement(typeMirror);
+		for ( Element enclosedElement : typeElement.getEnclosedElements() )
+			if ( name.equals( enclosedElement.getSimpleName() ) ) 
+				return ((ExecutableElement)enclosedElement).getReturnType() ;
+		return null ;
+	}
+
 	public TypeMirror determineTypeOfLiteral(Ast.Literal literal) {
 		switch (literal.literalType()) {
 		case STRING_LITERAL:

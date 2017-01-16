@@ -188,7 +188,7 @@ public class Converter {
 		DirectVariableReference destination = createDirectVariableReference(Scope.LOCAL, nameToken, null) ;
 		Expression step = stepByContext == null ? null : stepByContext.result ;
 		Expression stop = limitContext == null ? null : limitContext.result ;
-		return new LoopDefinition(destination, start, stop, step) ;
+		return new LoopDefinition(destination, start, step, stop) ;
 	}
 	
 	public Argument argumentFrom( AssignmentListContext assignmentListCtx ) {

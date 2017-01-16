@@ -72,13 +72,13 @@ public class RoutineJdtTools extends RoutineTools {
 
 		@Override
 		public boolean visit(SimpleName name) {
-			provide( determineTypeOfIdentifier( wrap(name) ) ) ;
+			provide( determineTypeOfIdentifier( name ) ) ;
 			return false ;
 		}
 
 		@Override
 		public boolean visit(QualifiedName name) {
-			provide( determineTypeOfIdentifier( wrap(name) ) ) ;
+			provide( determineTypeOfIdentifier( name ) ) ;
 			return false ;
 		}
 
@@ -269,18 +269,10 @@ public class RoutineJdtTools extends RoutineTools {
 		return null ;
 	}
 
-	public TypeMirror determineTypeOfIdentifier( Ast.Identifier identifier ) {
-		return null ;
+	public TypeMirror determineTypeOfIdentifier( Name name ) {
+		return resolveIdentifier( name ).type() ;
 	}
-
-	private TypeMirror determineTypeOfName( Name name, TypeMirror typeMirror ) {
-		Element typeElement = types().asElement(typeMirror);
-		for ( Element enclosedElement : typeElement.getEnclosedElements() )
-			if ( name.equals( enclosedElement.getSimpleName() ) ) 
-				return ((ExecutableElement)enclosedElement).getReturnType() ;
-		return null ;
-	}
-
+	
 	@Override
 	public MethodResolution resolveMethodInvocationTarget( Ast.MethodInvocation methodInvocationNode ) {
 		return resolveMethodInvocationTarget( this.<MethodInvocation>unwrap( methodInvocationNode ) ) ;

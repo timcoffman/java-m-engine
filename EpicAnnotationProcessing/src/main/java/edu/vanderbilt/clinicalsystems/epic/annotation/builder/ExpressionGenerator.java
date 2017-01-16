@@ -1,5 +1,6 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -12,8 +13,10 @@ import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.Repor
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TaggedRoutineDependency;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TypeResolution;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.VariableResolution;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValue;
+import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
@@ -25,6 +28,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
@@ -32,6 +36,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		
@@ -356,9 +361,17 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 				return buildValueIndex( methodInvocationNode, listener ) ;
 			case IMPLICIT_CAST:
 				return buildImplicitCast( methodInvocationNode, listener ) ;
+			case NEXT_KEY:
+				return buildSiblingKey( methodInvocationNode, listener, true ) ;
+			case PREVIOUS_KEY:
+				return buildSiblingKey( methodInvocationNode, listener, false ) ;
 			default:
 				report( RoutineTools.ReportType.ERROR, "unrecognized native function", methodInvocationNode ) ;
 			}
+		}
+		Function functionAnnotation = methodInvocationTarget.declaration().getAnnotation( Function.class ) ;
+		if ( null != functionAnnotation ) {
+			return buildBuiltinFunctionCall( functionAnnotation.value(), methodInvocationNode.arguments(), listener ) ;
 		}
 		
 		TaggedRoutineDependency taggedRoutineDependency = tools().resolveDependency( methodInvocationTarget.declaration() ) ;
@@ -403,6 +416,22 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 
 		}, listener) ;
 		return tools().expressions().generate( expression, listener ) ;
+	}
+	
+	private Expression buildSiblingKey( Ast.MethodInvocation methodInvocationNode, Listener listener, boolean next ) {
+		Expression key = tools().expressions().generate( methodInvocationNode.arguments().iterator().next() ,listener ) ;
+		VariableReference variableRef = (VariableReference)tools().expressions().generate( methodInvocationNode.methodSelect(), listener) ;
+		List<Expression> arguments ;
+		if ( next )
+			arguments = Arrays.asList( variableRef.child( key ) );
+		else
+			arguments = Arrays.asList( variableRef.child( key ), Constant.from(-1) );
+		return new BuiltinFunctionCall( BuiltinFunction.ORDER, arguments) ;
+	}
+	
+	private Expression buildBuiltinFunctionCall( BuiltinFunction builtinFunction, List<? extends Ast.Expression> arguments, Listener listener ) {
+		List<Expression> args = arguments.stream().map(e->tools().expressions().generate(e,listener)).collect(Collectors.toList());
+		return new BuiltinFunctionCall(builtinFunction, args) ;
 	}
 	
 	private void generateSideEffect( Generator.Listener listener, Generator.Listener.Location location, RoutineElement element ) {
@@ -452,7 +481,10 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		Expression operand =  tools().expressions().generate( compoundAssignment.operand(), listener ) ;
 		switch ( compoundAssignment.operationType() ) {
 		case PLUS_ASSIGNMENT:
-			return new BinaryOperation( variable, OperatorType.ADD, operand ) ;
+			if ( tools().isTypeOfString( compoundAssignment.variable() ) )
+				return new BinaryOperation( variable, OperatorType.CONCAT, operand ) ;
+			else
+				return new BinaryOperation( variable, OperatorType.ADD, operand ) ;
 		case MINUS_ASSIGNMENT:
 			return new BinaryOperation( variable, OperatorType.SUBTRACT, operand ) ;
 		case MULTIPLY_ASSIGNMENT:
