@@ -15,6 +15,7 @@ import java.util.stream.StreamSupport;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.Installer.TargetInstanceResolver;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.AssignmentHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.CallHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.DeclarationHandler;
@@ -47,6 +48,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.ExpressionParserFactory;
 public class StandardExecutionFrame extends StandardExecutor implements ExecutionFrame {
 	
 	private final NodeMap m_root ;
+	private Map<String,Object> m_properties = null ;
 	private final ExecutionFrame m_parent ;
 	private final GlobalContext m_globalContext ;
 	private final Map<String,Node> m_locals = new HashMap<String, Node>();
@@ -93,6 +95,42 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 	@Override public NodeMap root() { return m_root ; }
 	
 	@Override public ExecutionFrame parentFrame() { return m_parent ; }
+
+	
+	private Map<String,Object> requireProperties() {
+		if ( null == m_properties )
+			m_properties = new HashMap<String, Object>() ;
+		return m_properties ;
+	}
+	
+	@Override
+	public void setLocalProperty(String name, Object value) {
+		Objects.requireNonNull(value) ;
+		requireProperties().put( name, value ) ;
+	}
+	
+	@Override
+	public <T> T getProperty(String name, Class<T> ofType) {
+		if ( hasLocalProperty(name) )
+			return getLocalProperty( name, ofType );
+		else if ( null != m_parent )
+			return m_parent.getProperty( name, ofType ) ;
+		else
+			return null ;
+	}
+	
+	@Override
+	public <T> T getLocalProperty(String name, Class<T> ofType) {
+		if ( hasLocalProperty(name) )
+			return ofType.cast( m_properties.get(name) );
+		else
+			return null ;
+	}
+	
+	@Override
+	public boolean hasLocalProperty(String name ) {
+		return null != m_properties && m_properties.containsKey(name) ;
+	}
 	
 	@Override
 	public ExecutionFrame createChildFrame() {
@@ -152,6 +190,12 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 	}
 	
 	@Override
+	public Node insertLocalNode( String variableName, Node node ) {
+		m_locals.put( variableName, node ) ;
+		return node ;
+	}
+	
+	@Override
 	public Node createNode( DirectVariableReference variable ) {
 		String variableName = variable.variableName();
 		switch ( variable.scope() ) {
@@ -172,7 +216,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		Node node = variable.visit( new VariableReference.Visitor<Node>() {
 			
 			@Override public Node visitVariableReference(VariableReference variable) {
-				throw new UnsupportedOperationException(variable.getClass().getSimpleName() + " not supported for assignment") ;
+				throw new UnsupportedOperationException(variable.getClass().getSimpleName() + " not supported for node lookup") ;
 			}
 			
 			@Override public Node visitIndirectVariableReference( IndirectVariableReference variable) {
@@ -200,12 +244,15 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				case GLOBAL:
 					return m_root.get( variableName ) ;
 				case LOCAL:
-					if ( hasLocalNode( variableName) )
+					if ( hasLocalNode( variableName) ) {
 						return findLocalNode( variableName ) ;
-					else if ( null == m_parent )
+					} else if ( null == m_parent ) {
 						return createLocalNode( variableName ) ;
-					else
-						return m_parent.findLocalNode( variableName ) ;
+					} else {
+						try {
+							return m_parent.findNode( variable ) ;
+						} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+					}
 				default:
 					throw new UnsupportedOperationException(variable.scope() + " scope not supported for direct variable assignment") ;
 				}
@@ -527,15 +574,22 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			for ( Expression expression : arguments )
 				argumentValues.add( evaluate(expression) ) ;
 			
-			ExecutionFrame callFrame = createChildFrame();
-			ExecutionResult executionResult = m_compiledTag.execute(callFrame,argumentValues);
-			switch ( executionResult ) {
-			case ERROR:
-				throw callFrame.error() ;
-			case QUIT:
-				return callFrame.result() ;
-			default:
-				throw new IllegalStateException( "function call cannot result in " + executionResult ) ;
+			TargetInstanceResolver instanceResolver = getProperty("target-instance-resolver",TargetInstanceResolver.class) ;
+			Object targetInstance = instanceResolver.resolve( null, m_compiledTag.compiledRoutine().name(), StandardExecutionFrame.this ) ;
+			
+			try ( ExecutionFrame callFrame = createChildFrame() ) {
+				if ( null != targetInstance )
+					callFrame.setLocalProperty("target-instance", targetInstance);
+				
+				ExecutionResult executionResult = m_compiledTag.execute(callFrame,argumentValues);
+				switch ( executionResult ) {
+				case ERROR:
+					throw callFrame.error() ;
+				case QUIT:
+					return callFrame.result() ;
+				default:
+					throw new IllegalStateException( "function call cannot result in " + executionResult ) ;
+				}
 			}
 		}
 		

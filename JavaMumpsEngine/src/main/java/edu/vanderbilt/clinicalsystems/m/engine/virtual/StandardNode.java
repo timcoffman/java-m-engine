@@ -25,4 +25,11 @@ public class StandardNode extends TreeNodeMap implements Node {
 		}
 		return super.equals(obj) ;
 	}
+	
+	@Override
+	public Object toObject(Class<?> ofType) {
+		throw new UnsupportedOperationException( this + " cannot be converted to a " + ofType) ;
+	}
+	
+	
 }

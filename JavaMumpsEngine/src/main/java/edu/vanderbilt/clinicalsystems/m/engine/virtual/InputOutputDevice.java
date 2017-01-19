@@ -9,6 +9,6 @@ public interface InputOutputDevice {
 	void output( String text ) throws IOException ;
 	void outputCarriageReturn() throws IOException ;
 	void outputPageFeed() throws IOException ;
-	void outputColumnMove( int column ) throws IOException ;
+	void outputColumnMove( long column ) throws IOException ;
 	
 }

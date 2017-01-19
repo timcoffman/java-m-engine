@@ -1,33 +1,37 @@
 package edu.vanderbilt.clinicalsystems.epic.api;
 
-import edu.vanderbilt.clinicalsystems.epic.annotation.EpicRef;
+import edu.vanderbilt.clinicalsystems.m.core.Ref;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 
-@RoutineUnit(value="EALIB")
+@RoutineUnit(value="EALIBECF1")
 public class EpicCommunicationFoundation {
 	
-	@RoutineTag public static Value zECFGet(String propertyName ) { return zECFGet(propertyName,Value.nullValue()); }
-	@RoutineTag public static native Value zECFGet(String propertyName, Value parentId ) ;
-	@RoutineTag public static native Value zECFGet(String propertyName, Value parentId, @EpicRef Value more ) ;
+	@RoutineTag("zECFGet") public native String getProperty(String propertyName ) ;
+	@RoutineTag("zECFGet") public native String getProperty(String propertyName, String parentId ) ;
+	@RoutineTag("zECFGet") public native String getProperty(String propertyName, String parentId, Ref<Boolean> more ) ;
 	
-	@RoutineTag public static native int zECFNumElmts( String propertyName ) ;
-	@RoutineTag public static native int zECFNumElmts( String propertyName, Value parentId ) ;
+	@RoutineTag("zECFNumElmts") public native long propertyArrayLength( String propertyName ) ;
+	@RoutineTag("zECFNumElmts") public native long propertyArrayLength( String propertyName, Value parentId ) ;
 	
-	@RoutineTag public static native Value zECFGetElmt( String propertyName, Value parentId, Value key ) ;
-	@RoutineTag public static native Value zECFGetElmt( String propertyName, Value parentId, Value key, @EpicRef Value more ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String key ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String key, Ref<Boolean> more ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String parentId, String key ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String parentId, String key, Ref<Boolean> more ) ;
 	
-	@RoutineTag public static native Value zECFGetElmt( String propertyName, Value parentId, int key ) ;
-	@RoutineTag public static native Value zECFGetElmt( String propertyName, Value parentId, int key, @EpicRef Value more ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, long key ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, long key, Ref<Boolean> more ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String parentId, long key ) ;
+	@RoutineTag("zECFGetElmt") public native String getChildOfProperty( String propertyName, String parentId, long key, Ref<Boolean> more ) ;
 	
-	@RoutineTag public static native String zECFDctNxKey( String propertyName ) ;
-	@RoutineTag public static native String zECFDctNxKey( String propertyName, Value parent ) ;
-	@RoutineTag public static native String zECFDctNxKey( String propertyName, Value parent, String afterKey ) ;
+	@RoutineTag("zECFDctNxKey") public native String getItemOfProperty( String propertyName ) ;
+	@RoutineTag("zECFDctNxKey") public native String getItemOfProperty( String propertyName, String parent ) ;
+	@RoutineTag("zECFDctNxKey") public native String getItemOfProperty( String propertyName, String parent, String afterKey ) ;
 
 	
-	@RoutineTag public static native Value zECFSet(String propertyName, Value value ) ;
-	@RoutineTag public static native Value zECFSet(String propertyName, Value value, Value parentId ) ;
+	@RoutineTag("zECFSet") public native Void setProperty(String propertyName, String value ) ;
+	@RoutineTag("zECFSet") public native Void setProperty(String propertyName, String value, String parentId ) ;
 	
 	public static final String SINGLE_TYPE = "S" ;
 	public static final String ARRAY_TYPE = "A" ;
@@ -35,14 +39,15 @@ public class EpicCommunicationFoundation {
 	public static final String LIST_TYPE = "L" ;
 	public static final String TABLE_TYPE = "T" ;
 	
-	@RoutineTag public static native Value zECFNew(String propertyName, Value parentId, String type ) ;
+	@RoutineTag("zECFNew") public native String createProperty(String propertyName, String type ) ;
+	@RoutineTag("zECFNew") public native String createProperty(String propertyName, String parentId, String type ) ;
 	
-	@RoutineTag public static native Value zECFNewElmtObj(Value collectionId ) ;
-	@RoutineTag public static native Value zECFNewElmtObj(Value collectionId, Value key ) ;
+	@RoutineTag("zECFNewElmtObj") public native String addItem(String collectionId ) ;
+	@RoutineTag("zECFNewElmtObj") public native String addItem(String collectionId, String key ) ;
 	
-	@RoutineTag public static native Value zECFSetElmt(Value parentId, Value value ) ;
-	@RoutineTag public static native Value zECFSetElmt(Value parentId, Value value, int key ) ;
-	@RoutineTag public static native Value zECFSetElmt(Value parentId, Value value, int key, Value more ) ;
+	@RoutineTag("zECFSetElmt") public native Void setItem(String parentId, String value ) ;
+	@RoutineTag("zECFSetElmt") public native Void setItem(String parentId, String value, long key ) ;
+	@RoutineTag("zECFSetElmt") public native Void setItem(String parentId, String value, long key, Ref<Boolean> more ) ;
 	
 	
 }

@@ -203,6 +203,13 @@ public class RoutineJdkTools extends RoutineTools {
 			public IdentifierResolution visitPrimitiveType( PrimitiveTypeTree primitiveTypeTree, Void parameter ) {
 				return new PrimitiveTypeResolutionImpl(primitiveTypeTree);
 			}
+
+			@Override
+			public IdentifierResolution visitMemberSelect(MemberSelectTree memberSelectTree, Void parameter) {
+				/* this is a package access */
+				TypeElement typeElement = elements().getTypeElement( memberSelectTree.toString() ) ;
+				return resolutionForTypeElement( typeElement ) ;
+			}
 			
 			
 		}, null) ;
@@ -351,15 +358,6 @@ public class RoutineJdkTools extends RoutineTools {
 			throw new IllegalArgumentException( "\"" + name + "\" not implicitly imported" ) ; 
 		}
 	}
-
-	@Override
-	public MethodResolution resolveIdentifier( Name name, TypeMirror typeMirror ) {
-		Element typeElement = types().asElement(typeMirror);
-		for ( Element enclosedElement : typeElement.getEnclosedElements() )
-			if ( name.equals( enclosedElement.getSimpleName() ) ) 
-				return resolutionForExecutableElement( (ExecutableElement)enclosedElement ) ;
-		return null ;
-	}
 	
 	private TypeMirror determineTypeOfIdentifier( IdentifierTree identifierTree ) {
 		return determineTypeOfName( identifierTree.getName(), m_trees.getPath(m_compilationUnit, identifierTree ) ) ;
@@ -421,8 +419,8 @@ public class RoutineJdkTools extends RoutineTools {
 					
 				},null) ;
 				
-				MethodResolution resolvedIdentifier = resolveIdentifier( memberSelectTree.getIdentifier(), targetType ) ;
-				return resolvedIdentifier;
+				IdentifierResolution resolvedIdentifier = resolveIdentifier( memberSelectTree.getIdentifier(), targetType ) ;
+				return (MethodResolution)resolvedIdentifier;
 			}
 			
 			

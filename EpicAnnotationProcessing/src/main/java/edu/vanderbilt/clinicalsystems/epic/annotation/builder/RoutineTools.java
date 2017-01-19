@@ -42,6 +42,7 @@ public abstract class RoutineTools {
 	
 	private TagGenerator m_tagBuilder = null;
 	private ExpressionGenerator m_expressionBuilder = null;
+	private InputOutputGenerator m_inputOutputBuilder = null;
 	private BlockGenerator m_blockBuilder = null;
 
 	
@@ -72,6 +73,13 @@ public abstract class RoutineTools {
 			synchronized(this) { m_expressionBuilder = new ExpressionGenerator(this) ; }
 		}
 		return m_expressionBuilder ;
+	}
+	
+	public InputOutputGenerator inputOutputs() {
+		if ( null == m_inputOutputBuilder ) {
+			synchronized(this) { m_inputOutputBuilder = new InputOutputGenerator(this) ; }
+		}
+		return m_inputOutputBuilder ;
 	}
 	
 	public BlockGenerator blocks() {
@@ -141,12 +149,22 @@ public abstract class RoutineTools {
 		private final TypeElement m_dependsOnType ;
 		private final String m_routineName ;
 		public RoutineDependencyImpl(TypeElement dependsOnType, String routineName) {
+			Objects.requireNonNull(dependsOnType) ;
+			Objects.requireNonNull(routineName) ;
 			m_dependsOnType = dependsOnType;
 			m_routineName = routineName;
 		}
 		@Override public String routineName() { return m_routineName; }
 		@Override public TypeElement dependsOnType() { return m_dependsOnType; }
 		@Override public int hashCode() { return m_dependsOnType.getQualifiedName().toString().hashCode() ^ m_routineName.hashCode() ; }
+		@Override public boolean equals(Object obj) {
+			if ( null == obj ) return false ;
+			if ( this == obj ) return true ;
+			if ( !(obj instanceof RoutineDependencyImpl) ) return false ;
+			RoutineDependencyImpl dep = (RoutineDependencyImpl)obj ;
+			return m_dependsOnType.getQualifiedName().toString().equals( dep.m_dependsOnType.getQualifiedName().toString() ) && 
+					m_routineName.equals( dep.m_routineName) ; 
+		}
 	}
 	
 	private static class TaggedRoutineDependencyImpl extends RoutineDependencyImpl implements RoutineTools.TaggedRoutineDependency {
@@ -154,12 +172,23 @@ public abstract class RoutineTools {
 		private final String m_tagName ;
 		public TaggedRoutineDependencyImpl( RoutineDependency routineDependency, ExecutableElement dependsOnMethod, String tagName) {
 			super(routineDependency.dependsOnType(), routineDependency.routineName()) ;
+			Objects.requireNonNull(dependsOnMethod) ;
+			Objects.requireNonNull(tagName) ;
 			m_dependsOnMethod = dependsOnMethod ;
 			m_tagName = tagName ;
 		}
 		@Override public String tagName() { return m_tagName; }
 		@Override public ExecutableElement dependsOnMethod() { return m_dependsOnMethod; }
 		@Override public int hashCode() { return super.hashCode() ^ m_dependsOnMethod.getSimpleName().toString().hashCode() ^ m_tagName.hashCode() ; }
+		@Override public boolean equals(Object obj) {
+			if ( null == obj ) return false ;
+			if ( this == obj ) return true ;
+			if ( !(obj instanceof TaggedRoutineDependencyImpl) ) return false ;
+			TaggedRoutineDependencyImpl dep = (TaggedRoutineDependencyImpl)obj ;
+			return super.equals(dep) &&
+					m_dependsOnMethod.getSimpleName().equals( dep.m_dependsOnMethod.getSimpleName()) && 
+					m_tagName.equals( dep.m_tagName) ; 
+		}
 	}
 	
 
@@ -361,10 +390,22 @@ public abstract class RoutineTools {
 	public abstract IdentifierResolution resolveIdentifier( Name name, Ast.Node node ) ;
 	
 	public IdentifierResolution resolveIdentifier( Name name, TypeMirror typeMirror ) {
-		Element typeElement = m_processingEnv.getTypeUtils().asElement(typeMirror);
+		Element typeElement = types().asElement(typeMirror);
 		for ( Element enclosedElement : typeElement.getEnclosedElements() )
-			if ( name.equals( enclosedElement.getSimpleName() ) ) { 
-				return resolutionForExecutableElement( (ExecutableElement)enclosedElement ) ;
+			if ( name.equals( enclosedElement.getSimpleName() ) ) {
+				return enclosedElement.accept( new ElementInterpreter<IdentifierResolution,Void>(this) {
+
+					@Override
+					public IdentifierResolution visitVariable(VariableElement variableElement, Void parameter) {
+						return resolutionForVariableElement(variableElement) ;
+					}
+
+					@Override
+					public IdentifierResolution visitExecutable( ExecutableElement executableElement, Void parameter) {
+						return resolutionForExecutableElement( executableElement ) ;
+					}
+					
+				}, null ) ;
 			}
 		return null ;
 	}

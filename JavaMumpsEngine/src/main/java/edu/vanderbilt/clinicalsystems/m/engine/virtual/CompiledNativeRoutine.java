@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Executor.ExecutionResult;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.Installer.TargetInstanceResolver;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.ParameterName;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
@@ -16,9 +17,15 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 class CompiledNativeRoutine implements CompiledRoutine {
 
 	private final Routine m_routine;
+	private final TargetInstanceResolver m_targetInstanceResolver ;
 
 	public CompiledNativeRoutine(Routine routine) {
+		this( routine, null ) ;
+	}
+	
+	public CompiledNativeRoutine(Routine routine, TargetInstanceResolver targetInstanceResolver) {
 		m_routine = routine ;
+		m_targetInstanceResolver = targetInstanceResolver ;
 	}
 	
 	@Override
@@ -70,6 +77,9 @@ class CompiledNativeRoutine implements CompiledRoutine {
 		
 		@Override
 		public ExecutionResult execute( ExecutionFrame frame, List<EvaluationResult> arguments ) {
+			if ( null != m_targetInstanceResolver )
+				frame.setLocalProperty( "target-instance-resolver", m_targetInstanceResolver ) ;
+			
 			Iterator<RoutineElement> elementIterator = m_routine.findTagByName(m_tagName) ;
 
 			Iterator<EvaluationResult> argumentIterator = arguments.iterator() ;

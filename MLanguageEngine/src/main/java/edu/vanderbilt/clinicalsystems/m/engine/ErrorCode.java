@@ -16,6 +16,7 @@ public enum ErrorCode {
 	ILLEGAL_OPERAND("ILLEGAL_OPERAND","when applying {operator} operator, operand cannot have value \"{value}\""),
 	INFINITE_LOOP("INFINITE_LOOP","loop block never exits"),
 	JAVA_METHOD_NOT_IMPLEMENTED("JAVA_NATIVE","java method {class}.{method}(...) not implemented"),
+	JAVA_INSTANCE_NOT_AVAIALABLE("JAVA_NATIVE","no instance of {class} available calling non-static java method {method}(...)"),
 	JAVA_EXCEPTION("JAVA","java exception");
 	
 	private final String m_code;

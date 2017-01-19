@@ -24,6 +24,11 @@ public class ProcessorTest {
 	private static final RoutineTestUtils ROUTINE_TEST_UTILS = new RoutineTestUtils(ProcessorTest.class) ;  
 	
 	@Test
+	public void canProcessTags() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Tags" ) ;
+	}
+	
+	@Test
 	public void canProcessOperators() throws URISyntaxException, IOException {
 		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Operators" ) ;
 	}
@@ -59,8 +64,18 @@ public class ProcessorTest {
 	}
 	
 	@Test
-	public void canProcessSampleOne() throws URISyntaxException, IOException {
-		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("SampleOne" ) ;
+	public void canProcessCommands() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Commands" ) ;
+	}
+	
+	@Test
+	public void canProcessAlgorithms() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("Algorithms" ) ;
+	}
+	
+	@Test
+	public void canProcessChronicles() throws URISyntaxException, IOException {
+		ROUTINE_TEST_UTILS.canProcessRoutineAnnotations("ChroniclesMethods" ) ;
 	}
 	
 	@Test

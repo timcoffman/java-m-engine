@@ -129,7 +129,7 @@ public class OutputHandler extends CommandHandler {
 		}
 	}
 	
-	protected ExecutionResult writeColumn( int column ) {
+	protected ExecutionResult writeColumn( long column ) {
 		try {
 			try {
 				frame().inputOutputDevice().outputColumnMove( column );

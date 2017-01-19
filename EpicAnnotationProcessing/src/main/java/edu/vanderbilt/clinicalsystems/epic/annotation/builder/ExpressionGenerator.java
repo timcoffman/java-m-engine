@@ -420,7 +420,8 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 	
 	private Expression buildSiblingKey( Ast.MethodInvocation methodInvocationNode, Listener listener, boolean next ) {
 		Expression key = tools().expressions().generate( methodInvocationNode.arguments().iterator().next() ,listener ) ;
-		VariableReference variableRef = (VariableReference)tools().expressions().generate( methodInvocationNode.methodSelect(), listener) ;
+		Ast.MemberSelect memberSelect = (Ast.MemberSelect)methodInvocationNode.methodSelect() ;
+		VariableReference variableRef = (VariableReference)tools().expressions().generate( memberSelect.expression(), listener) ;
 		List<Expression> arguments ;
 		if ( next )
 			arguments = Arrays.asList( variableRef.child( key ) );

@@ -1,13 +1,12 @@
 package edu.vanderbilt.clinicalsystems.epic.api;
 
-import edu.vanderbilt.clinicalsystems.m.core.Value;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 
-@RoutineUnit(value="EALIB")
+@RoutineUnit(value="EA3LIB5")
 public class Chronicles {
 
-	@RoutineTag public static native Value znxIxID( Value ini, Value item, Value value, Value id ) ;
-	@RoutineTag public static native Value znxIxID( String ini, int item, Value value, Value id ) ;
+	@RoutineTag public native String znxIxID( String ini, long item, String value, String id ) ;
+	@RoutineTag public native String znxIxID( String ini, long item, String value, String id, long direction ) ;
 	
 }

@@ -81,7 +81,7 @@ public class VirtualConnection implements Connection {
 		}
 
 		@Override
-		public void outputColumnMove(int column) throws IOException {
+		public void outputColumnMove(long column) throws IOException {
 			/* nothing */
 		}
 		

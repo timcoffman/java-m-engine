@@ -1,14 +1,9 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
-import static edu.vanderbilt.clinicalsystems.epic.api.Chronicles.znxIxID;
+//import static edu.vanderbilt.clinicalsystems.epic.api.Chronicles.znxIxID;
 import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.ARRAY_TYPE;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFGet;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFGetElmt;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFNew;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFNumElmts;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFSetElmt;
-import edu.vanderbilt.clinicalsystems.epic.api.oo.EpicCommunicationFoundation;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.InjectRoutine;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 /**
@@ -16,7 +11,13 @@ import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
  */
 @RoutineUnit
 public class Services {
+
+	@InjectRoutine
+	private edu.vanderbilt.clinicalsystems.epic.api.Chronicles chronicles ;
 	
+	@InjectRoutine
+	private edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation ecfContext ;
+
 	/*
 	MyService n allergen,patients,patientsArrObj,ecfLine,ctr,patID
 	    ;
@@ -36,73 +37,28 @@ public class Services {
      */
 	
 	@RoutineTag
-	public static void MyService() {
-		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
-		int ecfLine ;
+	public void MyService() {
+		Value patients = Value.nullValue() ;
+		String patId = "";
 		//
 		// Get Request
-		allergen = zECFGet( "Allergen", Value.nullValue() ) ;
+		String allergen = ecfContext.getProperty( "Allergen", "" ) ;
 		//
 		int ctr;
 		for ( ctr=1; ; ++ctr ) {
-			patID = znxIxID( "ZPT", 400, allergen, patID) ;
-			if ( patID == Value.nullValue() )
+			patId = chronicles.znxIxID( "ZPT", 400, allergen, patId) ;
+			if ( patId == "" )
 				 break ;
-			patients.get(ctr).assign(patID) ;
+			patients.get(ctr).assign(patId) ;
 		}
 		patients.get(0).assign(ctr) ;
 		
 		// Send response
 		// ==== Set Array Property Patients ====
-	    patientsArrObj = zECFNew("Patients",Value.nullValue(),ARRAY_TYPE);
-	    for ( ecfLine=1 ; ecfLine <= patients.get(0).toInt(); ++ecfLine ) {
-	    	zECFSetElmt(patientsArrObj,patients.get(ecfLine)) ;
+	    String patientsNodeId = ecfContext.createProperty("Patients","",ARRAY_TYPE);
+	    for ( long ecfLine=1 ; ecfLine <= patients.get(0).toLong(); ++ecfLine ) {
+	    	ecfContext.setItem(patientsNodeId,patients.get(ecfLine).toString()) ;
 	    }
-	}
-	
-//	@RoutineTag
-//	public void MyService3() {
-//		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
-//		int ecfLine ;
-//		//
-//		// Get Request
-//		allergen = zECFGet("Allergen") ;
-//		//
-//		ValueArray patientLines = new ValueArray(patients) ;
-//		patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
-//		while ( patID != Value.nullValue() ) {
-//			patientLines.addLine( patID );
-//			patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
-//		}
-//		
-//		// Send response
-//		// ==== Set Array Property Patients ====
-//		patientsArrObj = zECFNew("Patients",Value.nullValue(),ARRAY_TYPE);
-//		for ( ecfLine=patientLines.firstLine() ; ecfLine <= patientLines.lastLine(); ++ecfLine ) {
-//			zECFSetElmt(patientsArrObj,patientLines.getLine(ecfLine),ecfLine) ;
-//		}
-//	}
-	
-	/*
-	UpdateNames n ln,employee,id,name
-	  f ln=1:1:$$zECFNumElmts("Employees") d
-	  . s employee=$$zECFGetElmt("Employees","",ln)
-	  . s id=$$zECFGet("Id",employee)
-	  . s name=$$zECFGet("Name",employee)
-	  . ; Code to change record names...
-	  
-	   */
-	
-	@EpicInject public EpicCommunicationFoundation.Request request ;
-	@EpicInject public EpicCommunicationFoundation.Response response ;
-	
-	//@RoutineTag("UpdateNames")
-	public static void updatesNames() {
-		for ( int ln=1 ; ln <= zECFNumElmts("Employees",null); ++ln  ) {
-			Value employee = zECFGetElmt( "Employees", null, ln ) ;
-			Value id = zECFGet( "Id", employee  ) ;
-			Value name = zECFGet( "Name", employee ) ;
-		}
 	}
 
 }

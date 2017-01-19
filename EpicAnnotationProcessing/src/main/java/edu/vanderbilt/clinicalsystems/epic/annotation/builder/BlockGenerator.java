@@ -25,6 +25,8 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutput;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
@@ -314,7 +316,21 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 				assembleExtension( (ExecutableElement)methodInvocationTarget, methodInvocationNode, block ) ;
 				return true ;
 			default:
-				report( RoutineTools.ReportType.ERROR, "unrecognized native command", methodInvocationNode ) ;
+				report( RoutineTools.ReportType.ERROR, "unrecognized native command \"" + nativeCommandAnnotation.value() + "\"", methodInvocationNode ) ;
+				return false ;
+			}
+		}
+		
+		edu.vanderbilt.clinicalsystems.m.core.annotation.Command commandAnnotation =
+				methodInvocationTarget.declaration().getAnnotation( edu.vanderbilt.clinicalsystems.m.core.annotation.Command.class ) ;
+		if ( null != commandAnnotation ) {
+			switch ( commandAnnotation.value() ) {
+			case WRITE:
+			case READ:
+				assembleReadWrite( commandAnnotation.value(), methodInvocationNode.arguments(), block, delegate ) ;
+				return true ;
+			default:
+				report( RoutineTools.ReportType.ERROR, "unrecognized command \"" + commandAnnotation.value() + "\"", methodInvocationNode ) ;
 				return false ;
 			}
 		}
@@ -408,5 +424,13 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	private void assembleExtension(ExecutableElement methodInvocationTarget, Ast.MethodInvocation methodInvocationNode, Block block) {
 //		Ast.Method tree = trees().getNode( methodInvocationTarget );
 //		blockManager.appendElements( tools().blocks().generate( tree.getBody() ) );
+	}
+	
+	private void assembleReadWrite(CommandType commandType, List<? extends Ast.Expression> arguments, Block block, Listener delegate) {
+		List<InputOutput> ios = arguments.stream()
+				.map( (e)->tools().inputOutputs().generate(e,delegate) )
+				.collect( Collectors.toList() )
+				;
+		block.appendElement( new Command( commandType, new InputOutputList(ios) ) );
 	}
 }

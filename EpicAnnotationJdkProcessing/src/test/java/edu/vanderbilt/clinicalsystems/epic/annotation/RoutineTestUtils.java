@@ -34,7 +34,7 @@ public class RoutineTestUtils {
 		m_resourceBase = resourceBase ;
 	}
 	
-	private static final Pattern IGNORE_LINES_M_LANGUAGE = Pattern.compile("Generated-On|^\\s*;") ;
+	private static final Pattern IGNORE_LINES_M_LANGUAGE = Pattern.compile("Generated-On|^\\s*;|^\\s*$") ;
 	private static final Pattern IGNORE_LINES_TREE = Pattern.compile("^###|^\\s*$") ;
 	
 	private File findOutputFolder( File dir, String pkgName ) {

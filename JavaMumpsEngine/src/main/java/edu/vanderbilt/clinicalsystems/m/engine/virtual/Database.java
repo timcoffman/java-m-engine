@@ -110,8 +110,8 @@ public class Database extends TreeNodeMap implements Installer {
 	public Node  at(BuiltinSystemVariable builtinSystemVariable) { return  at( makeKey(builtinSystemVariable) ); }
 	
 	@Override
-	public void install( Routine routine ) throws RoutineWriterException {
-		CompiledRoutine compiledRoutine = new CompiledNativeRoutine(routine);
+	public void install( Routine routine, TargetInstanceResolver targetInstanceResolver ) throws RoutineWriterException {
+		CompiledRoutine compiledRoutine = new CompiledNativeRoutine(routine, targetInstanceResolver);
 		m_compiledRoutines.put( routine.name(), compiledRoutine ) ;
 		
 		Node routinesNode = get( BuiltinSystemVariable.ROUTINE ) ;
@@ -134,8 +134,8 @@ public class Database extends TreeNodeMap implements Installer {
 	}
 	
 	@Override
-	public void install( Class<?> type, String routineName ) throws RoutineWriterException {
-		CompiledRoutine compiledRoutine = new CompiledJavaClassRoutine( type, routineName );
+	public void install( Class<?> type, TargetInstanceResolver targetInstanceResolver, String routineName ) throws RoutineWriterException {
+		CompiledRoutine compiledRoutine = new CompiledJavaClassRoutine( type, targetInstanceResolver, routineName );
 		m_compiledRoutines.put( routineName, compiledRoutine ) ;
 
 		Node routinesNode = get( BuiltinSystemVariable.ROUTINE ) ;
@@ -154,6 +154,6 @@ public class Database extends TreeNodeMap implements Installer {
 	}
 	
 	public Connection openConnection( InputOutputDevice inputOutputDevice ) {
-		return new Connection(this, m_globalContext, inputOutputDevice) ;
+		return new Connection(m_globalContext, inputOutputDevice) ;
 	}
 }

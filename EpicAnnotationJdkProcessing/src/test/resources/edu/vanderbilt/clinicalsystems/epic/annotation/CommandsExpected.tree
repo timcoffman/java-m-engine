@@ -1,0 +1,30 @@
+{
+TAG: Commands
+CMD: QUIT | (-)
+
+TAG: readWriteString
+CMD: WRITE | "abc"
+CMD: READ | "abc"
+CMD: QUIT | (-)
+
+TAG: readWriteStringWithCarriageReturn
+CMD: WRITE | "abc", !
+CMD: READ | "abc", !
+CMD: QUIT | (-)
+
+TAG: readWriteStringWithPageFeed
+CMD: WRITE | #, "abc"
+CMD: READ | #, "abc"
+CMD: QUIT | (-)
+
+TAG: readWriteVariable( x )
+CMD: WRITE | x
+CMD: READ | x
+CMD: QUIT | (-)
+
+TAG: readWriteGeneralExpression( x )
+CMD: WRITE | x_7
+CMD: READ | x_7
+CMD: QUIT | (-)
+
+}

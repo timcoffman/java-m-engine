@@ -22,13 +22,13 @@ public abstract class Value {
 	
 	@NativeCommand(VALUE_ASSIGN) public native void assign( Value   value ) ;
 	@NativeCommand(VALUE_ASSIGN) public native void assign( String  value ) ;
-	@NativeCommand(VALUE_ASSIGN) public native void assign( int     value ) ;
+	@NativeCommand(VALUE_ASSIGN) public native void assign( long    value ) ;
 	@NativeCommand(VALUE_ASSIGN) public native void assign( double  value ) ;
 	@NativeCommand(VALUE_ASSIGN) public native void assign( boolean value ) ;
 
 	@Override
 	@NativeFunction(IMPLICIT_CAST) public native String  toString() ;
-	@NativeFunction(IMPLICIT_CAST) public native int     toInt() ;
+	@NativeFunction(IMPLICIT_CAST) public native long    toLong() ;
 	@NativeFunction(IMPLICIT_CAST) public native double  toDouble() ;
 	@NativeFunction(IMPLICIT_CAST) public native boolean toBoolean() ;
 	
@@ -38,7 +38,7 @@ public abstract class Value {
 	
 	@NativeFunction(VALUE_INDEX) public native Value get( Value   key ) ;
 	@NativeFunction(VALUE_INDEX) public native Value get( String  key ) ;
-	@NativeFunction(VALUE_INDEX) public native Value get( int     key ) ;
+	@NativeFunction(VALUE_INDEX) public native Value get( long    key ) ;
 	@NativeFunction(VALUE_INDEX) public native Value get( double  key ) ;
 	@NativeFunction(VALUE_INDEX) public native Value get( boolean key ) ;
 	

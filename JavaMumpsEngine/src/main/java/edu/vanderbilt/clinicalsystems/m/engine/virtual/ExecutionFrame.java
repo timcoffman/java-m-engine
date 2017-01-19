@@ -13,6 +13,11 @@ public interface ExecutionFrame extends Executor, Evaluator, AutoCloseable {
 	NodeMap root();
 	ExecutionFrame parentFrame();
 	GlobalContext globalContext();
+
+	boolean hasLocalProperty( String name ) ;
+	void setLocalProperty(String name, Object value) ;
+	<T> T getLocalProperty(String name, Class<T> ofType) ;
+	<T> T getProperty(String name, Class<T> ofType) ;
 	
 	ExecutionFrame createChildFrame() ;
 	
@@ -23,6 +28,7 @@ public interface ExecutionFrame extends Executor, Evaluator, AutoCloseable {
 	boolean hasLocalNode( String variableName ) ;
 	Node findLocalNode( String variableName ) ;
 	Node createLocalNode(String variableName);
+	Node insertLocalNode(String variableName, Node node );
 	
 	Node createNode(DirectVariableReference variable);
 	

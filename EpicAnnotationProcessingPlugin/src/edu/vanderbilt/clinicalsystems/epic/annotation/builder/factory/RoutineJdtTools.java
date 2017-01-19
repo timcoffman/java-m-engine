@@ -259,16 +259,6 @@ public class RoutineJdtTools extends RoutineTools {
 		return resolutionForVariableElement(variableElement) ;
 	}
 
-	@Override
-	public IdentifierResolution resolveIdentifier( javax.lang.model.element.Name name, TypeMirror typeMirror ) {
-		Element typeElement = types().asElement(typeMirror);
-		for ( Element enclosedElement : typeElement.getEnclosedElements() )
-			if ( name.equals( enclosedElement.getSimpleName() ) ) { 
-				return resolutionForExecutableElement( (ExecutableElement)enclosedElement ) ;
-			}
-		return null ;
-	}
-
 	public TypeMirror determineTypeOfIdentifier( Name name ) {
 		return resolveIdentifier( name ).type() ;
 	}

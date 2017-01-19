@@ -1,16 +1,15 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
-import static edu.vanderbilt.clinicalsystems.epic.api.Chronicles.znxIxID;
 import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.ARRAY_TYPE;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFGet;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFGetElmt;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFNew;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFNumElmts;
-import static edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation.zECFSetElmt;
+
+import java.io.PrintStream;
+
 import edu.vanderbilt.clinicalsystems.epic.api.oo.EpicCommunicationFoundation;
 import edu.vanderbilt.clinicalsystems.m.core.Value;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.InjectRoutine;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
+import edu.vanderbilt.clinicalsystems.m.core.lib.ReadWrite;
 import edu.vanderbilt.clinicalsystems.m.core.lib.Text;
 
 @RoutineUnit
@@ -23,53 +22,40 @@ public class Samples {
 	public Samples( Object constructorParameter ) {
 	}
 	
-	
 	public void methodThatsNotATag() {
 	}
 	
 	@RoutineTag
-	public static void tagWithNoParameters() {
+	public void tagWithNoParameters() {
 	}
 
 	@RoutineTag
-	public static void tagWithStringParameter( String x ) {
+	public void tagWithStringParameter( String x ) {
+		ReadWrite.write(x);
 	}
 
 	@RoutineTag
-	public static void tagWithIntegerParameter( int x ) {
+	public void tagWithIntegerParameter( int x ) {
+		ReadWrite.write(x);
 	}
 
 	@RoutineTag
-	public static void tagWithDoubleParameter( double x ) {
+	public void tagWithDoubleParameter( double x ) {
+		ReadWrite.write(x);
 	}
 
 	@RoutineTag
-	public static void tagWithValueParameter( Value x ) {
+	public void tagWithValueParameter( Value x ) {
+		ReadWrite.write(x);
 	}
 
 	@RoutineTag
-	public static void tagWithOtherParameter( System x ) {
+	public void tagWithOtherParameter( PrintStream x ) {
+		ReadWrite.write(x);
 	}
 
 	@RoutineTag
-	public static void unaryOperators() {
-		int prefixPlus = 0 ;
-		int prefixMinus = 0 ;
-		int postfixIncrement = 0 ;
-		int prefixIncrement = 0 ;
-		int postfixDecrement = 0 ;
-		int prefixDecrement = 0 ;
-		int x;
-		x = +prefixPlus ;
-		x = -prefixMinus ;
-		x = postfixIncrement++ ;
-		x = ++prefixIncrement ;
-		x = postfixDecrement-- ;
-		x = --prefixDecrement ;
-	}
-
-	@RoutineTag
-	public static int basicSummationLoop( int start, int increment, int stop) {
+	public int basicSummationLoop( int start, int increment, int stop) {
 		int s = 0 ;
 		for ( int x = start ; x <= stop ; x+=increment )
 			s += x ;
@@ -80,7 +66,7 @@ public class Samples {
 	/**
 	 * SET key=$ORDER(x(""))
 	 */
-	public static String basicSort( String source, String delimiter) {
+	public String basicSort( String source, String delimiter) {
 		int n = Text.occurrencesPlusOne(source,delimiter) ;
 		if ( n == 1 )
 			return source ;
@@ -96,28 +82,6 @@ public class Samples {
 			key = x.nextKey(key) ;
 		}
 		return result ;
-	}
-
-	@RoutineTag
-	public static void loops() {
-		int k ;
-		for ( int x = 1 ; ; x+=7 )
-			break ;
-		for ( int x = 1 ; x <= 10 ; x+=2 )
-			k = 0 ;
-		for ( int x = 0 ; x < 10 ; ++x )
-			k = 0 ;
-		for ( int x = 10 ; x >= 1 ; --x )
-			k = 0 ;
-		
-		int r = 0 ;
-		while ( r < 10 )
-			++r ;
-
-		int q = 0 ;
-		do {
-			q = 0 ;
-		} while ( ++q < 10 );
 	}
 
 	/*
@@ -138,124 +102,65 @@ public class Samples {
 	    q
      */
 	
-	@RoutineTag
-	public static void MyService() {
-		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
+	@InjectRoutine
+	private edu.vanderbilt.clinicalsystems.epic.api.Chronicles chronicles ;
+	
+	@InjectRoutine
+	private edu.vanderbilt.clinicalsystems.epic.api.EpicCommunicationFoundation ecfContext ;
+	
+	@RoutineTag("MYSERVICE")
+	public void myService() {
+		String patID, allergen ;
+		Value patients = Value.nullValue() ;
 		int ecfLine ;
 		//
 		// Get Request
-		allergen = zECFGet("Allergen") ;
+		allergen = ecfContext.getProperty("Allergen") ;
 		//
-		int ctr;
+		patID = "" ;
+		long ctr;
 		for ( ctr=1; ; ++ctr ) {
-			patID = znxIxID( "ZPT", 400, allergen, patID) ;
-			if ( patID == Value.nullValue() )
+			patID = chronicles.znxIxID( "ZPT", 400, allergen, patID) ;
+			if ( patID == "" )
 				 break ;
-			patients.get(String.valueOf(ctr)).assign(patID.toString()) ;
+			patients.get(ctr).assign(patID) ;
 		}
-		patients.get("0").assign(String.valueOf(ctr)) ;
+		patients.get("0").assign(ctr) ;
 		
 		// Send response
 		// ==== Set Array Property Patients ====
-	    patientsArrObj = zECFNew("Patients",Value.nullValue(),ARRAY_TYPE);
-	    for ( ecfLine=1 ; ecfLine <= patients.get(0).toInt(); ++ecfLine ) {
-	    	zECFSetElmt(patientsArrObj,patients.get(ecfLine),ecfLine) ;
+		String patientsArrNodeId = ecfContext.createProperty("Patients",ARRAY_TYPE);
+	    for ( ecfLine=1 ; ecfLine <= patients.get(0).toLong(); ++ecfLine ) {
+	    	ecfContext.setItem(patientsArrNodeId,patients.get(ecfLine).toString(),ecfLine) ;
 	    }
 	}
 	
-	@RoutineTag
-	public static void MyService2() {
-		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
+	@RoutineTag("MYSERVICE2")
+	public void myService2() {
+		String patID, allergen;
+		Value patients = Value.nullValue();
 		int ecfLine ;
 		//
 		// Get Request
-		allergen = zECFGet("Allergen") ;
+		allergen = ecfContext.getProperty("Allergen") ;
 		//
 		int ctr = 0 ;
-		patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
-		while ( patID != Value.nullValue() ) {
+		patID = chronicles.znxIxID( "ZPT", 400, allergen, "" ) ;
+		while ( patID != "" ) {
 			++ctr ;
 			patients.get(ctr).assign(patID) ;
-			patID = znxIxID( "ZPT", 400, allergen, patID) ;
+			patID = chronicles.znxIxID( "ZPT", 400, allergen, patID) ;
 		}
 		patients.get(0).assign(ctr) ;
 		
 		// Send response
 		// ==== Set Array Property Patients ====
-	    patientsArrObj = zECFNew("Patients",Value.nullValue(),ARRAY_TYPE);
-	    for ( ecfLine=1 ; ecfLine <= patients.get(0).toInt(); ++ecfLine ) {
-	    	zECFSetElmt(patientsArrObj,patients.get(ecfLine),ecfLine) ;
+		String patientsArrNodeId = ecfContext.createProperty("Patients",ARRAY_TYPE);
+	    for ( ecfLine=1 ; ecfLine <= patients.get(0).toLong(); ++ecfLine ) {
+	    	ecfContext.setItem(patientsArrNodeId,patients.get(ecfLine).toString(),ecfLine) ;
 	    }
 	}
 	
-//	@RoutineTag
-//	public void MyService3() {
-//		Value allergen, patients = Value.nullValue(), patientsArrObj = Value.nullValue(), patID = Value.nullValue() ;
-//		int ecfLine ;
-//		//
-//		// Get Request
-//		allergen = zECFGet("Allergen") ;
-//		//
-//		ValueArray patientLines = new ValueArray(patients) ;
-//		patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
-//		while ( patID != Value.nullValue() ) {
-//			patientLines.addLine( patID );
-//			patID = znxIxID( "ZPT", 400, allergen, Value.nullValue() ) ;
-//		}
-//		
-//		// Send response
-//		// ==== Set Array Property Patients ====
-//		patientsArrObj = zECFNew("Patients",Value.nullValue(),ARRAY_TYPE);
-//		for ( ecfLine=patientLines.firstLine() ; ecfLine <= patientLines.lastLine(); ++ecfLine ) {
-//			zECFSetElmt(patientsArrObj,patientLines.getLine(ecfLine),ecfLine) ;
-//		}
-//	}
-	
-	/**
-	 * helper4 function, expecting "N z I a>7 S z=">7"\nE  S z="<=7""
-	 */
-	@RoutineTag
-	public static String helper4( int a ) {
-		String z ;
-		if ( a>7 ) z = ">7" ;
-		else z = "<=7" ;
-		return z ;
-	}
-
-	/**
-	 * main entry point, expecting "Q"
-	 */
-	@RoutineTag
-	public static void main( String x, Integer y ) {
-		/* nothing */
-	}
-
-	/**
-	 * helper function, expecting "Q s_s"
-	 */
-	@RoutineTag
-	public static String helper( String s ) {
-		return s + s ;
-	}
-	
-	/**
-	 * helper2 function, expecting "Q b*c+a"
-	 */
-	@RoutineTag
-	public static double helper2( double a, double b, double c ) {
-		return a + b * c ;
-	}
-	
-	/**
-	 * helper3 function, expecting "N z S z=$$helper2(1.0,2.0,3.0) Q b*z+a"
-	 */
-	@RoutineTag
-	public static Float helper3( Float a, Float b, Float c ) {
-		float z = (float)helper2(1.0,2.0,3.0), k = 99 ; 
-		long t = System.currentTimeMillis() ;
-		return a + b * z ;
-	}
-
 	/*
 	UpdateNames n ln,employee,id,name
 	  f ln=1:1:$$zECFNumElmts("Employees") d
@@ -266,15 +171,15 @@ public class Samples {
 	  
 	   */
 	
-	@EpicInject public static EpicCommunicationFoundation.Request request ;
-	@EpicInject public static EpicCommunicationFoundation.Response response ;
+	@InjectRoutine public EpicCommunicationFoundation.Request request ;
+	@InjectRoutine public EpicCommunicationFoundation.Response response ;
 	
 	@RoutineTag("UpdateNames")
-	public static void updatesNames() {
-		for ( int ln=1 ; ln <= zECFNumElmts("Employees",null); ++ln  ) {
-			Value employee = zECFGetElmt( "Employees", null, ln ) ;
-			Value id = zECFGet( "Id", employee  ) ;
-			Value name = zECFGet( "Name", employee ) ;
+	public void updateNames() {
+		for ( int ln=1 ; ln <= ecfContext.propertyArrayLength("Employees"); ++ln  ) {
+			String employeeNodeId = ecfContext.getChildOfProperty( "Employees", ln ) ;
+			String id = ecfContext.getProperty( "Id", employeeNodeId ) ;
+			String name = ecfContext.getProperty( "Name", employeeNodeId ) ;
 		}
 	}
 	

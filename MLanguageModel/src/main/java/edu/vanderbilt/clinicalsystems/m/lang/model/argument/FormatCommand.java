@@ -16,7 +16,7 @@ public abstract class FormatCommand extends InputOutput {
 	
 	public static FormatCommand carriageReturn() { return CARRIAGE_RETURN ; }
 	public static FormatCommand pageFeed() { return PAGE_FEED ; }
-	public static FormatCommand column( int col ) { return new ColumnCommand( col ); }
+	public static FormatCommand column( long col ) { return new ColumnCommand( col ); }
 	
 	public abstract String text() ;
 	

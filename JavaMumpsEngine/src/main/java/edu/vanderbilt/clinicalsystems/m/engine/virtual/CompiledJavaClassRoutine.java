@@ -10,17 +10,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Executor.ExecutionResult;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.Installer.TargetInstanceResolver;
 
 class CompiledJavaClassRoutine implements CompiledRoutine {
 	
 	private final Class<?> m_type;
 	private final String m_routineName ;
+	private final TargetInstanceResolver m_targetInstanceResolver ;
 	
-	public CompiledJavaClassRoutine(Class<?> type, String routineName) {
+	public CompiledJavaClassRoutine(Class<?> type, TargetInstanceResolver targetInstanceResolver, String routineName) {
 		m_type = type ;
+		m_targetInstanceResolver = targetInstanceResolver ;
 		m_routineName = routineName  ;
 	}
 	
@@ -51,19 +55,19 @@ class CompiledJavaClassRoutine implements CompiledRoutine {
 			}
 		} else {
 			for ( Method method : m_type.getDeclaredMethods() ) {
-				String checkTagName = method.getName() ; /* perhaps pass the tag name through via the routine meta file */
+				String checkTagName = RoutineTools.determineTagName(method) ; /* perhaps pass the tag name through via the routine meta file */
 				if ( checkTagName.equals( tagName ) && method.getParameterCount() == parameterCount) {
 					return new CompiledJavaMethodTag(method,tagName);
 				}
 			}
 			for ( Method method : m_type.getDeclaredMethods() ) {
-				String checkTagName = method.getName() ; /* perhaps pass the tag name through via the routine meta file */
+				String checkTagName = RoutineTools.determineTagName(method) ; /* perhaps pass the tag name through via the routine meta file */
 				if ( checkTagName.equals( tagName ) && method.getParameterCount() > parameterCount) {
 					return new CompiledJavaMethodTag(method,tagName);
 				}
 			}
 			for ( Method method : m_type.getDeclaredMethods() ) {
-				String checkTagName = method.getName() ; /* perhaps pass the tag name through via the routine meta file */
+				String checkTagName = RoutineTools.determineTagName(method) ; /* perhaps pass the tag name through via the routine meta file */
 				if ( checkTagName.equals( tagName ) ) {
 					return new CompiledJavaMethodTag(method,tagName);
 				}
@@ -91,15 +95,38 @@ class CompiledJavaClassRoutine implements CompiledRoutine {
 		}
 
 		@Override
-		public ExecutionResult execute( ExecutionFrame frame, List<EvaluationResult> arguments ) {
-			if ( Modifier.isNative( m_method.getModifiers() ) )
-				return frame.caughtError( new EngineException(ErrorCode.JAVA_METHOD_NOT_IMPLEMENTED, "class", m_method.getDeclaringClass().getName(), "method", m_method.getName() ) ) ;
-			return super.execute(frame, arguments) ;
-		}
-
-		@Override
 		protected ExecutionResult invoke(ExecutionFrame frame, Object[] javaArguments) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-			Object javaResult = m_method.invoke(null, javaArguments) ;
+			if ( null != m_targetInstanceResolver )
+				frame.setLocalProperty( "target-instance-resolver", m_targetInstanceResolver ) ;
+			
+			Object targetInstance = frame.getProperty("target-instance",Object.class);
+
+			if ( null == targetInstance && !Modifier.isStatic( m_method.getModifiers() ) )
+				return frame.caughtError( new EngineException(ErrorCode.JAVA_INSTANCE_NOT_AVAIALABLE, "class", m_method.getDeclaringClass().getName(), "method", m_method.getName() ) ) ;
+
+			if ( null != targetInstance && !Modifier.isStatic( m_method.getModifiers() ) );
+				
+			
+			Method implementedMethod ;
+			
+			if ( null != targetInstance ) {
+				
+				try {
+					implementedMethod = targetInstance.getClass().getMethod( m_method.getName(), m_method.getParameterTypes() ) ;
+				} catch (NoSuchMethodException | SecurityException ex) {
+					implementedMethod = m_method ;
+				}
+				
+			} else {
+				
+				implementedMethod = m_method ;
+				
+			}
+			
+			if ( Modifier.isNative( implementedMethod.getModifiers() ) )
+				return frame.caughtError( new EngineException(ErrorCode.JAVA_METHOD_NOT_IMPLEMENTED, "class", implementedMethod.getDeclaringClass().getName(), "method", implementedMethod.getName() ) ) ;
+			
+			Object javaResult = implementedMethod.invoke(targetInstance, javaArguments) ;
 			if ( Void.TYPE.equals( m_method.getReturnType() ) ) {
 				return ExecutionResult.QUIT ;
 			} else {

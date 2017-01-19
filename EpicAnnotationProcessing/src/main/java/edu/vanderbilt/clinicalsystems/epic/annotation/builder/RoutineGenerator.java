@@ -37,8 +37,8 @@ public class RoutineGenerator extends Generator<Routine,TypeElement> {
 			if ( !element.getModifiers().contains( Modifier.PUBLIC ) )
 				report( ReportType.WARNING, "tagged methods are expected to be public", element);
 			
-			if ( !element.getModifiers().contains( Modifier.STATIC ) )
-				report( ReportType.WARNING, "tagged methods are expected to be static", element);
+//			if ( !element.getModifiers().contains( Modifier.STATIC ) )
+//				report( ReportType.WARNING, "tagged methods are expected to be static", element);
 			
 			element.accept( new ElementInterpreter<Void, Routine>(tools()) {
 

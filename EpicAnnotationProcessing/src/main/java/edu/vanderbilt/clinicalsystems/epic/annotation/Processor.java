@@ -27,6 +27,7 @@ import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineGenerator;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.RoutineDependency;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TaggedRoutineDependency;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.factory.RoutineToolsFactory;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
@@ -118,6 +119,11 @@ public class Processor extends AbstractProcessor {
 				org.w3c.dom.Element dependencyElement = doc.createElement("dependency") ;
 				dependencyElement.setAttribute("routine", dependendency.routineName() );
 				dependencyElement.setAttribute("class", dependendency.dependsOnType().getQualifiedName().toString() );
+				if ( dependendency instanceof TaggedRoutineDependency ) {
+					TaggedRoutineDependency tagDep = (TaggedRoutineDependency)dependendency ;
+					dependencyElement.setAttribute("tag", tagDep.tagName() );
+					dependencyElement.setAttribute("method", tagDep.dependsOnMethod().getSimpleName().toString() );
+				}
 				routineElement.appendChild(dependencyElement) ;
 			}
 			
@@ -130,6 +136,7 @@ public class Processor extends AbstractProcessor {
 			javax.xml.transform.TransformerFactory transformerFactory = javax.xml.transform.TransformerFactory.newInstance();
 			javax.xml.transform.Transformer transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 			try ( Writer writer = new BufferedWriter(resourceFile.openWriter()) ) {
 				transformer.transform(
 						new javax.xml.transform.dom.DOMSource(doc),

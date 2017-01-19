@@ -28,4 +28,8 @@ public abstract class ReadOnlyNode implements Node {
 
 	@Override public void dropAll() { /* no action */ }
 
+	@Override
+	public Object toObject(Class<?> ofType) {
+		throw new UnsupportedOperationException( this + " cannot be converted to a " + ofType) ;
+	}
 }

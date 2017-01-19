@@ -29,7 +29,7 @@ public class EngineException extends Exception {
 			String value = context.get( m.group(1) ) ;
 			if ( null == value )
 				value = "???" ;
-			m.appendReplacement(sb, value) ;
+			m.appendReplacement(sb, Matcher.quoteReplacement(value) ) ;
 		}
 		m.appendTail(sb) ;
 		return sb.toString() ;

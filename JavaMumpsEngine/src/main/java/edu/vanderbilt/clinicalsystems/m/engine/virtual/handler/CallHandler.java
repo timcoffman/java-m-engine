@@ -12,6 +12,7 @@ import edu.vanderbilt.clinicalsystems.m.engine.virtual.CompiledRoutine;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.CompiledTag;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.EvaluationResult;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.ExecutionFrame;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.Installer.TargetInstanceResolver;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
@@ -52,8 +53,14 @@ public class CallHandler extends CommandHandler {
 		CompiledTag compiledTag = compiledRoutine.compiledTag(tagName, argumentCount.intValue() );
 		if ( null == compiledTag )
 			throw new EngineException(ErrorCode.MISSING_TAG,"tag",tagName,"routine",routineName) ;
-
+		
+		TargetInstanceResolver instanceResolver = frame().getProperty("target-instance-resolver",TargetInstanceResolver.class) ;
+		Object targetInstance = instanceResolver.resolve( null, compiledTag.compiledRoutine().name(), frame() ) ;
+		
 		try ( ExecutionFrame frame = frame().createChildFrame() ) {
+			if ( null != targetInstance )
+				frame.setLocalProperty("target-instance", targetInstance);
+			
 			List<EvaluationResult> arguments = new ArrayList<EvaluationResult>() ;
 			for ( Expression expression : taggedRoutineCall.arguments() )
 				arguments.add( evaluate(expression) ) ;

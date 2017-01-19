@@ -1,19 +1,21 @@
 Services;sample service
 	QUIT 
 MyService;
-	NEW allergen,patients,patientsArrObj,patID,ecfLine
+	NEW patients,patId,allergen
 	;
 	; Get request
-	SET allergen=$$zECFGet^EALIB("Allergen","")
+	SET allergen=$$zECFGet^EALIBECF1("Allergen","")
 	;
 	NEW ctr
-	FOR ctr=1 SET patID=$$znxIxID^EALIB("ZPT",400,allergen,patID) QUIT:patID=""  DO 
-	. SET patients(ctr)=patID
+	FOR ctr=1 SET patId=$$znxIxID^EA3LIB5("ZPT",400,allergen,patId) QUIT:patId=""  DO 
+	. SET patients(ctr)=patId
 	SET patients(0)=ctr
 	;
 	; Send response
 	; ==== Set Array Property Patients ====
-	SET patientsArrObj=$$zECFNew^EALIB("Patients","","A")
-	FOR ecfLine=1:1:patients(0) SET %=$$zECFSetElmt^EALIB(patientsArrObj,patients(ecfLine))
+	NEW patientsNodeId
+	SET patientsNodeId=$$zECFNew^EALIBECF1("Patients","","A")
+	NEW ecfLine
+	FOR ecfLine=1:1:patients(0) SET %=$$zECFSetElmt^EALIBECF1(patientsNodeId,patients(ecfLine))
 	QUIT ;method returns void
 

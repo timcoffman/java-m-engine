@@ -1,6 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 
@@ -25,20 +26,8 @@ public abstract class EvaluationResult {
 			return m_constant ;
 		}
 		@Override public Object toObject(Class<?> ofType) {
-			if ( String.class.isAssignableFrom(ofType) )
-				return m_constant.toString() ;
-			else if ( Boolean.TYPE.isAssignableFrom(ofType) || Boolean.class.isAssignableFrom(ofType) )
-				return m_constant.toBoolean() ;
-			else if ( Long.TYPE.isAssignableFrom(ofType) || Long.class.isAssignableFrom(ofType) )
-				return m_constant.toLong() ;
-			else if ( Double.TYPE.isAssignableFrom(ofType) || Double.class.isAssignableFrom(ofType) )
-				return m_constant.toDouble() ;
-			else if ( Object.class.isAssignableFrom(ofType) )
-				return m_constant.toString() ;
-			else
-				throw new UnsupportedOperationException( m_constant + " cannot be converted to a " + ofType) ;
+			return constantToObject( m_constant, ofType ) ;
 		}
-		
 		@Override public boolean equals(Object obj) {
 			if ( null == obj ) return false ;
 			if ( this == obj ) return true ;
@@ -47,25 +36,31 @@ public abstract class EvaluationResult {
 			return m_constant.equals( evalResult.toConstant() ) ;
 		}
 	}
+
+	private static Object constantToObject( Constant constant, Class<?> ofType ) {
+		if ( String.class.isAssignableFrom(ofType) )
+			return constant.value() ;
+		else if ( Boolean.TYPE.isAssignableFrom(ofType) || Boolean.class.isAssignableFrom(ofType) )
+			return constant.toBoolean() ;
+		else if ( Long.TYPE.isAssignableFrom(ofType) || Long.class.isAssignableFrom(ofType) )
+			return constant.toLong() ;
+		else if ( Double.TYPE.isAssignableFrom(ofType) || Double.class.isAssignableFrom(ofType) )
+			return constant.toDouble() ;
+		else if ( Object.class.isAssignableFrom(ofType) )
+			return constant.toString() ;
+		else
+			throw new UnsupportedOperationException( constant + " cannot be converted to a " + ofType) ;
+	}
 	
 	private static class JavaEvaluationResult extends EvaluationResult {
-		private Object m_object;
-		public JavaEvaluationResult(Object obj) { Objects.requireNonNull(obj) ; m_object = obj; }
-		@Override public String toString() { return m_object.toString() ; } 
+		private Optional<Object> m_object;
+		public JavaEvaluationResult(Object obj) { m_object = Optional.ofNullable(obj); }
+		@Override public String toString() { return m_object.map(Object::toString).orElseThrow( ()->new NullPointerException() ) ; } 
 		@Override public Object toObject(Class<?> ofType) {
-			return ofType.cast(m_object) ;
+			return m_object.map( ofType::cast ).get() ;
 		}
 		@Override public Constant toConstant() {
-			if ( m_object instanceof String )
-				return Constant.from( (String)m_object ) ;
-			else if ( m_object instanceof Boolean )
-				return Constant.from( (Boolean)m_object ) ;
-			else if ( m_object instanceof Long)
-				return Constant.from( (Long)m_object ) ;
-			else if ( m_object instanceof Double )
-				return Constant.from( (Double)m_object ) ;
-			else
-				throw new UnsupportedOperationException( m_object + " cannot be converted to a Constant" ) ;
+			return m_object.map( EvaluationResult::objectToConstant ).orElse( Constant.NULL ) ;
 		}
 		
 		@Override public boolean equals(Object obj) {
@@ -73,8 +68,24 @@ public abstract class EvaluationResult {
 			if ( this == obj ) return true ;
 			if ( !(obj instanceof EvaluationResult) ) return false ;
 			EvaluationResult evalResult = (EvaluationResult)obj ;
-			return m_object.equals( evalResult.toObject( m_object.getClass() ) ) ;
+			return m_object
+				.map( (o)->o.equals( evalResult.toObject( o.getClass() ) ) )
+				.orElse( null == evalResult.toObject(Object.class) )
+				;
 		}
+	}
+	
+	private static Constant objectToConstant(Object obj) {
+		if ( obj instanceof String )
+			return Constant.from( (String)obj ) ;
+		else if ( obj instanceof Boolean )
+			return Constant.from( (Boolean)obj ) ;
+		else if ( obj instanceof Long)
+			return Constant.from( (Long)obj ) ;
+		else if ( obj instanceof Double )
+			return Constant.from( (Double)obj ) ;
+		else
+			throw new UnsupportedOperationException( obj + " cannot be converted to a Constant" ) ;
 	}
 	
 }
