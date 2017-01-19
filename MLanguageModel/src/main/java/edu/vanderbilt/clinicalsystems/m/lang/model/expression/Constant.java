@@ -61,7 +61,7 @@ public class Constant extends Expression implements Comparable<Constant> {
 	}
 
 	@Override
-	protected String unformattedRepresentation() { return "\"" + m_value + "\"" ; } 
+	protected String unformattedRepresentation() { return representsNumber() ? m_value : "\"" + m_value + "\"" ; } 
 
 	@Override public <R> R visit( Visitor<R> visitor ) {
 		return visitor.visitConstant(this) ;

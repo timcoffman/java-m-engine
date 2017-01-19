@@ -42,7 +42,7 @@ public class JdtTools {
 			for (IPackageFragment packageFragment : javaProject.getPackageFragments()) {
 				for (ICompilationUnit compilationUnit : packageFragment.getCompilationUnits()) {
 					IType type = compilationUnit.findPrimaryType() ; //.getType( annotatedType.getQualifiedName().toString() );
-					if ( annotatedType.getQualifiedName().toString().equals( type.getFullyQualifiedName() ) /* null != type */ ) {
+					if ( null != type && annotatedType.getQualifiedName().toString().equals( type.getFullyQualifiedName() ) /* null != type */ ) {
 						ASTParser astParser = ASTParser.newParser(AST.JLS8) ;
 						astParser.setKind(ASTParser.K_COMPILATION_UNIT);
 						astParser.setSource(compilationUnit);
