@@ -84,9 +84,12 @@ class CompiledNativeRoutine implements CompiledRoutine {
 
 			Iterator<EvaluationResult> argumentIterator = arguments.iterator() ;
 			for ( String parameterName : m_parameterNames ) {
-				Node localParameterNode = frame.createLocalNode( parameterName ) ;
-				if ( argumentIterator.hasNext() )
-					localParameterNode.assign( argumentIterator.next().toConstant().value() ) ;
+				if ( argumentIterator.hasNext() ) {
+					EvaluationResult evaluationResult = argumentIterator.next();
+					evaluationResult.toNode( parameterName, frame ) ;
+				} else {
+					frame.createLocalNode( parameterName ) ;
+				}
 			}
 			
 			ExecutionResult result = ExecutionResult.CONTINUE ;

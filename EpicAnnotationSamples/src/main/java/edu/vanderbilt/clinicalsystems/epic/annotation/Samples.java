@@ -84,6 +84,24 @@ public class Samples {
 		return result ;
 	}
 
+
+	@RoutineTag
+	public String enhancedSort(String source, String delimiter) {
+		int n = Text.occurrencesPlusOne(source,delimiter) ;
+		if ( n == 1 )
+			return source ;
+		Value x = Value.nullValue();
+		for ( int i = 1; i <= n ; ++i )
+			x.get( Text.piece(source, delimiter, i) ).assign( 1 ) ;
+		
+		String result = "" ;
+		for ( String key : x.keys() ) {
+			if ( result != "" ) result += delimiter ;
+			result += key ;
+		}
+		return result ;
+	}
+
 	/*
 	MyService n allergen,patients,patientsArrObj,ecfLine,ctr,patID
 	    ;

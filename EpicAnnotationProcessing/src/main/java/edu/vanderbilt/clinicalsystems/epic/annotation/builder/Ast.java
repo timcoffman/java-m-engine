@@ -89,7 +89,11 @@ public final class Ast {
 		Expression condition();
 	}
 	public interface EmptyStatement extends Statement { }
-	public interface EnhancedForLoop extends Statement { }
+	public interface EnhancedForLoop extends Statement {
+		VariableDeclarationsStatement variable();
+		Expression expression();
+		Statement statement();
+	}
 	public interface Erroneous extends Expression { }
 	public interface ExpressionStatement extends Statement {
 		Expression expression();

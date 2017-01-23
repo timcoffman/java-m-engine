@@ -11,6 +11,7 @@ public enum ErrorCode {
 	OUTPUT_ERROR("OUTPUT_ERROR", "failed to send output \"{text}\""),
 	NOT_A_NUMBER("NAN","\"{text}\" does not represent a number"),
 	NOT_A_BOOLEAN("CANNOT_CONVERT_TO_BOOLEAN","\"{text}\" does not represent a boolean"),
+	FUNCTION_DID_NOT_RETURN_VALUE("FUNCTION_DID_NOT_RETURN_VALUE","{tag}^{routine} failed to return a value when evaluated"),
 	UNSUPPORTED_FEATURE("UNSUPPORTED_FEATURE","{feature} \"{code}\" not supported at this time"),
 	ILLEGAL_ARGUMENT("ILLEGAL_ARGUMENT","when calling {function}, argument {argument} cannot have value \"{value}\""),
 	ILLEGAL_OPERAND("ILLEGAL_OPERAND","when applying {operator} operator, operand cannot have value \"{value}\""),

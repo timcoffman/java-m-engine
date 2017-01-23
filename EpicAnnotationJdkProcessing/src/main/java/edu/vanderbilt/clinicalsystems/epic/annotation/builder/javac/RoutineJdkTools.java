@@ -74,6 +74,9 @@ import com.sun.source.tree.WildcardTree;
 import com.sun.source.util.TreePath;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Expression;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Statement;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.VariableDeclarationsStatement;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.ElementInterpreter;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 
@@ -596,6 +599,12 @@ public class RoutineJdkTools extends RoutineTools {
 	}
 	private class EnhancedForLoopImpl extends TreeWrapper<EnhancedForLoopTree> implements Ast.EnhancedForLoop {
 		public EnhancedForLoopImpl(EnhancedForLoopTree tree) { super(tree) ; }
+		@Override
+		public VariableDeclarationsStatement variable() { return wrap( m_tree.getVariable() ); }
+		@Override
+		public Expression expression() { return wrap( m_tree.getExpression() ); }
+		@Override
+		public Statement statement() { return wrap( m_tree.getStatement() ); }
 	}
 	private class ErroneousImpl extends TreeWrapper<ErroneousTree> implements Ast.Erroneous {
 		public ErroneousImpl(ErroneousTree tree) { super(tree) ; }

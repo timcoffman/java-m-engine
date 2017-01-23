@@ -41,6 +41,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 	
 	private final ConditionalFlowAssembler m_conditionalFlowAssembler;
 	private final IncrementalLoopAssembler m_incrementalLoopAssembler;
+	private final IterativeLoopAssembler m_iterativeLoopAssembler;
 	private final ConditionalLoopAssembler m_conditionalLoopAssembler ;
 	private final PostConditionalLoopAssembler m_postConditionalLoopAssembler ;
 
@@ -48,6 +49,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		super( builderTools ) ;
 		m_conditionalFlowAssembler = new ConditionalFlowAssembler( builderTools );
 		m_incrementalLoopAssembler = new IncrementalLoopAssembler( builderTools );
+		m_iterativeLoopAssembler = new IterativeLoopAssembler( builderTools );
 		m_conditionalLoopAssembler = new ConditionalLoopAssembler( builderTools );
 		m_postConditionalLoopAssembler = new PostConditionalLoopAssembler( builderTools );
 	}
@@ -265,6 +267,12 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 		@Override
 		public Void visitForLoop(Ast.ForLoop forLoop, Block block) {
 			m_incrementalLoopAssembler.assemble( forLoop, block, m_delegate ) ;
+			return null ;
+		}
+		
+		@Override
+		public Void visitEnhancedForLoop(Ast.EnhancedForLoop enhancedForLoop, Block block) {
+			m_iterativeLoopAssembler.assemble( enhancedForLoop, block, m_delegate ) ;
 			return null ;
 		}
 		

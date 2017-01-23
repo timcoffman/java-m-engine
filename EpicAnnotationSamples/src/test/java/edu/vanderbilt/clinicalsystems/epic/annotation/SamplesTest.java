@@ -101,6 +101,15 @@ public class SamplesTest {
 	
 	@RoutineTag
 	@Test
+	public void canPerformEnhancedSort() {
+		String actual = m_samples.enhancedSort("c;d;b;a",";") ;
+		String expected = "a;b;c;d" ;
+		assertThat( actual, equalTo(expected) ) ;
+		
+	}
+	
+	@RoutineTag
+	@Test
 	public void canInvokeWebService() {
 		m_samples.myService();
 	}

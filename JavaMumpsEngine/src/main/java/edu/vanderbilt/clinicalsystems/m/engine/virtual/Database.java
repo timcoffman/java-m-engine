@@ -39,6 +39,9 @@ public class Database extends TreeNodeMap implements Installer {
 		
 	} ;
 	public Database() {
+		this( new TreeNodeMap() ) ;
+	} ;
+	public Database( TreeNodeMap persistentStorage ) {
 		m_routineFormatter = new RoutineNativeFormatter() ;
 		m_routineFormatter.options().setCommandsPerLineLimit(1); 
 		m_routineFormatter.options().setCommentsPerLineLimit(1); 

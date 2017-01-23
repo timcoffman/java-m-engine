@@ -1,7 +1,10 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation;
 
+import edu.vanderbilt.clinicalsystems.m.core.Value;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.support.ReadWriteCodeType;
+import edu.vanderbilt.clinicalsystems.m.core.lib.ReadWrite;
 
 /**
  *  ForLoop Sample
@@ -59,4 +62,14 @@ public class ForLoop {
 		for( int i = 0 ; i < 10 ; i+=2 ) loopBody(i) ;
 	}
 
+	/**
+	 * Expect N key S key="" F  key=$O(x(key)) Q:key="" W key
+	 */
+	@RoutineTag
+	public static void enhancedForLoop() {
+		Value x = Value.nullValue() ;
+		for( String key : x.keys() )
+			ReadWrite.write( key );
+	}
+	
 }

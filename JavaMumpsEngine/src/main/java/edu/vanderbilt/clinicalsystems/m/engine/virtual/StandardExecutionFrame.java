@@ -324,10 +324,22 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			}
 			
 			@Override public EvaluationResult visitVariableReference(VariableReference variable) {
-				try { return EvaluationResult.fromConstant( Constant.from( findNode( variable ).value() ) ) ; }
-				catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+				try { return EvaluationResult.fromConstant( Constant.from( findNode( variable ).value() ) ) ;
+				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 			}
 			
+			@Override
+			public EvaluationResult visitDirectVariableReference( DirectVariableReference variable) {
+				switch ( variable.parameterPassMethod() ) {
+				case BY_REFERENCE:
+					try { return EvaluationResult.fromNode( findNode( variable ) ) ;
+					} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+				case BY_VALUE:
+				default:
+					return visitVariableReference(variable);
+				}
+			}
+
 			private double requireDouble(Constant c) throws EngineException {
 				try { return c.toDouble() ; }
 				catch ( NumberFormatException ex ) { throw new EngineException(ErrorCode.NOT_A_NUMBER, "text", c.toString() ) ; } 
@@ -586,7 +598,10 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				case ERROR:
 					throw callFrame.error() ;
 				case QUIT:
-					return callFrame.result() ;
+					EvaluationResult result = callFrame.result();
+					if (null == result )
+						throw new EngineException( ErrorCode.FUNCTION_DID_NOT_RETURN_VALUE, "tag", m_compiledTag.name(), "routine", m_compiledTag.compiledRoutine().name() ) ;
+					return result ;
 				default:
 					throw new IllegalStateException( "function call cannot result in " + executionResult ) ;
 				}

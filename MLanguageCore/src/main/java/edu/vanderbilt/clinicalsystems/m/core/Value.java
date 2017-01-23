@@ -7,6 +7,7 @@ import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFun
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.NEXT_KEY;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.PREVIOUS_KEY;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.VALUE_INDEX;
+import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType.VALUE_KEYS_ITERATION;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeValueTypes.INITIAL_VALUE;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
@@ -19,6 +20,8 @@ public abstract class Value {
 	public native boolean isNull() ;
 
 	@NativeCommand(VALUE_CLEAR) public native void clear() ;
+	
+	@NativeFunction(VALUE_KEYS_ITERATION) public native Iterable<String> keys() ;
 	
 	@NativeCommand(VALUE_ASSIGN) public native void assign( Value   value ) ;
 	@NativeCommand(VALUE_ASSIGN) public native void assign( String  value ) ;

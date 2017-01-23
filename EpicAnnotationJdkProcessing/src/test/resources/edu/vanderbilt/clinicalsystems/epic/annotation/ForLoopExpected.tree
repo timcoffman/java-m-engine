@@ -59,4 +59,15 @@ CMD: FOR | (-) {
 }
 CMD: QUIT | (-)
 
+TAG: enhancedForLoop
+CMD: NEW | x, key
+CMD: FOR | (-) {
+  CMD: SET | key := $ORDER( x( key ) )
+  CMD: QUIT : key="" | (-)
+  CMD: DO | (-)
+  {
+    CMD: WRITE | key
+  }
+}
+CMD: QUIT | (-)
 }
