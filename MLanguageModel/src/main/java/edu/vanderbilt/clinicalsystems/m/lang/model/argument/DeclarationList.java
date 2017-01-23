@@ -21,7 +21,7 @@ public class DeclarationList extends ElementListArgument<DirectVariableReference
 	@Override
 	protected void check(DirectVariableReference variable) throws IllegalArgumentException {
 		super.check(variable);
-		if ( variable.scope() != Scope.LOCAL )
+		if ( variable.scope() != Scope.TRANSIENT )
 			throw new IllegalArgumentException("variable reference provided for declaration must have local scope") ;
 		if ( variable.referenceStyle() != ReferenceStyle.DIRECT )
 			throw new IllegalArgumentException("variable reference provided for declaration must be a plain (not indirect) reference") ;

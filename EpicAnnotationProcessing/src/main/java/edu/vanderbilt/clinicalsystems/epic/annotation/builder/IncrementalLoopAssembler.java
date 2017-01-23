@@ -30,7 +30,7 @@ public class IncrementalLoopAssembler extends FlowAssembler<Ast.ForLoop>{
 	
 			ForLoopConfiguration config = extractForLoopConfiguration( forLoopNode ) ;
 			if ( config.complete() ) {
-				DirectVariableReference loopVar = new DirectVariableReference(Scope.LOCAL, config.loopVariable().toString() ) ;
+				DirectVariableReference loopVar = new DirectVariableReference(Scope.TRANSIENT, config.loopVariable().toString() ) ;
 				
 				if ( config.requiresLoopVariableDeclaration() )
 					blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(loopVar) ) ) ;

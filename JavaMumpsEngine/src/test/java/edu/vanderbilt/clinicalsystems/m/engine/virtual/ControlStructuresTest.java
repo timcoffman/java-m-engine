@@ -44,7 +44,7 @@ public class ControlStructuresTest {
 	}
 	
 	private Command makeForLoopCommand( Expression start, Expression step, Expression stop ) {
-		DirectVariableReference loopVar = new DirectVariableReference(Scope.LOCAL, "i") ;
+		DirectVariableReference loopVar = new DirectVariableReference(Scope.TRANSIENT, "i") ;
 		LoopDefinition loopDefinition = new LoopDefinition(loopVar, start, step, stop) ;
 		Command command = new Command( CommandType.FOR, loopDefinition, new InlineBlock( new Command(CommandType.WRITE,new InputOutputList(InputOutput.wrap(loopVar),FormatCommand.carriageReturn())) ) ) ;
 		return command ;

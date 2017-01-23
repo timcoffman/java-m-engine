@@ -101,10 +101,10 @@ public class RoutineTest {
 	public void canWriteMulitpleVariableDeclarationsInRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "a")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.TRANSIENT, "a")) ) );
 		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( Constant.from("lorem")) ) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "b")) ) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.LOCAL, "c")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.TRANSIENT, "b")) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference(Scope.TRANSIENT, "c")) ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN a W \"lorem\" N b,c\n\n") );
 	}
@@ -125,9 +125,9 @@ public class RoutineTest {
 	public void canWriteSimpleRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
-		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap( new DirectVariableReference( Scope.LOCAL, "message" ) ), Constant.from("Hello, world!") ) ) ) );
-		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new DirectVariableReference( Scope.LOCAL, "message" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.TRANSIENT, "message" ) ) ) );
+		routine.appendElement( new Command( CommandType.SET, new AssignmentList( new Assignment( Destination.wrap( new DirectVariableReference( Scope.TRANSIENT, "message" ) ), Constant.from("Hello, world!") ) ) ) );
+		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new DirectVariableReference( Scope.TRANSIENT, "message" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN message S message=\"Hello, world!\" W message Q \n\n") );
@@ -169,12 +169,12 @@ public class RoutineTest {
 	public void canWriteMultiplyTaggedRoutine() throws RoutineWriterException {
 		Routine routine = new Routine() ;
 		routine.appendElement( new Tag("MYROUTINE") );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.TRANSIENT, "abc" ) ) ) );
 		routine.appendElement( new Command( CommandType.WRITE, new ExpressionList( new RoutineFunctionCall( new TagReference("MYFUNCTION", "MYROUTINE" ), FunctionCall.Returning.UNKNOWN, Expression.list( Constant.from("123"), Constant.from("456") ) )) ) );
 		routine.appendElement( new Command( CommandType.DO, new TaggedRoutineCallList( new TaggedRoutineCall( new TagReference( "MYFUNCTION", "MYROUTINE"), Expression.list( Constant.from("123"), Constant.from("456") ) ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		routine.appendElement( new Tag( "MYFUNCTION", Arrays.asList( new ParameterName("x"), new ParameterName("y") )) );
-		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.LOCAL, "abc" ) ) ) );
+		routine.appendElement( new Command( CommandType.NEW, new DeclarationList( new DirectVariableReference( Scope.TRANSIENT, "abc" ) ) ) );
 		routine.appendElement( new Command( CommandType.QUIT ) );
 		m_routineWriter.write(routine);
 		assertThat( m_buffer.toString(), equalTo("MYROUTINE\tN abc W $$MYFUNCTION^MYROUTINE(123,456) D MYFUNCTION^MYROUTINE(123,456) Q \nMYFUNCTION(x,y)\tN abc Q \n\n") );

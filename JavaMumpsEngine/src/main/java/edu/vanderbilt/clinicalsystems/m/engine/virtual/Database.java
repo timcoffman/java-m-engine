@@ -24,6 +24,8 @@ public class Database extends TreeNodeMap implements Installer {
 
 	private RoutineNativeFormatter m_routineFormatter ;
 	
+	private final NodeMap m_persistentStorage ;
+	
 	private final Map<String,CompiledRoutine> m_compiledRoutines = new HashMap<String, CompiledRoutine>(); 
 
 	private GlobalContext m_globalContext = new GlobalContext() {
@@ -41,7 +43,9 @@ public class Database extends TreeNodeMap implements Installer {
 	public Database() {
 		this( new TreeNodeMap() ) ;
 	} ;
-	public Database( TreeNodeMap persistentStorage ) {
+	public Database( NodeMap persistentStorage ) {
+		m_persistentStorage = persistentStorage ;
+		
 		m_routineFormatter = new RoutineNativeFormatter() ;
 		m_routineFormatter.options().setCommandsPerLineLimit(1); 
 		m_routineFormatter.options().setCommentsPerLineLimit(1); 

@@ -199,9 +199,9 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 	public Node createNode( DirectVariableReference variable ) {
 		String variableName = variable.variableName();
 		switch ( variable.scope() ) {
-		case GLOBAL:
+		case PERSISTENT:
 			return m_root.create( variableName ) ;
-		case LOCAL:
+		case TRANSIENT:
 			return createLocalNode( variableName ) ;
 		default:
 			throw new UnsupportedOperationException(variable.scope() + " scope not supported for direct variable creation") ;
@@ -241,9 +241,9 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			@Override public Node visitDirectVariableReference(DirectVariableReference variable) {
 				String variableName = variable.variableName();
 				switch ( variable.scope() ) {
-				case GLOBAL:
+				case PERSISTENT:
 					return m_root.get( variableName ) ;
-				case LOCAL:
+				case TRANSIENT:
 					if ( hasLocalNode( variableName) ) {
 						return findLocalNode( variableName ) ;
 					} else if ( null == m_parent ) {

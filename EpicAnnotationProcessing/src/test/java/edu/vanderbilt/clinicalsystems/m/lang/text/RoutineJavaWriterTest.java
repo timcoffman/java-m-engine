@@ -16,10 +16,10 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.writer.FileCodeWriter;
 
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
 import edu.vanderbilt.clinicalsystems.epic.lib.Epic;
 import edu.vanderbilt.clinicalsystems.m.Core;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
@@ -57,7 +57,7 @@ public class RoutineJavaWriterTest {
 		}
 	}
 
-//	@Test
+	@Test
 	public void canSerializeRoutine() throws Exception {
 		URL src = RoutineJavaWriterTest.class.getResource("EALIBECF1.m");
 		File dst = new File(src.toURI().resolve("EALIBECF1.ser"));
@@ -73,7 +73,7 @@ public class RoutineJavaWriterTest {
 		}
 	}
 
-	@Test
+//	@Test
 	public void canWriteEpicClass() throws Exception {
 		RoutineJavaBuilderContext.EventListener listener = new RoutineJavaBuilderContext.EventListener() {
 

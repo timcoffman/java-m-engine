@@ -87,7 +87,7 @@ public class IterativeLoopAssembler extends FlowAssembler<Ast.EnhancedForLoop>{
 		
 		try ( BlockManager blockManager = new BlockManager(block, delegate) ) {
 	
-			DirectVariableReference loopVar = new DirectVariableReference(Scope.LOCAL, variableName ) ;
+			DirectVariableReference loopVar = new DirectVariableReference(Scope.TRANSIENT, variableName ) ;
 			blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(loopVar) ) ) ;
 				
 			Block bodyBlock = tools().blocks().generate( enhancedForLoopNode.statement(), delegate ) ;

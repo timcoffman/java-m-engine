@@ -1,8 +1,8 @@
 package edu.vanderbilt.clinicalsystems.m.lang;
 
 public enum Scope {
-	LOCAL(""),
-	GLOBAL("^");
+	TRANSIENT(""),
+	PERSISTENT("^");
 
 	private final String m_unformattedRepresentation ;
 	Scope( String unformattedRepresentation ) { m_unformattedRepresentation = unformattedRepresentation ; }

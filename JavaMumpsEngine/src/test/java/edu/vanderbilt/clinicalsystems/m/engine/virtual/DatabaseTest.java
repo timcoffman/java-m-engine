@@ -137,7 +137,7 @@ public class DatabaseTest {
 	
 	@Test
 	public void canSetVariable() throws EngineException {
-		ExecutionResult result = m_cxn.execute( makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) ) );
+		ExecutionResult result = m_cxn.execute( makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(123) ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("X").value(), equalTo("123") ) ;
@@ -145,40 +145,40 @@ public class DatabaseTest {
 	
 	@Test
 	public void canAssignLocalVariableInOuterFrame() throws EngineException {
-		m_cxn.execute( makeAssignmentCommand( "x", Scope.LOCAL, Constant.from(123) ) );
+		m_cxn.execute( makeAssignmentCommand( "x", Scope.TRANSIENT, Constant.from(123) ) );
 		try ( ExecutionFrame frame = m_cxn.createChildFrame() ) {
-			frame.execute( makeAssignmentCommand( "x", Scope.LOCAL, Constant.from(456) ) ) ;
+			frame.execute( makeAssignmentCommand( "x", Scope.TRANSIENT, Constant.from(456) ) ) ;
 			
-			assertThat( frame.findNode( new DirectVariableReference(Scope.LOCAL, "x") ).value(), equalTo("456") ) ;
+			assertThat( frame.findNode( new DirectVariableReference(Scope.TRANSIENT, "x") ).value(), equalTo("456") ) ;
 		}
 
-		assertThat( m_cxn.findNode( new DirectVariableReference(Scope.LOCAL, "x") ).value(), equalTo("456") ) ;
+		assertThat( m_cxn.findNode( new DirectVariableReference(Scope.TRANSIENT, "x") ).value(), equalTo("456") ) ;
 	}
 	
 	@Test
 	public void canHideLocalVariableInOuterFrame() throws EngineException {
-		m_cxn.execute( makeAssignmentCommand( "x", Scope.LOCAL, Constant.from(123) ) );
+		m_cxn.execute( makeAssignmentCommand( "x", Scope.TRANSIENT, Constant.from(123) ) );
 		try ( ExecutionFrame frame = m_cxn.createChildFrame() ) {
-			frame.execute( makeDeclarationCommand( "x", Scope.LOCAL ) );
-			frame.execute( makeAssignmentCommand( "x", Scope.LOCAL, Constant.from(456) ) ) ;
+			frame.execute( makeDeclarationCommand( "x", Scope.TRANSIENT ) );
+			frame.execute( makeAssignmentCommand( "x", Scope.TRANSIENT, Constant.from(456) ) ) ;
 			
-			assertThat( frame.findNode( new DirectVariableReference(Scope.LOCAL, "x") ).value(), equalTo("456") ) ;
+			assertThat( frame.findNode( new DirectVariableReference(Scope.TRANSIENT, "x") ).value(), equalTo("456") ) ;
 		}
 		
-		assertThat( m_cxn.findNode( new DirectVariableReference(Scope.LOCAL, "x") ).value(), equalTo("123") ) ;
+		assertThat( m_cxn.findNode( new DirectVariableReference(Scope.TRANSIENT, "x") ).value(), equalTo("123") ) ;
 	}
 	
 	@Test
 	public void canMergeVariables() throws EngineException {
-		m_cxn.execute( makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from("-x-") ) );
-		m_cxn.execute( makeAssignmentCommand( "X", asList(Constant.from("a")), Scope.GLOBAL, Constant.from(123) ) );
-		m_cxn.execute( makeAssignmentCommand( "X", asList(Constant.from("b")), Scope.GLOBAL, Constant.from(456) ) );
+		m_cxn.execute( makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from("-x-") ) );
+		m_cxn.execute( makeAssignmentCommand( "X", asList(Constant.from("a")), Scope.PERSISTENT, Constant.from(123) ) );
+		m_cxn.execute( makeAssignmentCommand( "X", asList(Constant.from("b")), Scope.PERSISTENT, Constant.from(456) ) );
 		
-		m_cxn.execute( makeAssignmentCommand( "Y", Scope.GLOBAL, Constant.from("-y-") ) );
-		m_cxn.execute( makeAssignmentCommand( "Y", asList(Constant.from("b")), Scope.GLOBAL, Constant.from(789) ) );
-		m_cxn.execute( makeAssignmentCommand( "Y", asList(Constant.from("c")), Scope.GLOBAL, Constant.from(555) ) );
+		m_cxn.execute( makeAssignmentCommand( "Y", Scope.PERSISTENT, Constant.from("-y-") ) );
+		m_cxn.execute( makeAssignmentCommand( "Y", asList(Constant.from("b")), Scope.PERSISTENT, Constant.from(789) ) );
+		m_cxn.execute( makeAssignmentCommand( "Y", asList(Constant.from("c")), Scope.PERSISTENT, Constant.from(555) ) );
 		
-		ExecutionResult result = m_cxn.execute( makeMergeCommand( "X", Scope.GLOBAL, new DirectVariableReference( Scope.GLOBAL, "Y") ) );
+		ExecutionResult result = m_cxn.execute( makeMergeCommand( "X", Scope.PERSISTENT, new DirectVariableReference( Scope.PERSISTENT, "Y") ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
 		assertThat( m_db.at("X").value(), equalTo("-y-") ) ;
@@ -215,26 +215,26 @@ public class DatabaseTest {
 	
 	@Test
 	public void canIterateOverKeys() throws EngineException {
-		m_cxn.execute( makeDeclarationCommand( "x", Scope.LOCAL ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("0x"  )), Scope.LOCAL, Constant.from("mixed numbers and uppercase letters") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("Abc" )), Scope.LOCAL, Constant.from("few uppercase letters") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("Abcd")), Scope.LOCAL, Constant.from("more uppercase letters") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("abc" )), Scope.LOCAL, Constant.from("few lowercase letters") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("abcd")), Scope.LOCAL, Constant.from("more lowercase letters") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("123" )), Scope.LOCAL, Constant.from("number") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("!!!" )), Scope.LOCAL, Constant.from("early punctuation") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("???" )), Scope.LOCAL, Constant.from("middle punctuation") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("___" )), Scope.LOCAL, Constant.from("late punctuation") ) ) ;
+		m_cxn.execute( makeDeclarationCommand( "x", Scope.TRANSIENT ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("0x"  )), Scope.TRANSIENT, Constant.from("mixed numbers and uppercase letters") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("Abc" )), Scope.TRANSIENT, Constant.from("few uppercase letters") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("Abcd")), Scope.TRANSIENT, Constant.from("more uppercase letters") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("abc" )), Scope.TRANSIENT, Constant.from("few lowercase letters") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("abcd")), Scope.TRANSIENT, Constant.from("more lowercase letters") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("123" )), Scope.TRANSIENT, Constant.from("number") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("!!!" )), Scope.TRANSIENT, Constant.from("early punctuation") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("???" )), Scope.TRANSIENT, Constant.from("middle punctuation") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("___" )), Scope.TRANSIENT, Constant.from("late punctuation") ) ) ;
 		
-		final DirectVariableReference keyVar = new DirectVariableReference(Scope.LOCAL, "key");
-		final DirectVariableReference subscriptedVar = new DirectVariableReference(Scope.LOCAL, "x", Expression.list(keyVar) );
+		final DirectVariableReference keyVar = new DirectVariableReference(Scope.TRANSIENT, "key");
+		final DirectVariableReference subscriptedVar = new DirectVariableReference(Scope.TRANSIENT, "x", Expression.list(keyVar) );
 		final BuiltinFunctionCall nextKeyCall = new BuiltinFunctionCall( BuiltinFunction.ORDER, Expression.list(subscriptedVar));
-		m_cxn.execute( makeDeclarationCommand( "key", Scope.LOCAL ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "key", Scope.LOCAL, nextKeyCall ) ) ;
+		m_cxn.execute( makeDeclarationCommand( "key", Scope.TRANSIENT ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "key", Scope.TRANSIENT, nextKeyCall ) ) ;
 		ExecutionResult result = m_cxn.execute( new Command( CommandType.FOR, Argument.NOTHING, new InlineBlock(
 				/* Q:key=""         */ new Command( new BinaryOperation(keyVar, OperatorType.EQUALS, Constant.NULL), CommandType.QUIT, Argument.NOTHING ),
 				/* W x(key)         */ new Command( CommandType.WRITE, new InputOutputList( InputOutput.wrap( subscriptedVar ), FormatCommand.carriageReturn() ) ),
-				/* S key=$O(x(key)) */ makeAssignmentCommand( "key", Scope.LOCAL, nextKeyCall )
+				/* S key=$O(x(key)) */ makeAssignmentCommand( "key", Scope.TRANSIENT, nextKeyCall )
 		) ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
@@ -274,7 +274,7 @@ public class DatabaseTest {
 	public void canInstallAndExecuteRoutine() throws RoutineWriterException, EngineException {
 		m_db.install(
 			makeSimpleRoutine( "TESTROUTINE",
-				makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) )
+				makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(123) )
 				)
 			);
 		
@@ -293,9 +293,9 @@ public class DatabaseTest {
 	public void canInstallRoutineAndExecuteTag() throws RoutineWriterException, EngineException {
 		m_db.install(
 			makeSimpleRoutine( "TESTROUTINE",
-				makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) ),
+				makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(123) ),
 				new Tag( "testtag" ),
-				makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(456) )
+				makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(456) )
 				)
 			);
 		
@@ -314,8 +314,8 @@ public class DatabaseTest {
 	public void canInstallAndReturnValueFromRoutine() throws RoutineWriterException, EngineException {
 		m_db.install(
 			makeSimpleRoutine( "TESTROUTINE",
-				makeAssignmentCommand( "X", Scope.GLOBAL, Constant.from(123) ),
-				new Command( CommandType.QUIT, new ExpressionList(new DirectVariableReference(Scope.GLOBAL, "X")) )
+				makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(123) ),
+				new Command( CommandType.QUIT, new ExpressionList(new DirectVariableReference(Scope.PERSISTENT, "X")) )
 				)
 			);
 		
@@ -334,12 +334,12 @@ public class DatabaseTest {
 	}
 	
 	@Test
-	public void canInstallRoutineViaRoutineGlobal() throws RoutineWriterException, EngineException {
-		m_cxn.execute( makeDeclarationCommand("x", Scope.LOCAL ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("1")), Scope.LOCAL, Constant.from("TESTROUTINE") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("2")), Scope.LOCAL, Constant.from(" N y S ^Y=100+23") ) ) ;
-		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("3")), Scope.LOCAL, Constant.from(" Q y") ) ) ;
-		m_cxn.execute( makeMergeCommand( BuiltinSystemVariable.ROUTINE, asList(Constant.from("TESTROUTINE")), new DirectVariableReference(Scope.LOCAL,"x") ) ) ;
+	public void canInstallRoutineViaRoutineSystemVariable() throws RoutineWriterException, EngineException {
+		m_cxn.execute( makeDeclarationCommand("x", Scope.TRANSIENT ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("1")), Scope.TRANSIENT, Constant.from("TESTROUTINE") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("2")), Scope.TRANSIENT, Constant.from(" N y S ^Y=100+23") ) ) ;
+		m_cxn.execute( makeAssignmentCommand( "x", asList(Constant.from("3")), Scope.TRANSIENT, Constant.from(" Q y") ) ) ;
+		m_cxn.execute( makeMergeCommand( BuiltinSystemVariable.ROUTINE, asList(Constant.from("TESTROUTINE")), new DirectVariableReference(Scope.TRANSIENT,"x") ) ) ;
 
 		Node routineNode = m_db.at( BuiltinSystemVariable.ROUTINE ).at( "TESTROUTINE" );
 		assertThat( routineNode, notNullValue() ) ;

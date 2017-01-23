@@ -109,8 +109,8 @@ public class RoutineParserTest {
 		assertThat( command.argument(), instanceOf( AssignmentList.class ) );
 		assertThat( ((AssignmentList)command.argument()).elements(), hasItem(
 				new Assignment(
-						Destination.wrap( new IndirectVariableReference( new DirectVariableReference(Scope.LOCAL, "INDIRECT1") ) ),
-						new IndirectVariableReference( new DirectVariableReference(ParameterPassMethod.BY_VALUE, Scope.LOCAL, "INDIRECT2"), Arrays.asList(Constant.from("KEY1"), Constant.from("KEY2")) )
+						Destination.wrap( new IndirectVariableReference( new DirectVariableReference(Scope.TRANSIENT, "INDIRECT1") ) ),
+						new IndirectVariableReference( new DirectVariableReference(ParameterPassMethod.BY_VALUE, Scope.TRANSIENT, "INDIRECT2"), Arrays.asList(Constant.from("KEY1"), Constant.from("KEY2")) )
 					)
 			) );
 	}

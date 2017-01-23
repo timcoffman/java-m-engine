@@ -151,7 +151,7 @@ public class Converter {
 	}
 	
 	public BuiltinVariableReferenceBase createBuiltinVariableReference( Scope scope, Token nameToken ) {
-		if ( Scope.GLOBAL == scope ) {
+		if ( Scope.PERSISTENT == scope ) {
 			BuiltinSystemVariable builtinVariable = BuiltinSystemVariable.valueOfSymbol( nameToken.getText(), Compatibility.EXTENSION ) ;
 			return new BuiltinSystemVariableReference( builtinVariable, EMPTY_EXPRESSION_LIST ) ;
 		} else {
@@ -185,7 +185,7 @@ public class Converter {
 	}
 	
 	public LoopDefinition createLoopDefinition( Token nameToken, Expression start, ExpressionContext stepByContext, ExpressionContext limitContext ) {
-		DirectVariableReference destination = createDirectVariableReference(Scope.LOCAL, nameToken, null) ;
+		DirectVariableReference destination = createDirectVariableReference(Scope.TRANSIENT, nameToken, null) ;
 		Expression step = stepByContext == null ? null : stepByContext.result ;
 		Expression stop = limitContext == null ? null : limitContext.result ;
 		return new LoopDefinition(destination, start, step, stop) ;

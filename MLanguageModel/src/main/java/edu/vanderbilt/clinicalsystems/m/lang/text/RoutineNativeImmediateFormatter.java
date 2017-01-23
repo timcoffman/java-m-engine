@@ -497,10 +497,10 @@ class RoutineNativeImmediateFormatter implements RoutineFormatter {
 
 	public void writeScopeMarker( Scope scope, Writer writer ) throws IOException {
 		switch ( scope ) {
-		case GLOBAL:
+		case PERSISTENT:
 			writer.append( "^" ) ;
 			break;
-		case LOCAL:
+		case TRANSIENT:
 			break;
 		}
 	}

@@ -36,7 +36,7 @@ public class RoutineJavaWriterTest {
 				.asList(new ParameterName("x"))));
 		routine.appendElement(new Comment("my method"));
 		routine.appendElement(new Command(CommandType.QUIT, new ExpressionList(
-				new DirectVariableReference(Scope.LOCAL, "x"))));
+				new DirectVariableReference(Scope.TRANSIENT, "x"))));
 
 		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder();
 		Core.useLibrariesIn(routineBuilder.env());

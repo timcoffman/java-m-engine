@@ -12,7 +12,7 @@ public abstract class VariableReference extends Expression {
 	private static final long serialVersionUID = 1L;
 
 	public static final DirectVariableReference DEFAULT_TEMP_VARIABLE
-		= new DirectVariableReference(Scope.LOCAL, "%");
+		= new DirectVariableReference(Scope.TRANSIENT, "%");
 
 	private final ReferenceStyle m_referenceStyle ;
 	private final List<Expression> m_keys = new ArrayList<Expression>();

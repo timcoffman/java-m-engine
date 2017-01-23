@@ -243,7 +243,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 
 			try ( BlockManager blockManager = new BlockManager(block, m_delegate) ) {
 				String variableName = variableNode.name().toString();
-				DirectVariableReference variableRef = new DirectVariableReference(Scope.LOCAL, variableName );
+				DirectVariableReference variableRef = new DirectVariableReference(Scope.TRANSIENT, variableName );
 				DirectVariableReference[] variables = new DirectVariableReference[] { variableRef } ;
 				blockManager.appendElement( new Command( CommandType.NEW, new DeclarationList(variables) ) ) ;
 				if ( null != variableNode.initializer() ) {
@@ -349,7 +349,7 @@ public class BlockGenerator extends Generator<Block,Ast.Statement> {
 //		DirectVariableReference variableRef = variableProvidingExpression.accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
 //			@Override
 //			public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-//				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() ) ;
+//				return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString() ) ;
 //			}
 //
 //			@Override

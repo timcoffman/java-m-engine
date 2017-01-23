@@ -31,7 +31,7 @@ public class BuiltinVariableReference extends BuiltinVariableReferenceBase {
 		return new BuiltinVariableReference( m_builtinVariable, keys ) ;
 	}
 	
-	@Override public Scope scope() { return Scope.LOCAL ; }
+	@Override public Scope scope() { return Scope.TRANSIENT ; }
 	public BuiltinVariable builtinVariable() { return m_builtinVariable; }
 
 	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinVariableReference(this); }

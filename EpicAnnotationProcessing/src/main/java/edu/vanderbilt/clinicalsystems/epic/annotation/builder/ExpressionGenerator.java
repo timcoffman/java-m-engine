@@ -79,7 +79,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			if ( null == resolvedIdentifier ) {
 
 				report( RoutineTools.ReportType.ERROR, "cannot resolve identifier", identifierNode ) ;
-				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
+				return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString() );
 
 			}
 			
@@ -92,14 +92,14 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 						return Constant.from( constantValue.toString() );
 					
 					else
-						return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
+						return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString() );
 					
 				}
 				
 				@Override
 				public DirectVariableReference visit( MethodResolution methodResolution, Listener listener ) {
 					
-					return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString() );
+					return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString() );
 					
 				}
 				
@@ -126,7 +126,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //					} else {
 //						tools().reportError( "type without a Library or Library cannot be used", identifierNode ) ;
 //					}
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierNode.name().toString() );
 //					
 //				}
 
@@ -144,7 +144,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //					} else {
 //						tools().reportError( "type without a Function or RoutineTag cannot be used", identifierNode ) ;
 //					}
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierNode.name().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierNode.name().toString() );
 //
 //				}
 			}, listener) ;
@@ -154,7 +154,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //				@Override
 //				protected VariableReference unsupportedTypeMirrorTypeResult( TypeMirror typeMirror, Listener listener ) {
 //					reportError( "no checking defined for type " + typeMirror.toString(), identifierTree );
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
 //					
 //				}
 //
@@ -175,7 +175,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //						reportError("primitive type " + primitiveType.getKind() + " not supported", identifierTree);
 //						break ;
 //					}
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
 //
 //				}
 //
@@ -184,7 +184,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //				@Override
 //				public VariableReference visitDeclared(DeclaredType declaredType, Listener listener) {
 //					
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
 //					
 //				}
 //
@@ -199,7 +199,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 //					} else {
 //						reportError( "type without a Function or RoutineTag cannot be used", identifierTree ) ;
 //					}
-//					return new VariableReference( Scope.LOCAL, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
+//					return new VariableReference( Scope.TRANSIENT, ReferenceStyle.DIRECT, identifierTree.getName().toString() );
 //				}
 //				
 //			}, null ) ;
@@ -217,7 +217,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 			DirectVariableReference variableRef = null ;
 			for ( Ast.Variable variableNode : variablesExpressionNode.variables() ) {
 				String variableName = variableNode.name().toString();
-				variableRef = new DirectVariableReference(Scope.LOCAL, variableName );
+				variableRef = new DirectVariableReference(Scope.TRANSIENT, variableName );
 				DirectVariableReference[] variables = new DirectVariableReference[] { variableRef } ;
 				listener.generateSideEffect( Location.BEFORE_EXPRESSION, new Command( CommandType.NEW, new DeclarationList(variables) ) ) ;
 				if ( null != variableNode.initializer() ) {
@@ -393,12 +393,12 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		return methodInvocationNode.methodSelect().accept( new Ast.Interpreter<DirectVariableReference, Listener>(tools()) {
 			@Override
 			public DirectVariableReference visitIdentifier(Ast.Identifier identifierNode, Listener listener) {
-				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString(), keys ) ;
+				return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString(), keys ) ;
 			}
 			@Override
 			public DirectVariableReference visitMemberSelect(Ast.MemberSelect memberSelectNode, Listener listener) {
 				Ast.Identifier identifierNode = ((Ast.Identifier)memberSelectNode.expression()) ;
-				return new DirectVariableReference( Scope.LOCAL, identifierNode.name().toString(), keys ) ;
+				return new DirectVariableReference( Scope.TRANSIENT, identifierNode.name().toString(), keys ) ;
 			}
 		}, listener) ;
 	}

@@ -46,7 +46,7 @@ public class ArgumentPassingTest {
 		routine.appendElement( new Tag("ADDKEY", Arrays.asList( new ParameterName("passedByReference") )) );
 		routine.appendElement( new Command(CommandType.SET, new AssignmentList(
 				new Assignment(
-						Destination.wrap( new DirectVariableReference(Scope.LOCAL,"passedByReference", Arrays.asList( Constant.from("KEY") ) ) ),
+						Destination.wrap( new DirectVariableReference(Scope.TRANSIENT,"passedByReference", Arrays.asList( Constant.from("KEY") ) ) ),
 						Constant.from("VALUE")
 				)
 		)) );
@@ -63,7 +63,7 @@ public class ArgumentPassingTest {
 	public void canCreateVariablePassedByReference() throws EngineException, RoutineWriterException {
 		
 		Node variable = m_cxn.createLocalNode( "VAR" ) ;
-		DirectVariableReference variableRef = new DirectVariableReference( ParameterPassMethod.BY_REFERENCE, Scope.LOCAL, "VAR") ;
+		DirectVariableReference variableRef = new DirectVariableReference( ParameterPassMethod.BY_REFERENCE, Scope.TRANSIENT, "VAR") ;
 		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall( new TagReference("ADDKEY", "MYROUTINE"), Arrays.asList(variableRef) ) ;
 		m_cxn.execute( new Command( CommandType.DO, new TaggedRoutineCallList( taggedRoutineCall ) ) ) ;
 		
@@ -77,7 +77,7 @@ public class ArgumentPassingTest {
 		variable.create("KEY").assign("OLDVALUE") ;
 		assertThat( variable.at("KEY").value(), equalTo("OLDVALUE") ) ;
 		
-		DirectVariableReference variableRef = new DirectVariableReference( ParameterPassMethod.BY_REFERENCE, Scope.LOCAL, "VAR") ;
+		DirectVariableReference variableRef = new DirectVariableReference( ParameterPassMethod.BY_REFERENCE, Scope.TRANSIENT, "VAR") ;
 		TaggedRoutineCall taggedRoutineCall = new TaggedRoutineCall( new TagReference("ADDKEY", "MYROUTINE"), Arrays.asList(variableRef) ) ;
 		m_cxn.execute( new Command( CommandType.DO, new TaggedRoutineCallList( taggedRoutineCall ) ) ) ;
 		

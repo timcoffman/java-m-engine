@@ -4,8 +4,8 @@ options { tokenVocab=MumpsLexer; }
 
 @header {
 import static java.util.Objects.requireNonNull;
-import static edu.vanderbilt.clinicalsystems.m.lang.Scope.LOCAL;
-import static edu.vanderbilt.clinicalsystems.m.lang.Scope.GLOBAL;
+import static edu.vanderbilt.clinicalsystems.m.lang.Scope.TRANSIENT;
+import static edu.vanderbilt.clinicalsystems.m.lang.Scope.PERSISTENT;
 import static edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle.DIRECT;
 import static edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle.INDIRECT;
 import static edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod.BY_VALUE;
@@ -161,7 +161,7 @@ declarationList
 
 declaration
 	returns [ DirectVariableReference result ] @after { requireNonNull($result); } 
-	: n=Name { $result = (DirectVariableReference)_converter.createDirectVariableReference( LOCAL, $n, null ); }
+	: n=Name { $result = (DirectVariableReference)_converter.createDirectVariableReference( TRANSIENT, $n, null ); }
 	;
 
 variableList
@@ -171,8 +171,8 @@ variableList
 
 variable
 	returns [ VariableReference result ] @after { requireNonNull($result); }
-	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference(  LOCAL, $n, $el.ctx ); }
-	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( GLOBAL, $n, $el.ctx ); }
+	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference(  TRANSIENT, $n, $el.ctx ); }
+	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( PERSISTENT, $n, $el.ctx ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
 	;
 
@@ -183,8 +183,8 @@ inputOutputList
 
 inputOutput
 	returns [ InputOutput result ] @after { requireNonNull($result); }
-	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = InputOutput.wrap( _converter.createDirectVariableReference(  LOCAL, $n, $el.ctx ) ); }
-	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = InputOutput.wrap( _converter.createDirectVariableReference( GLOBAL, $n, $el.ctx ) ); }
+	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = InputOutput.wrap( _converter.createDirectVariableReference(  TRANSIENT, $n, $el.ctx ) ); }
+	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = InputOutput.wrap( _converter.createDirectVariableReference( PERSISTENT, $n, $el.ctx ) ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = InputOutput.wrap( _converter.createIndirectVariableReference( $e.result, $el.ctx ) ); }
 	| e=expression { $result = InputOutput.wrap( $e.result ); }
 	| Exclamation           { $result = FormatCommand.carriageReturn() ; }
@@ -241,12 +241,12 @@ assignment
 
 destination
 	returns [ Destination result ] @after { requireNonNull($result); }
-	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference(  LOCAL, $n, $el.ctx ) ); }
-	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference( GLOBAL, $n, $el.ctx ) ); }
+	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference(  TRANSIENT, $n, $el.ctx ) ); }
+	|        Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference( PERSISTENT, $n, $el.ctx ) ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createIndirectVariableReference( $e.result, $el.ctx ) ); }
 	|       Dollar n=Name OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = Destination.wrap( _converter.createBuiltinFunctionCall( $n, $pl.ctx) ); }
-	|       Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( LOCAL,  $n ) ); }
-	| Caret Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( GLOBAL, $n ) ); }
+	|       Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( TRANSIENT,  $n ) ); }
+	| Caret Dollar n=Name                                                             { $result = Destination.wrap( _converter.createBuiltinVariableReference( PERSISTENT, $n ) ); }
 	;
 
 block [ CommandType _commandType, Argument _argument ]
@@ -277,19 +277,19 @@ literal
 
 variableReference
 	returns [ Expression result ] @after { requireNonNull($result); }
-	:     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     GLOBAL, $n, $el.ctx ); }
-	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     LOCAL, $n, $el.ctx ); }
-	| Dot Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, GLOBAL, $n, $el.ctx ); }
-	| Dot       n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, LOCAL, $n, $el.ctx ); }
+	:     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     PERSISTENT, $n, $el.ctx ); }
+	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     TRANSIENT, $n, $el.ctx ); }
+	| Dot Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, PERSISTENT, $n, $el.ctx ); }
+	| Dot       n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, TRANSIENT, $n, $el.ctx ); }
 	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
 	;
 
 functionCall
 	returns [ Expression result ] @after { requireNonNull($result); }
-	: Dollar Dollar n=Name ( Caret r=Name )? OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = _converter.createRoutineFunctionCall( LOCAL, DIRECT, $n, $r, $pl.ctx); }
+	: Dollar Dollar n=Name ( Caret r=Name )? OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = _converter.createRoutineFunctionCall( TRANSIENT, DIRECT, $n, $r, $pl.ctx); }
 	|        Dollar n=Name                   OpenParenthesis pl=parameterList[$n]? CloseParenthesis { $result = _converter.createBuiltinFunctionCall( $n,  $pl.ctx); }
-	|        Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( LOCAL,  $n ); }
-	|  Caret Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( GLOBAL, $n ); }
+	|        Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( TRANSIENT,  $n ); }
+	|  Caret Dollar n=Name                                                                               { $result = _converter.createBuiltinVariableReference( PERSISTENT, $n ); }
 	;
 
 expression

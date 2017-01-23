@@ -28,7 +28,7 @@ public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase
 		return new BuiltinSystemVariableReference( m_builtinVariable, keys ) ;
 	}
 
-	@Override public Scope scope() { return Scope.GLOBAL ; }
+	@Override public Scope scope() { return Scope.PERSISTENT ; }
 	public BuiltinSystemVariable builtinSystemVariable() { return m_builtinVariable; }
 
 	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinSystemVariableReference(this); }
