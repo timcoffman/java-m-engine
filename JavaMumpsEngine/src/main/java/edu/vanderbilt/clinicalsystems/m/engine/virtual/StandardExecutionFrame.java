@@ -27,6 +27,7 @@ import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.OutputHandler;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.handler.ReturnHandler;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
+import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
@@ -47,7 +48,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.ExpressionParserFactory;
 
 public class StandardExecutionFrame extends StandardExecutor implements ExecutionFrame {
 	
-	private final NodeMap m_root ;
 	private Map<String,Object> m_properties = null ;
 	private final ExecutionFrame m_parent ;
 	private final GlobalContext m_globalContext ;
@@ -66,7 +66,6 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		Objects.requireNonNull(parent); 
 		m_parent = parent ;
 		m_globalContext = m_parent.globalContext() ;
-		m_root = m_parent.root() ;
 		m_currentInputOutputDevice = inputOutputDevice ;
 	}
 	
@@ -74,7 +73,6 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		Objects.requireNonNull(globalContext); 
 		m_parent = null ;
 		m_globalContext = globalContext ;
-		m_root = m_globalContext.root() ;
 		m_currentInputOutputDevice = inputOutputDevice ;
 	}
 	
@@ -92,7 +90,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		return detachedInputOutputDevice ;
 	}
 	
-	@Override public NodeMap root() { return m_root ; }
+	@Override public NodeMap root( Scope scope ) { return m_globalContext.root(scope) ; }
 	
 	@Override public ExecutionFrame parentFrame() { return m_parent ; }
 
@@ -200,9 +198,9 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		String variableName = variable.variableName();
 		switch ( variable.scope() ) {
 		case PERSISTENT:
-			return m_root.create( variableName ) ;
+			return root(variable.scope()).create( variableName ) ; // unsure if this is correct
 		case TRANSIENT:
-			return createLocalNode( variableName ) ;
+			return createLocalNode( variableName ) ; // unsure if this is correct
 		default:
 			throw new UnsupportedOperationException(variable.scope() + " scope not supported for direct variable creation") ;
 		}
@@ -221,7 +219,7 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			
 			@Override public Node visitIndirectVariableReference( IndirectVariableReference variable) {
 				try {
-					String variableName = evaluate( variable.variableNameProducer() ).toString();
+					String variableName = evaluate( variable.variableNameProducer() ).toConstant().value();
 					return interpretExpression( variableName ).visit( new Expression.Visitor<Node>() {
 
 						@Override public Node visitExpression(Expression expression) {
@@ -242,16 +240,16 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				String variableName = variable.variableName();
 				switch ( variable.scope() ) {
 				case PERSISTENT:
-					return m_root.get( variableName ) ;
-				case TRANSIENT:
+					return root(variable.scope()).get( variableName ) ;  // unsure if this is correct
+				case TRANSIENT: // unsure if this is correct
 					if ( hasLocalNode( variableName) ) {
 						return findLocalNode( variableName ) ;
-					} else if ( null == m_parent ) {
-						return createLocalNode( variableName ) ;
-					} else {
+					} else if ( null != m_parent ) {
 						try {
 							return m_parent.findNode( variable ) ;
 						} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+					} else {
+						return m_globalContext.root(variable.scope()).get( variableName );
 					}
 				default:
 					throw new UnsupportedOperationException(variable.scope() + " scope not supported for direct variable assignment") ;
@@ -259,11 +257,11 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			}
 			
 			@Override public Node visitBuiltinVariableReference(BuiltinVariableReference variable) {
-				return m_root.get( variable.builtinVariable().canonicalSymbol() ) ;
+				return m_globalContext.root(Scope.TRANSIENT).get( variable.builtinVariable().canonicalSymbol() ) ;
 			}
 			
 			@Override public Node visitBuiltinSystemVariableReference(BuiltinSystemVariableReference variable) {
-				return m_root.get( variable.builtinSystemVariable().canonicalSymbol() ) ;
+				return m_globalContext.root(Scope.PERSISTENT).get( variable.builtinSystemVariable().canonicalSymbol() ) ;
 			}
 		});
 		if ( null == node )

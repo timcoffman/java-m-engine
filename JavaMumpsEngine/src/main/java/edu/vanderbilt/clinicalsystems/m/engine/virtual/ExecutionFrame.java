@@ -3,6 +3,7 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual;
 import java.util.List;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
+import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
@@ -10,7 +11,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public interface ExecutionFrame extends Executor, Evaluator, AutoCloseable {
 
-	NodeMap root();
+	NodeMap root(Scope scope);
 	ExecutionFrame parentFrame();
 	GlobalContext globalContext();
 

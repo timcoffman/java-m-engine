@@ -140,7 +140,7 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeAssignmentCommand( "X", Scope.PERSISTENT, Constant.from(123) ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("123") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("123") ) ;
 	}
 	
 	@Test
@@ -181,10 +181,10 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeMergeCommand( "X", Scope.PERSISTENT, new DirectVariableReference( Scope.PERSISTENT, "Y") ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("-y-") ) ;
-		assertThat( m_db.at("X").at("a").value(), equalTo("123") ) ;
-		assertThat( m_db.at("X").at("b").value(), equalTo("789") ) ;
-		assertThat( m_db.at("X").at("c").value(), equalTo("555") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("-y-") ) ;
+		assertThat( m_db.persistentStorage().at("X").at("a").value(), equalTo("123") ) ;
+		assertThat( m_db.persistentStorage().at("X").at("b").value(), equalTo("789") ) ;
+		assertThat( m_db.persistentStorage().at("X").at("c").value(), equalTo("555") ) ;
 	}
 	
 	@Test
@@ -192,8 +192,8 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeExecuteCommand( "SET ^X=123 SET ^Y=456" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("123") ) ;
-		assertThat( m_db.at("Y").value(), equalTo("456") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("123") ) ;
+		assertThat( m_db.persistentStorage().at("Y").value(), equalTo("456") ) ;
 	}
 	
 	@Test
@@ -202,7 +202,7 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeExecuteCommand( "READ ^X" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("test line") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("test line") ) ;
 	}
 	
 	@Test
@@ -286,7 +286,7 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("123") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("123") ) ;
 	}
 	
 	@Test
@@ -307,7 +307,7 @@ public class DatabaseTest {
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( "testtag", "TESTROUTINE" ) );
 		
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("X").value(), equalTo("456") ) ;
+		assertThat( m_db.persistentStorage().at("X").value(), equalTo("456") ) ;
 	}
 	
 	@Test
@@ -351,7 +351,7 @@ public class DatabaseTest {
 		
 		ExecutionResult result = m_cxn.execute( makeTaggedRoutineCallCommand( null, "TESTROUTINE" ) );
 		assertThat( result, equalTo(ExecutionResult.CONTINUE) );
-		assertThat( m_db.at("Y").value(), equalTo("123") ) ;
+		assertThat( m_db.persistentStorage().at("Y").value(), equalTo("123") ) ;
 		
 	}
 	

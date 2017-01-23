@@ -34,7 +34,7 @@ public class BuiltinSystemVariableReference extends BuiltinVariableReferenceBase
 	@Override public <R> R visit( Visitor<R> visitor ) { return visitor.visitBuiltinSystemVariableReference(this); }
 
 	@Override protected String unformattedVariableNameRepresentation() {
-		return m_builtinVariable.canonicalSymbol() ;
+		return Scope.PERSISTENT.unformattedRepresentation() + m_builtinVariable.canonicalSymbol() ;
 	}
 
 	@Override
