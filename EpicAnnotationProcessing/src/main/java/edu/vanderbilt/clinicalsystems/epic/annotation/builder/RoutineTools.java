@@ -118,13 +118,15 @@ public abstract class RoutineTools {
 	}
 	
 	public interface RoutineDependency {
-		String routineName() ;
-		TypeElement dependsOnType() ;
+		String dependsOnRoutineName() ;
+		default String dependsOnTypeName() { return dependsOnType().getQualifiedName().toString() ; }
+		@Deprecated TypeElement dependsOnType() ;
 	}
 	
 	public interface TaggedRoutineDependency extends RoutineDependency {
-		String tagName() ;
-		ExecutableElement dependsOnMethod() ;
+		String dependsOnTagName() ;
+		default String dependsOnMethodName() { return dependsOnMethod().getSimpleName().toString() ; }
+		@Deprecated ExecutableElement dependsOnMethod() ;
 	}
 	
 	public RoutineDependency resolveDependency( Element element ) {
@@ -154,7 +156,7 @@ public abstract class RoutineTools {
 			m_dependsOnType = dependsOnType;
 			m_routineName = routineName;
 		}
-		@Override public String routineName() { return m_routineName; }
+		@Override public String dependsOnRoutineName() { return m_routineName; }
 		@Override public TypeElement dependsOnType() { return m_dependsOnType; }
 		@Override public int hashCode() { return m_dependsOnType.getQualifiedName().toString().hashCode() ^ m_routineName.hashCode() ; }
 		@Override public boolean equals(Object obj) {
@@ -171,13 +173,13 @@ public abstract class RoutineTools {
 		private final ExecutableElement m_dependsOnMethod ;
 		private final String m_tagName ;
 		public TaggedRoutineDependencyImpl( RoutineDependency routineDependency, ExecutableElement dependsOnMethod, String tagName) {
-			super(routineDependency.dependsOnType(), routineDependency.routineName()) ;
+			super(routineDependency.dependsOnType(), routineDependency.dependsOnRoutineName()) ;
 			Objects.requireNonNull(dependsOnMethod) ;
 			Objects.requireNonNull(tagName) ;
 			m_dependsOnMethod = dependsOnMethod ;
 			m_tagName = tagName ;
 		}
-		@Override public String tagName() { return m_tagName; }
+		@Override public String dependsOnTagName() { return m_tagName; }
 		@Override public ExecutableElement dependsOnMethod() { return m_dependsOnMethod; }
 		@Override public int hashCode() { return super.hashCode() ^ m_dependsOnMethod.getSimpleName().toString().hashCode() ^ m_tagName.hashCode() ; }
 		@Override public boolean equals(Object obj) {

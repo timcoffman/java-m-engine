@@ -12,7 +12,7 @@ public class Expressions {
 	 * main entry point, expecting "Q"
 	 */
 	@RoutineTag
-	public static void main( String x, Integer y ) {
+	public static void main( String x, long y ) {
 		/* nothing */
 	}
 

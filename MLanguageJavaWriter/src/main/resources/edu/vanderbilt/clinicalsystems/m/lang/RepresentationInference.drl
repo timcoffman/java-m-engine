@@ -1,0 +1,25 @@
+package edu.vanderbilt.clinicalsystems.m.lang
+
+import edu.vanderbilt.clinicalsystems.m.lang.text.Representation ;
+import edu.vanderbilt.clinicalsystems.m.lang.VariableAssignment ;
+
+dialect "java"
+
+rule "variable assigned value of type boolean"
+when
+	$a : VariableAssignment( assignedValueOfType == Representation.BOOLEAN )
+then
+	insert( new VariableCanRepresent( $a.getVariableName(), Representation.BOOLEAN ) ) ;
+end
+
+rule "can rep -> must rep at least"
+when
+	$a : VariableCanRepresent( representation == Representation.BOOLEAN )
+then
+	insert( new VariableMustRepresentAtLeast( $a.getVariableName(), Representation.BOOLEAN ) ) ;
+end
+
+
+query "variable must represent at least" ( String queryVariableName )
+	variableMustRepresentAtLeast : VariableMustRepresentAtLeast( variableName == queryVariableName ) 
+end

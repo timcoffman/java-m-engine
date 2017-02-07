@@ -17,4 +17,16 @@ public abstract class Operation extends Expression {
 	}
 
 	public OperatorType operator() { return m_operator; }
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof Operation) ) return false ;
+		Operation operation = (Operation)obj ;
+		return
+			m_operator.equals( operation.m_operator )
+			;
+	}
+	
 }

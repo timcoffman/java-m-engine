@@ -29,8 +29,6 @@ public class Text {
 	@Function(value=EXTRACT,assignment=true) public static native Consumer<String> extractAssign( String source, int start ) ;
 	@Function(value=EXTRACT,assignment=true) public static native Consumer<String> extractAssign( String source, int start, int stop ) ;
 	
-	@Function(EXTRACT) public static native String extractAssign( int ... ascii ) ;
-	
 	@Function(PIECE) public native static String piece( String searched, String sought ) ;
 	@Function(PIECE) public native static String piece( String searched, String sought, int first ) ;
 	@Function(PIECE) public native static String piece( String searched, String sought, int first, int last ) ;
@@ -39,7 +37,9 @@ public class Text {
 	@Function(value=PIECE,assignment=true) public native static Consumer<String> pieceAssign( String searched, String sought, int first ) ;
 	@Function(value=PIECE,assignment=true) public native static Consumer<String> pieceAssign( String searched, String sought, int first, int last ) ;
 
-	@Operator(OperatorType.FOLLOWS) public static native boolean follows( String leftHandSide, String rightHandSide ) ;
+	@Operator(OperatorType.MATCH      ) public static native boolean matches( String text,         String pattern ) ;
+	@Operator(OperatorType.FOLLOWS    ) public static native boolean follows( String leftHandSide, String rightHandSide ) ;
+	@Operator(OperatorType.NOT_FOLLOWS) public static native boolean notFollows( String leftHandSide, String rightHandSide ) ;
 
 	@Function(LENGTH) public native static int length( String searched ) ;
 	@Function(LENGTH) public native static int occurrencesPlusOne( String searched, String sought ) ;

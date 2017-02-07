@@ -10,6 +10,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern.MatchSequence;
 
 public class RoutineTreeFormatter implements RoutineFormatter {
 	
@@ -287,6 +288,11 @@ public class RoutineTreeFormatter implements RoutineFormatter {
 	@Override
 	public void writeNumberConstant(String value, Writer writer) throws IOException {
 		writer.append( value ) ;
+	}
+	
+	@Override
+	public void writeMatchSequence(MatchSequence matchSequence, Writer writer) throws IOException {
+		writer.append( matchSequence.toString() ) ; /* take more control here */
 	}
 	
 	@Override

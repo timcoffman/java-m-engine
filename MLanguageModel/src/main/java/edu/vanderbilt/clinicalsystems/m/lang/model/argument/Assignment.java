@@ -1,6 +1,10 @@
 package edu.vanderbilt.clinicalsystems.m.lang.model.argument;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.Element;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
@@ -11,17 +15,22 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 public class Assignment implements Element {
 
 	private static final long serialVersionUID = 1L;
-	private final Destination<?> m_destination ;
+	private final List<Destination<?>> m_destinations = new ArrayList<Destination<?>>() ;
 	private final Expression m_source ;
 	
 	public Assignment( Destination<?> destination, Expression source ) {
-		Objects.requireNonNull(destination) ;
+		this( Arrays.asList(destination), source ) ;
+	}
+	
+	public Assignment( List<? extends Destination<?>> destinations, Expression source ) {
+		Objects.requireNonNull(destinations) ;
+		destinations.forEach( Objects::requireNonNull );
 		Objects.requireNonNull(source) ;
-		m_destination = destination ;
+		m_destinations.addAll( destinations ) ;
 		m_source = source ;
 	}
 
-	public Destination<?> destination() { return m_destination ; }
+	public List<Destination<?>> destinations() { return m_destinations ; }
 	public Expression source() { return m_source ; }
 	
 	@Override
@@ -30,7 +39,12 @@ public class Assignment implements Element {
 	} ;	
 
 	@Override
-	public String toString() { return m_destination + " := " + m_source ; }
+	public String toString() {
+		if ( m_destinations.size() == 1 )
+			return m_destinations.get(0) + " := " + m_source ;
+		else
+			return m_destinations.stream().map(Object::toString).collect(Collectors.joining(", ", "( ", " )")) + " := " + m_source ;
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -39,7 +53,7 @@ public class Assignment implements Element {
 		if ( !(obj instanceof Assignment) ) return false ;
 		Assignment assignment = (Assignment)obj ;
 		return
-			m_destination.equals( assignment.m_destination )
+			m_destinations.equals( assignment.m_destinations )
 			&& m_source.equals( assignment.m_source )
 			;
 	}

@@ -38,5 +38,36 @@ public class UnaryOperation extends Operation {
 		else
 			return super.inverted() ;
 	}
+
+	@Override
+	public Expression simplified() {
+		switch ( operator() ) {
+		case NOT:
+			return simplifiedLogicalInversion() ;
+		default:
+			return super.simplified() ;
+		}
+	}
+
+	private Expression simplifiedLogicalInversion() {
+		Expression invertedOperand = m_operand.inverted() ;
+		if ( invertedOperand instanceof UnaryOperation && ((UnaryOperation)invertedOperand).operand() == m_operand ) {
+			return this ; /* no effect */
+		} else {
+			return invertedOperand ;
+		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof UnaryOperation) ) return false ;
+		UnaryOperation operation = (UnaryOperation)obj ;
+		return
+			super.equals( operation ) &&
+			m_operand.equals( operation.m_operand )
+			;
+	}
 	
 }

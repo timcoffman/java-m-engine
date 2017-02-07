@@ -21,6 +21,7 @@ import com.sun.codemodel.JType;
 
 import edu.vanderbilt.clinicalsystems.m.core.VariableContext;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
+import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Element;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
@@ -69,8 +70,9 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 		
 		Supplier<Optional<Representation>> rep = m_symbolUsage.impliedRepresentation(symbol) ;
 		return (b)->{
-			JType type = context().typeFor( rep.get().get() ) ;
-			JExpression initialValue = context().initialValueFor( rep.get().get() ) ;
+			Representation representation = rep.get().orElse(Representation.NATIVE);
+			JType type = context().typeFor( representation ) ;
+			JExpression initialValue = context().initialValueFor( representation ) ;
 			b.decl( JMod.NONE, type, symbol, initialValue );
 		};
 	}
@@ -193,12 +195,14 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 			
 			@Override
 			public Builder<JBlock>  visitDirectVariableReference(DirectVariableReference variable) {
+				// fails to allow for assigning to indexed variable leaves
+				variableUsedAs(m_symbolUsage, variable, expr(source).representation()); // native repr
+				
 				String symbol = context().symbolForIdentifier(variable.variableName());
-				m_symbolUsage.usedAs(symbol, expr(source).representation() ); // native repr
-				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation(symbol) ;
+				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbol ) ;
 				
 				return (b)->{
-					JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol ), representation.get().get() ) ;
+					JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol ), representation.get().orElse(Representation.NATIVE) ) ;
 					switch ( assignableTarget.representation().get().get() ) {
 					case NATIVE:
 						JavaExpression<?> target = applyKeys( variable, assignableTarget ) ;
@@ -242,13 +246,36 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 		return (b)->builders.forEach( (builder)->builder.build(b) );
 	}
 	
+	private static final String MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME = "__multipleAssignmentTemp" ;
+	
 	private Builder<JBlock> analyzeAssignment( Assignment assignment ) {
 		final Expression source = assignment.source() ;
 		
-		return assignment.destination().visit( new Destination.Visitor<Builder<JBlock>>() {
+		if ( assignment.destinations().size() == 1 ) {
+			return analyzeAssignment( assignment.destinations().get(0), source ) ;
+		} else if ( assignment.destinations().isEmpty() ) {
+			return (b)->{} ; /* nothing */
+		} else {
+			DirectVariableReference tempVariable = new DirectVariableReference(Scope.TRANSIENT, MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME);
+			Builder<JBlock> tempAssignment ;
+			if ( m_symbolUsage.declared(MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME) ) {
+				tempAssignment = analyzeAssignment( Destination.wrap( tempVariable ), source ) ;
+			} else {
+				tempAssignment = analyzeDeclaration( MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME ) ;
+			}
+			return assignment.destinations().stream()
+				.map( (destination)->analyzeAssignment( destination, source ) )
+				.reduce( tempAssignment, (a,x)->buildInSequence(a,x) )
+				;
+		}
+		
+	}
+	
+	private Builder<JBlock> analyzeAssignment( Destination<?> destination, Expression source ) {
+		return destination.visit( new Destination.Visitor<Builder<JBlock>>() {
 
 			@Override public Builder<JBlock> visitElement(Element element) {
-				throw new UnsupportedOperationException( "destination type \"" + assignment.destination().getClass() + "\" not supported" ) ;	
+				throw new UnsupportedOperationException( "destination type \"" + destination.getClass() + "\" not supported" ) ;	
 			}
 
 			@Override public Builder<JBlock> visitVariableReference( VariableReference variable) {
@@ -323,11 +350,27 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 	
 	private Builder<JBlock> analyzeMerge( Assignment assignment ) {
 		final Expression source = assignment.source();
+
+		if ( assignment.destinations().size() == 1 ) {
+			return analyzeMerge( assignment.destinations().get(0), source ) ;
+		} else if ( assignment.destinations().isEmpty() ) {
+			return (b)->{} ; /* nothing */
+		} else {
+			DirectVariableReference tempVariable = new DirectVariableReference(Scope.TRANSIENT, "__multipleMergeTemp");
+			Builder<JBlock> tempAssignment = analyzeMerge( Destination.wrap( tempVariable ), source ) ;
+			return assignment.destinations().stream()
+				.map( (destination)->analyzeMerge( destination, source ) )
+				.reduce( tempAssignment, (a,x)->buildInSequence(a,x) )
+				;
+		}
+}
+	
+	private Builder<JBlock> analyzeMerge( Destination<?> destination, Expression source ) {
 		
-		return assignment.destination().visit( new Destination.Visitor<Builder<JBlock>>() {
+		return destination.visit( new Destination.Visitor<Builder<JBlock>>() {
 
 			@Override public Builder<JBlock> visitElement(Element element) {
-				throw new UnsupportedOperationException( "destination type \"" + assignment.destination().getClass() + "\" not supported" ) ;	
+				throw new UnsupportedOperationException( "destination type \"" + destination.getClass() + "\" not supported" ) ;	
 			}
 
 			@Override public Builder<JBlock> visitVariableReference( VariableReference variable) {

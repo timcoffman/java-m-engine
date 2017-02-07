@@ -38,6 +38,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
@@ -309,6 +310,19 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 		}
 	}
 	
+	public MatchPattern interpretMatchPattern( String unparsedCode ) throws EngineException {
+		ServiceLoader<ExpressionParserFactory> serviceLoader = ServiceLoader.load( ExpressionParserFactory.class ) ;
+		ExpressionParserFactory expressionParserFactory = serviceLoader.iterator().next() ;
+		ExpressionParser expressionParser = expressionParserFactory.createExpressionParser() ;
+		Reader reader = new StringReader(unparsedCode);
+		
+		try {
+			return expressionParser.parseMatchPattern( reader );
+		} catch (IOException e) {
+			throw new EngineException(ErrorCode.CANNOT_PARSE,"code",unparsedCode);
+		}
+	}
+	
 	@Override
 	public EvaluationResult evaluate( Expression expression ) throws EngineException {
 		return resultOrException( expression.visit( new Expression.Visitor<EvaluationResult>() {
@@ -377,9 +391,31 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 				}
 			}
 			
+			private Constant evaluateBinaryMatchOperation( OperatorType operatorType, Constant lhs, Expression rightHandSide ) throws EngineException {
+				MatchPattern matchPattern = rightHandSide.visit( new Expression.Visitor<MatchPattern>() {
+
+					@Override public MatchPattern visitExpression(Expression expression) {
+						try {
+							return interpretMatchPattern( evaluate(expression).toConstant().value() ) ;
+						} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
+					}
+					
+					@Override public MatchPattern visitMatchPattern( MatchPattern matchPattern ) {
+						return matchPattern ;
+					}
+
+				}) ;
+				if ( null == matchPattern )
+					throw new EngineException(ErrorCode.SYNTAX_ERROR, "code", rightHandSide.toString() );
+				
+				return Constant.from( new PatternMatcher(matchPattern).matches(lhs) ); 
+			}
+			
 			@Override public EvaluationResult visitBinaryOperation( BinaryOperation operation ) {
 				try { 
 					Constant lhs = evaluate( operation.leftHandSide()  ).toConstant() ;
+					if ( operation.operator() == OperatorType.MATCH )
+						return EvaluationResult.fromConstant( evaluateBinaryMatchOperation(operation.operator(), lhs, operation.rightHandSide() )) ;
 					Constant rhs = evaluate( operation.rightHandSide() ).toConstant() ;
 					return EvaluationResult.fromConstant( evaluateBinaryOperation(operation.operator(), lhs, rhs)) ;
 				} catch ( EngineException ex ) { caughtError(ex) ; return null ; }
@@ -448,11 +484,13 @@ public class StandardExecutionFrame extends StandardExecutor implements Executio
 			VariableReference subscriptedVar = (VariableReference)args.next();
 			boolean forward = args.hasNext() ? evaluate(args.next()).toConstant().representsNumber(1) : true ;
 
-			if ( !subscriptedVar.keys().iterator().hasNext() )
-				throw new EngineException(ErrorCode.SYNTAX_ERROR, "code", subscriptedVar.toString() ) ;
+			VariableReference parent = subscriptedVar.parent()
+					.orElseThrow( ()->new EngineException(ErrorCode.SYNTAX_ERROR, "code", subscriptedVar.toString() ) ) ;
+			Expression finalKey = subscriptedVar.finalKey()
+					.orElseThrow( ()->new EngineException(ErrorCode.SYNTAX_ERROR, "code", subscriptedVar.toString() ) ) ;
 
-			Node node = findNode( subscriptedVar.parent() ) ;
-			String key = evaluate( subscriptedVar.finalKey() ).toConstant().value() ;
+			Node node = findNode( parent ) ;
+			String key = evaluate( finalKey ).toConstant().value() ;
 			String resultKey ;
 			if ( node.isEmpty() ) {
 				resultKey = "" ;

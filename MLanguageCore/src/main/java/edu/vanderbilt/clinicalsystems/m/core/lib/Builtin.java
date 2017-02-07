@@ -18,4 +18,7 @@ public class Builtin {
 	@Command(CommandType.GOTO) public native static void jump( Runnable destination ) ;
 	
 	@Variable(BuiltinVariable.ECODE) public native static void ecode() ;
+	@Variable(BuiltinVariable.HOROLOG) public native static void horolog() ;
+
+	@Command(CommandType.LOCK) public native static void lock( Value ... variable ) ;
 }

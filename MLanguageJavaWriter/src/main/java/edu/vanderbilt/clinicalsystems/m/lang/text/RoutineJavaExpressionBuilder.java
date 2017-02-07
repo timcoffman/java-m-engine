@@ -9,6 +9,7 @@ import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NUMERIC;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -29,11 +30,13 @@ import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BinaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConditionalExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
@@ -78,10 +81,17 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 			
 			@Override
 			public JavaExpression<?> visitDirectVariableReference( DirectVariableReference variable ) {
+				variableUsedAs(m_symbolUsage, variable, expectedRepresentation);
+				
 				String symbol = context().symbolForIdentifier(variable.variableName());
-				m_symbolUsage.usedAs(symbol, expectedRepresentation);
-				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation(symbol) ;
-				return JavaExpression.from( JExpr.ref( symbol ), representation );
+				if ( variable.keys().iterator().hasNext() ) {
+					Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbolForVariable(variable) ) ;
+					JavaExpression<?> target = JavaExpression.from( JExpr.ref( symbol ), NATIVE.supplier() );
+					return applyKeys(variable, representation, target) ;
+				} else {
+					Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbol ) ;
+					return JavaExpression.from( JExpr.ref( symbol ), representation );
+				}
 			}
 			
 			@Override
@@ -93,6 +103,15 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 						.supplying( (r)->build( variable.variableNameProducer(), STRING ) ) 
 						.build() ;
 				return applyKeys(variable,target) ;
+			}
+
+			
+			@Override
+			public JavaExpression<?> visitBuiltinVariableReference( BuiltinVariableReference variable ) {
+				JavaExpression<?> target = JavaInvocation.builder(context())
+						.invoke( env().methodFor(variable.builtinVariable()) )
+						.build();
+				return applyKeys( variable, target ) ;
 			}
 
 			private JavaExpression<?> literalInteger( Constant constant ) {
@@ -129,13 +148,19 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 					}
 				case NATIVE:
 				default:
-					if ( constant.representsInteger() )
+					if ( constant.representsNull() )
+						return JavaExpression.from( JExpr._null(), ()->Optional.empty() );
+					else if ( constant.representsInteger() )
 						return literalInteger( constant );
 					else if ( constant.representsNumber() )
 						return literalDecimal( constant ); 
 					else
 						return JavaExpression.from( JExpr.lit( constant.value() ), STRING );
 				}
+			}
+
+			@Override public JavaExpression<?> visitMatchPattern( MatchPattern matchPattern ) {
+				return JavaExpression.from( JExpr.lit( matchPattern.toString() ), STRING ); /* whoah, really? */
 			}
 
 			private JavaExpression<?> buildOp( BinaryOperation operation, BiFunction<JExpression,JExpression,JExpression> f, Representation producingRep, Representation lhsRep, Representation rhsRep) {
@@ -149,6 +174,16 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				JavaExpression<?> operand = build( operation.operand(), operandRep ) ;
 				JExpression expr = f.apply(operand.expr()) ;
 				return JavaExpression.from(expr, producingRep) ;
+			}
+			
+			private JavaExpression<?> buildIndirection( Expression operand ) {
+				JavaExpression<?> target = JavaInvocation.builder(context())
+						.on(VariableContext.class)
+						.invoke("lookup")
+						.accepting( java.lang.String.class )
+						.supplying( (r)->build( operand, STRING ) ) 
+						.build() ;
+				return target ;
 			}
 			
 			@Override
@@ -198,6 +233,8 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 					return buildOp( operation, JOp::minus, NUMERIC, NUMERIC ) ;
 				case NOT:
 					return buildOp( operation, JOp::not, BOOLEAN, BOOLEAN ) ;
+				case INDIRECTION:
+					return buildIndirection( operation.operand() ) ; 
 				default:
 					throw new UnsupportedOperationException( "operator type \"" + operation.operator() + "\" not supported" ) ;	
 				}
@@ -240,8 +277,13 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 					
 				}
 				
-				for (Expression arg : functionCall.arguments())
+				int position = 0 ;
+				for (Expression arg : functionCall.arguments()) {
 					invocation.appendArgument( (r)->build(arg,r) ) ;
+					
+					String parameterExternalSymbol = RoutineJavaMethodBuilder.symbolForMethodParameterPosition( symbol, position++ ) ;
+					m_symbolUsage.usedAs( parameterExternalSymbol, build(arg).representation() ) ;
+				}
 				return invocation ;
 			}
 			
@@ -308,12 +350,16 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 		}) ;
 	}
 
-	public KeyApplier keyApplier( VariableReference variable ) {
-		return new KeyApplierImpl(variable) ;
+	public KeyApplier keyApplier( VariableReference variable, Supplier<Optional<Representation>> asRepresentation ) {
+		return new KeyApplierImpl(variable, asRepresentation) ;
 	}
 
 	public JavaExpression<?> applyKeys( VariableReference variable, JavaExpression<?> target ) {
-		return keyApplier(variable).apply(target) ;
+		return applyKeys(variable,null,target) ;
+	}
+	
+	public JavaExpression<?> applyKeys( VariableReference variable, Supplier<Optional<Representation>> asRepresentation, JavaExpression<?> target ) {
+		return keyApplier(variable,asRepresentation).apply(target) ;
 	}
 	
 	public interface KeyApplier {
@@ -321,22 +367,40 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 		JavaExpression<?> apply( JavaExpression<?> target );
 	}
 	
+	private static class KeySpec {
+		private final JavaExpression<?> m_key ;
+		private final Supplier<Optional<Representation>> m_asRepresentation ;
+		public KeySpec(JavaExpression<?> key, Supplier<Optional<Representation>> asRepresentation) { m_key = key; m_asRepresentation = asRepresentation; }
+		public JavaExpression<?> key() { return m_key; }
+		public Supplier<Optional<Representation>> asRepresentation() { return m_asRepresentation; }
+	}
+	
 	private class KeyApplierImpl implements KeyApplier {
-		private List<JavaExpression<?>> m_keys;
-		public KeyApplierImpl( VariableReference variable ) {
-			m_keys = StreamSupport.stream(variable.keys().spliterator(),true).map( (e)->build(e,STRING) ).collect( Collectors.toList() ) ;
+		private final List<KeySpec> m_keySpecs = new ArrayList<KeySpec>();
+		public KeyApplierImpl( VariableReference variable, Supplier<Optional<Representation>> asRepresentation ) {
+			Iterator<Expression> i = variable.keys().iterator() ;
+			while ( i.hasNext() ) {
+				Expression expression = i.next();
+				m_keySpecs.add( new KeySpec(
+						build(expression,STRING),
+						i.hasNext() ? NATIVE.supplier() : asRepresentation // final key produces the given representation
+				)) ;
+			}
 		}
 		@Override
-		public boolean hasKeys() { return !m_keys.isEmpty() ; }
+		public boolean hasKeys() { return !m_keySpecs.isEmpty() ; }
 		@Override
 		public JavaExpression<?> apply( JavaExpression<?> target ) {
-			return m_keys.stream().reduce( target, (t,k)->
-				JavaInvocation.builder(context())
-					.on( t )
+			for ( KeySpec keySpec : m_keySpecs )
+				target = JavaInvocation.builder(context())
+					.on( target )
 					.invoke( env().methodFor(VALUE_INDEX) )
-					.supplying( (r)->k )
+					.accepting( String.class )
+					.supplying( (r)->keySpec.key() )
+					.as( keySpec.asRepresentation() )
 					.build()
-			) ;
+					;
+			return target ;
 		}
 	}
 }

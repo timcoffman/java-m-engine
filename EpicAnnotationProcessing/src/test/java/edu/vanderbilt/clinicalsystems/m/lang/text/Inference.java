@@ -2,6 +2,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
 import edu.vanderbilt.clinicalsystems.m.core.Value;
+import edu.vanderbilt.clinicalsystems.m.core.lib.ReadWrite;
 
 public class Inference {
 
@@ -9,7 +10,7 @@ public class Inference {
     public static double globalInteger;
     public static boolean globalBoolean;
     public static String globalString;
-    public static int globalDouble;
+    public static long globalDouble;
 
     /**
      * INFERENCE; see edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaWriterTest.canInferTypes
@@ -34,7 +35,7 @@ public class Inference {
      * Q 1
      * 
      */
-    public static int inferMethodReturnsInteger() {
+    public static long inferMethodReturnsInteger() {
         return  1;
     }
 
@@ -83,7 +84,7 @@ public class Inference {
         boolean localBoolean = false;
         String localString = "";
         double localInteger = 0.0D;
-        int localDouble = 0;
+        long localDouble = 0;
         localBoolean = true;
         localString = ("3"+"7");
         localInteger = (3.0D/ 7.0D);
@@ -132,6 +133,17 @@ public class Inference {
      * 
      */
     public static void inferTypeFromBuiltinFunction() {
+        ReadWrite.use(globalChannel);
+        return ;
+    }
+
+    /**
+     * inferMethodReturnTypeFromBuiltinFunction; expect Value
+     * Q globalChannel
+     * 
+     */
+    public static Value inferMethodReturnTypeFromBuiltinFunction() {
+        return globalChannel;
     }
 
 }

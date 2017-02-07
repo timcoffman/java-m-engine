@@ -48,4 +48,18 @@ public class LoopDefinition extends Argument {
 		return m_destination + " from " + m_start + (null == m_step ? "" : (" by " + m_step + (null == m_stop ? " forever" : " to " + m_stop)));
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof LoopDefinition) ) return false ;
+		LoopDefinition loopDefinition = (LoopDefinition)obj ;
+		return
+			m_destination.equals( loopDefinition.m_destination )
+			&& m_start.equals( loopDefinition.m_start )
+			&& ( null == m_step ? null == loopDefinition.m_step : m_step.equals( loopDefinition.m_step ) )
+			&& ( null == m_stop ? null == loopDefinition.m_stop : m_stop.equals( loopDefinition.m_stop ) )
+			;
+	}
+	
 }

@@ -1,20 +1,26 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import java.util.function.Function;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.StreamSupport;
 
 import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JExpression;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 
 public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 
 	public enum JavaMethodContents {
 		STUB,
-		EXECUTABLE
+		EXECUTABLE,
+		IMPLEMENTATION
 	}
 	
 	private final T m_builderContext ;
@@ -27,10 +33,14 @@ public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 		void build( T location ) ;
 	}
 
-	public interface Binder<T extends JExpression> extends Function<Representation,JavaExpression<T>> {
+	protected static <T> Builder<T> buildInSequence( Builder<T> a, Builder<T> x ) {
+		return (b)->{
+			a.build(b) ;
+			x.build(b) ; 
+		} ;
 	}
 
-	protected T context() { return m_builderContext; }
+	public T context() { return m_builderContext; }
 	protected RoutineJavaBuilderEnvironment env() { return context().env(); }
 
 	protected JCodeModel codeModel() { return context().codeModel(); }
@@ -63,4 +73,31 @@ public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 			return false ;
 	}
 		
+	protected void variableUsedAs( SymbolUsage symbolUsage, DirectVariableReference variable, Supplier<Optional<Representation>> expectedRepresentation ) {
+		symbolUsage.usedAs( symbolForVariable(variable), expectedRepresentation);
+		for ( Optional<VariableReference> parent = variable.parent() ; parent.isPresent() ; parent = parent.get().parent() )
+			symbolUsage.usedAs( symbolForVariable((DirectVariableReference)parent.get()), Representation.NATIVE );
+	}
+	
+	protected String symbolForVariable( DirectVariableReference variable ) {
+		StringBuilder sb = new StringBuilder() ;
+		sb.append( context().symbolForIdentifier(variable.variableName()) ) ;
+		
+		StreamSupport.stream(variable.keys().spliterator(),false)
+			.forEach( (e)->{
+				sb.append("[");
+				sb.append(symbolForIndex(e));
+				sb.append("]");
+			} );
+		
+		return sb.toString() ;
+	}
+	
+	private String symbolForIndex( Expression e ) {
+		if ( e instanceof Constant )
+			return ((Constant)e).value() ;
+		else
+			return "?" ;
+	}
+	
 }

@@ -70,6 +70,11 @@ commandSequence
 	| /* nothing */
 	;
 
+completeExpression
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: e=expression EOF { $result = $e.result ; }
+	;
+
 inlineBlock
 	returns [ InlineBlock result ]
 	@init { _stack.push( new InlineBlock() ); }
@@ -86,6 +91,7 @@ routineCommands
 	: ( Space | OtherWhitespace )+ blockIndent? { setupBlock(); } (
 		command ( ( Space | OtherWhitespace )+ command )* ( ( Space | OtherWhitespace )+ finalCommand )?
 		| finalCommand
+		| /* maybe no commands, just end of line and/or comments */
 		)
 	;
 
@@ -237,8 +243,14 @@ assignmentList
 assignment
 	returns [ Assignment result ] @after { requireNonNull($result); }
 	: d=destination Equals s=expression { $result = new Assignment( $d.result, $s.result ); }
+	| OpenParenthesis dl=destinationList CloseParenthesis Equals s=expression { $result = new Assignment( $dl.result, $s.result ); }
 	;
 
+destinationList
+	returns [ List<Destination<?>> result ] @after { requireNonNull($result); }
+	: destination ( Comma destination )* { $result = _converter.asList($ctx); }
+	;
+	
 destination
 	returns [ Destination result ] @after { requireNonNull($result); }
 	:              n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = Destination.wrap( _converter.createDirectVariableReference(  TRANSIENT, $n, $el.ctx ) ); }
@@ -271,17 +283,23 @@ group
 
 literal
 	returns [ Expression result ] @after { requireNonNull($result); }
-	: ( Plus | Minus )? Digit+ ( Dot Digit+ )? { $result = Constant.from($text); }
+	: ( Plus | Minus )? Digit+ ( Dot Digit* )? { $result = Constant.from(  $text); }
+	| ( Plus | Minus )?          Dot Digit+    { $result = Constant.from(  $text); }
 	| Quote s=quotedSequence EndQuote          { $result = Constant.from($s.text); }
 	;
 
-variableReference
+directVariableRef
 	returns [ Expression result ] @after { requireNonNull($result); }
 	:     Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     PERSISTENT, $n, $el.ctx ); }
 	|           n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_VALUE,     TRANSIENT, $n, $el.ctx ); }
 	| Dot Caret n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, PERSISTENT, $n, $el.ctx ); }
 	| Dot       n=Name (        OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createDirectVariableReference( BY_REFERENCE, TRANSIENT, $n, $el.ctx ); }
-	| AtSign e=expression ( AtSign OpenParenthesis el=expressionList CloseParenthesis )? { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
+	;
+
+variableReference
+	returns [ Expression result ] @after { requireNonNull($result); }
+	: v=directVariableRef { $result = $v.result; }
+	| AtSign e=expression AtSign OpenParenthesis el=expressionList CloseParenthesis { $result = _converter.createIndirectVariableReference( $e.result, $el.ctx ); }
 	;
 
 functionCall
@@ -300,27 +318,80 @@ expression
 	| var=variableReference { $result = $var.result; }
 	| fun=functionCall      { $result = $fun.result; }
 	/* unary operations */
-	| Minus      e=expression { $result = new UnaryOperation( OperatorType.SUBTRACT, $e.result ); }
-	| Plus       e=expression { $result = new UnaryOperation( OperatorType.ADD,      $e.result ); }
-	| Apostrophe e=expression { $result = new UnaryOperation( OperatorType.NOT,      $e.result ); }
+	| Minus      e=expression { $result = new UnaryOperation( OperatorType.SUBTRACT,    $e.result ); }
+	| Plus       e=expression { $result = new UnaryOperation( OperatorType.ADD,         $e.result ); }
+	| Apostrophe e=expression { $result = new UnaryOperation( OperatorType.NOT,         $e.result ); }
+	| AtSign     e=expression { $result = new UnaryOperation( OperatorType.INDIRECTION, $e.result ); }
 	/* binary operations */
-	| lhs=expression        Underscore      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.CONCAT          , $rhs.result); }
-	| lhs=expression           Plus         rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.ADD             , $rhs.result); }
-	| lhs=expression          Minus         rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.SUBTRACT        , $rhs.result); }
-	| lhs=expression    Asterisk Asterisk   rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.POWER           , $rhs.result); }
-	| lhs=expression         Asterisk       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.MULTIPLY        , $rhs.result); }
-	| lhs=expression        PoundSign       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.MODULO          , $rhs.result); }
-	| lhs=expression         Backslash      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.DIVIDE_INT      , $rhs.result); }
-	| lhs=expression       ForwardSlash     rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.DIVIDE          , $rhs.result); }
-	| lhs=expression          Equals        rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.EQUALS          , $rhs.result); }
-	| lhs=expression       GreaterThan      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.GREATER_THAN    , $rhs.result); }
-	| lhs=expression         LessThan       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.LESS_THAN       , $rhs.result); }
-	| lhs=expression    Apostrophe Equals   rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_EQUALS      , $rhs.result); }
-	| lhs=expression Apostrophe GreaterThan rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_GREATER_THAN, $rhs.result); }
-	| lhs=expression   Apostrophe LessThan  rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_LESS_THAN   , $rhs.result); }
-	| lhs=expression        Ampersand       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.AND             , $rhs.result); }
-	| lhs=expression       Exclamation      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.OR              , $rhs.result); }
-	| lhs=expression   CloseSquareBracket   rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.FOLLOWS         , $rhs.result); }
+	| lhs=expression           Underscore          rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.CONCAT          , $rhs.result); }
+	| lhs=expression              Plus             rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.ADD             , $rhs.result); }
+	| lhs=expression             Minus             rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.SUBTRACT        , $rhs.result); }
+	| lhs=expression       Asterisk Asterisk       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.POWER           , $rhs.result); }
+	| lhs=expression            Asterisk           rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.MULTIPLY        , $rhs.result); }
+	| lhs=expression           PoundSign           rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.MODULO          , $rhs.result); }
+	| lhs=expression            Backslash          rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.DIVIDE_INT      , $rhs.result); }
+	| lhs=expression          ForwardSlash         rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.DIVIDE          , $rhs.result); }
+	| lhs=expression             Equals            rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.EQUALS          , $rhs.result); }
+	| lhs=expression          GreaterThan          rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.GREATER_THAN    , $rhs.result); }
+	| lhs=expression            LessThan           rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.LESS_THAN       , $rhs.result); }
+	| lhs=expression       Apostrophe Equals       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_EQUALS      , $rhs.result); }
+	| lhs=expression    Apostrophe GreaterThan     rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_GREATER_THAN, $rhs.result); }
+	| lhs=expression      Apostrophe LessThan      rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_LESS_THAN   , $rhs.result); }
+	| lhs=expression           Ampersand           rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.AND             , $rhs.result); }
+	| lhs=expression          Exclamation          rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.OR              , $rhs.result); }
+	| lhs=expression      CloseSquareBracket       rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.FOLLOWS         , $rhs.result); }
+	| lhs=expression Apostrophe CloseSquareBracket rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.NOT_FOLLOWS     , $rhs.result); }
+	| lhs=expression         QuestionMark          mp=matchPattern{ $result = new BinaryOperation( $lhs.result, OperatorType.MATCH           ,  $mp.result); }
+	| lhs=expression         QuestionMark          rhs=expression { $result = new BinaryOperation( $lhs.result, OperatorType.MATCH           , $rhs.result); }
+	;
+
+matchPattern
+	returns [ MatchPattern result ] @after { requireNonNull($result); }
+	: mas=matchAtomSequence { $result = new MatchPattern( new MatchPattern.MatchSequence( _converter.asList($mas.ctx) ) ); }
+	;
+
+completeMatchPattern
+	returns [ MatchPattern result ] @after { requireNonNull($result); }
+	: mp=matchPattern EOF { $result = $mp.result ; } 
+	;
+
+matchAtomSequence
+	: matchAtom+
+	;
+	
+matchAtom
+	returns [ MatchPattern.Atom result ] @after { requireNonNull($result); }
+	: min=Digit+ Dot max=Digit+ mt=matchType { $result = new MatchPattern.Atom( Integer.parseInt($min.text), Integer.parseInt($max.text), $mt.result ); }
+	| min=Digit+ Dot            mt=matchType { $result = new MatchPattern.Atom( Integer.parseInt($min.text), null,                        $mt.result ); }
+	|            Dot max=Digit+ mt=matchType { $result = new MatchPattern.Atom( null,                        Integer.parseInt($max.text), $mt.result ); }
+	|            Dot            mt=matchType { $result = new MatchPattern.Atom( null,                        null,                        $mt.result ); }
+	| mnx=Digit+                mt=matchType { $result = new MatchPattern.Atom( Integer.parseInt($mnx.text), Integer.parseInt($mnx.text), $mt.result ); }
+	;
+	
+matchType
+	returns [ MatchPattern.MatchType result ] @after { requireNonNull($result); }
+	: csmt=codeSetMatchType { $result = $csmt.result ; }
+	|  lmt=literalMatchType { $result =  $lmt.result ; }
+	|  umt=unionMatchType   { $result =  $umt.result ; }
+	;
+
+literalMatchType
+	returns [ MatchPattern.LiteralMatchType result ] @after { requireNonNull($result); }
+	: Quote s=quotedSequence EndQuote { $result = new MatchPattern.LiteralMatchType( $s.text ) ; }
+	;
+
+codeSetMatchType
+	returns [ MatchPattern.CodeSetMatchType result ] @after { requireNonNull($result); }
+	: cs=Name /* how to differentiate in the lexer between Name and Alpha+ ??? */ { $result = new MatchPattern.CodeSetMatchType( _converter.codeSetFrom($cs.text) ) ; }
+	;
+
+matchAtomList
+	: matchAtom ( Comma matchAtom )*
+	;
+	
+unionMatchType
+	returns [ MatchPattern.UnionMatchType result ] @after { requireNonNull($result); }
+	: OpenParenthesis mal=matchAtomList? CloseParenthesis { $result = new MatchPattern.UnionMatchType( _converter.asList($mal.ctx) ) ; }
 	;
 
 quotedSequence

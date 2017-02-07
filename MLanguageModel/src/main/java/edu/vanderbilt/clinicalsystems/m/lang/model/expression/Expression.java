@@ -27,6 +27,7 @@ public abstract class Expression implements Element {
 		@Override default R visitVariableReference ( VariableReference     variable ) { return visitExpression(variable    ) ; }
 		@Override default R visitFunctionCall      ( FunctionCall      functionCall ) { return visitExpression(functionCall) ; }
 		default R visitConstant           ( Constant                 constant ) { return visitExpression(constant    ) ; }
+		default R visitMatchPattern       ( MatchPattern         matchPattern ) { return visitExpression(matchPattern) ; }
 		default R visitBinaryOperation    ( BinaryOperation         operation ) { return visitExpression(operation   ) ; }
 		default R visitUnaryOperation     ( UnaryOperation          operation ) { return visitExpression(operation   ) ; }
 		default R visitConditional        ( ConditionalExpression conditional ) { return visitExpression(conditional ) ; }

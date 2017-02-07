@@ -2,6 +2,8 @@ package edu.vanderbilt.clinicalsystems.epic.annotation;
 
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit ;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineTag ;
+import edu.vanderbilt.clinicalsystems.m.core.lib.Builtin;
+import edu.vanderbilt.clinicalsystems.m.core.lib.Text;
 
 /**
  *  Operators Sample
@@ -89,4 +91,20 @@ public class Operators {
 		return x -= 7 ;
 	}
 		
+	/**
+	 * Expect Q x]"abc"
+	 */
+	@RoutineTag
+	public static boolean infixFollows(String x) {
+		return Text.follows(x,"abc") ;
+	}
+	
+	/**
+	 * Expect Q x']"abc"
+	 */
+	@RoutineTag
+	public static int infixNotFollows(int x) {
+		return !Text.follows(x,"abc") ;
+	}
+	
 }

@@ -9,6 +9,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern.MatchSequence;
 
 /**
  * Translates {@link RoutineFormatter} methods calls into {@link FormattingCall}s
@@ -91,6 +92,8 @@ public abstract class RoutineCallProducingFormatter implements RoutineFormatter 
 
 	@Override public void writeNumberConstant(String value, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeNumberConstant(value, writer) ) ; }
 
+	@Override public void writeMatchSequence(MatchSequence matchSequence, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeMatchSequence(matchSequence, writer) ) ; }
+	
 	@Override public void writeStringConstant(String value, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeStringConstant(value, writer) ) ; }
 
 	@Override public void writeVariablePassedByReference(Scope scope, String variableName, Writer writer) throws IOException { produce( (RoutineFormatter rf) -> rf.writeVariablePassedByReference(scope, variableName, writer) ) ; }

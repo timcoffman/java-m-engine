@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.lang.model.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import edu.vanderbilt.clinicalsystems.m.lang.ReferenceStyle;
@@ -26,17 +27,19 @@ public abstract class VariableReference extends Expression {
 		m_keys.addAll( keys ) ;
 	}
 	
-	public Expression finalKey() {
+	public Optional<Expression> finalKey() {
 		if ( m_keys.isEmpty() )
-			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
-		return m_keys.get( m_keys.size()-1 ) ;
+//			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
+			return Optional.empty() ;
+		return Optional.of(m_keys.get( m_keys.size()-1 )) ;
 	}
 	
-	public VariableReference parent() {
+	public Optional<VariableReference> parent() {
 		if ( m_keys.isEmpty() )
-			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
+//			throw new IllegalArgumentException( "cannot make parent variable of variable that has no keys" ) ;
+			return Optional.empty() ;
 		List<Expression> parentKeys = m_keys.subList(0, m_keys.size()-1 );
-		return copyWithKeys( parentKeys ) ;
+		return Optional.of(copyWithKeys( parentKeys )) ;
 	}
 	
 	public VariableReference child( Expression key ) {
@@ -65,15 +68,16 @@ public abstract class VariableReference extends Expression {
 
 	@Override
 	protected String unformattedRepresentation() {
-		return
-				m_referenceStyle.unformattedRepresentation()
-				+
-				unformattedVariableNameRepresentation()
-				+
-				m_referenceStyle.unformattedRepresentation()
-				+
-				(m_keys.isEmpty() ? "" : m_keys.stream().map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ","(",")")))
+		String s = m_referenceStyle.unformattedRepresentation()
+			+
+			unformattedVariableNameRepresentation()
+			;
+		if ( !m_keys.isEmpty() ) {
+			s += m_referenceStyle.unformattedRepresentation()
+				+ m_keys.stream().map(e->e.unformattedRepresentation()).collect(Collectors.joining(", ","(",")"))
 				;
+		}
+		return s ;
 	}
 	
 	@Override

@@ -16,6 +16,7 @@ import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.Varia
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValue;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.Operator;
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
@@ -369,6 +370,19 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 				report( RoutineTools.ReportType.ERROR, "unrecognized native function", methodInvocationNode ) ;
 			}
 		}
+		Operator operatorAnnotation = methodInvocationTarget.declaration().getAnnotation( Operator.class ) ;
+		if ( null != operatorAnnotation ) {
+			if ( methodInvocationNode.arguments().size() == 1 ) {
+				Expression operand = tools().expressions().generate( methodInvocationNode.arguments().get(0), listener ) ;
+				return new UnaryOperation( operatorAnnotation.value(), operand ) ;
+			} else if ( methodInvocationNode.arguments().size() == 2 ) {
+				Expression lhs = tools().expressions().generate( methodInvocationNode.arguments().get(0), listener ) ;
+				Expression rhs = tools().expressions().generate( methodInvocationNode.arguments().get(1), listener ) ;
+				return new BinaryOperation( lhs, operatorAnnotation.value(), rhs ) ;
+			} else {
+				report( RoutineTools.ReportType.ERROR, "too many arguments for an operator method", methodInvocationNode ) ;
+			}
+		}
 		Function functionAnnotation = methodInvocationTarget.declaration().getAnnotation( Function.class ) ;
 		if ( null != functionAnnotation ) {
 			return buildBuiltinFunctionCall( functionAnnotation.value(), methodInvocationNode.arguments(), listener ) ;
@@ -376,7 +390,7 @@ public class ExpressionGenerator extends Generator<Expression,Ast.Expression> {
 		
 		TaggedRoutineDependency taggedRoutineDependency = tools().resolveDependency( methodInvocationTarget.declaration() ) ;
 		listener.publishDependency( taggedRoutineDependency );
-		TagReference tagRef = new TagReference( taggedRoutineDependency.tagName(), taggedRoutineDependency.routineName() ) ;
+		TagReference tagRef = new TagReference( taggedRoutineDependency.dependsOnTagName(), taggedRoutineDependency.dependsOnRoutineName() ) ;
 		FunctionCall.Returning returning ;
 		if ( tools().isTypeOfAnything( methodInvocationTarget.returnType() ) )
 			returning = FunctionCall.Returning.SOME_VALUE ;

@@ -129,7 +129,7 @@ public class SymbolUsage {
 		@Override protected Stack<Usage> initialValue() { return new Stack<Usage>() ; }
 	};
 	
-	private <T> Optional<Supplier<T>> preventingRecursion( Usage usage, Function<Usage,Supplier<T>> action ) {
+	private static <T> Optional<Supplier<T>> preventingRecursion( Usage usage, Function<Usage,Supplier<T>> action ) {
 		Stack<Usage> stack = m_symbolImplicationStack.get();
 		if ( stack.contains(usage) )
 			return Optional.empty() ; /* recursive */
@@ -141,7 +141,7 @@ public class SymbolUsage {
 		}
 	}
 	
-	private Supplier<Optional<Representation>> impliedRepresentation(Usage usage) {
+	private static Supplier<Optional<Representation>> impliedRepresentation(Usage usage) {
 		return preventingRecursion( usage, (u)->{
 
 			if ( u.indexedByKey() || u.passedByReference() )
@@ -152,7 +152,7 @@ public class SymbolUsage {
 		}).orElse( ()->Optional.empty() );
 	}
 	
-	private Supplier<Optional<Representation>> commonRepresentation( Collection<Supplier<Optional<Representation>>> representations ) {
+	private static Supplier<Optional<Representation>> commonRepresentation( Collection<Supplier<Optional<Representation>>> representations ) {
 		Optional<Representation> representation = representations.stream()
 			.map(Supplier::get)
 			.filter(Optional::isPresent)
@@ -162,7 +162,7 @@ public class SymbolUsage {
 		return ()->representation ;
 	}
 	
-	private Supplier<Optional<Representation>> impliedRepresentation(Collection<Supplier<Optional<Representation>>> representations) {
+	private static Supplier<Optional<Representation>> impliedRepresentation(Collection<Supplier<Optional<Representation>>> representations) {
 		return commonRepresentation(representations) ;
 	}
 

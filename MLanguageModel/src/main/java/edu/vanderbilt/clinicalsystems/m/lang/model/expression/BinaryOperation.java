@@ -53,8 +53,25 @@ public class BinaryOperation extends Operation {
 			return new BinaryOperation(m_leftHandSide, OperatorType.LESS_THAN, m_rightHandSide) ;
 		} else if ( operator() == OperatorType.NOT_GREATER_THAN ) {
 			return new BinaryOperation(m_leftHandSide, OperatorType.GREATER_THAN, m_rightHandSide) ;
+		} else if ( operator() == OperatorType.NOT_FOLLOWS ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.FOLLOWS, m_rightHandSide) ;
+		} else if ( operator() == OperatorType.FOLLOWS ) {
+			return new BinaryOperation(m_leftHandSide, OperatorType.NOT_FOLLOWS, m_rightHandSide) ;
 		} else {
 			return super.inverted() ;
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) return true ;
+		if ( null == obj ) return false ;
+		if ( !(obj instanceof BinaryOperation) ) return false ;
+		BinaryOperation operation = (BinaryOperation)obj ;
+		return
+			super.equals( operation ) &&
+			m_leftHandSide.equals( operation.m_leftHandSide ) &&
+			m_rightHandSide.equals( operation.m_rightHandSide )
+			;
 	}
 }

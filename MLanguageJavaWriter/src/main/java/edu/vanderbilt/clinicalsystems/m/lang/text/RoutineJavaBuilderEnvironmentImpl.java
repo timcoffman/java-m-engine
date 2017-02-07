@@ -14,13 +14,13 @@ import java.util.function.Consumer;
 
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Command;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Function;
-import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeCommand;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeFunction;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeType;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.NativeValue;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Operator;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.ReadWriteCode;
+import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.Variable;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeCommandType;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFunctionType;
@@ -166,7 +166,7 @@ class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment
 		case DECIMAL:
 			return java.lang.Double.TYPE ;
 		case INTEGER:
-			return java.lang.Integer.TYPE ;
+			return java.lang.Long.TYPE ;
 		case BOOLEAN:
 			return java.lang.Boolean.TYPE ;
 		case STRING:

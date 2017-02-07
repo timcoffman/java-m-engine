@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<routine name="%Zefnlih">
+    <dependency tag="%zwrap"/>
+    <dependency tag="%zRegGlobal"/>
+    <dependency tag="zEMPini"/>
+    <dependency tag="zTagExists"/>
+    <dependency tag="zzzGtGloOwner"/>
+    <dependency tag="zzzGtGloFromBase"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <dependency routine="%Zelibh" tag="zzzGtTmpGloAllocPPG"/>
+    <dependency tag="zzzGtGloOwner"/>
+    <dependency tag="%zzIncSafeReset"/>
+    <dependency tag="zGtTmpGloType"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <dependency tag="zIncSafe"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <dependency tag="zgCurLWSIDEnt"/>
+    <dependency tag="%zErrLog"/>
+    <dependency tag="zgUserID"/>
+    <dependency tag="zgCurLWS"/>
+    <dependency routine="EAETBT4" tag="checkBatchesServer"/>
+    <dependency tag="%zRegGlobal"/>
+    <dependency tag="%zErrLog"/>
+    <dependency routine="EAETBKG" tag="saveLostBatch"/>
+    <dependency routine="elibEALIBG" tag="zClient"/>
+    <dependency tag="zGtTmpGlo"/>
+    <dependency tag="%zUnregGlobal"/>
+    <dependency routine="%Zelibh" tag="zGetGloCleanupMode"/>
+    <dependency tag="zGetPPGwhenDBINTERNAL"/>
+    <dependency tag="%zEMPLst"/>
+    <dependency tag="zgCurLWS"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <dependency tag="%zRegGlobal"/>
+    <dependency tag="zzzGtGloFromBase"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <dependency routine="%ZeCLEANUP" tag="GlobalCleanUp"/>
+    <dependency tag="%zRelTmpGlo"/>
+    <tag name="%Zefnlih"/>
+    <tag name="zPckSz"/>
+    <tag name="zPort"/>
+    <tag name="zHangTm"/>
+    <tag name="zCommReadTm"/>
+    <tag name="zKeepAliveInterval"/>
+    <tag name="zKeepAliveGrace"/>
+    <tag name="zKeepAliveGraceProxy"/>
+    <tag name="zPkTLm"/>
+    <tag name="zCommPersistTm"/>
+    <tag name="zGtTmpGlo"/>
+    <tag name="zzzGtTmpGloAllocPPG"/>
+    <tag name="zzzGtAuditTmpGloAllocPPG"/>
+    <tag name="zzzGtGloFromBase"/>
+    <tag name="zzzGtGloOwner"/>
+    <tag name="zGtTmpGloType"/>
+    <tag name="%zRelTmpGlo"/>
+    <tag name="%zRelAllTmpGlo"/>
+    <tag name="zGtTmpGloShrd"/>
+    <tag name="%zRelTmpGloShrd"/>
+    <tag name="zNumMaxIncrement"/>
+    <tag name="zIncSafe"/>
+    <tag name="%zzIncSafeReset"/>
+    <tag name="zGetGloCleanupMode"/>
+    <tag name="zGetGloCleanupModeCustNoCache"/>
+    <tag name="zOIDType"/>
+    <tag name="zIsEpicOID"/>
+    <tag name="%zetGlo"/>
+    <tag name="%zsetPCMPCD"/>
+    <tag name="zNeedsExtDirRef"/>
+    <tag name="%zWrapPrint"/>
+    <tag name="%zEMPLst"/>
+    <tag name="EMPLst"/>
+    <tag name="zGetESUn"/>
+    <tag name="zGtPrGlo"/>
+</routine>

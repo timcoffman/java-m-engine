@@ -16,4 +16,5 @@ public interface CommandParser {
 
 	List<? extends Command> parseCommandSequence(String text) ;
 
+	void listen( RoutineParseListener listener );
 }

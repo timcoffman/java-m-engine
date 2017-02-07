@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<routine name="HULIBFN">
+    <dependency tag="getn"/>
+    <dependency routine="HULIC" tag="fngtPln"/>
+    <dependency tag="zgetblu"/>
+    <dependency tag="znxIxID"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="gtActFC"/>
+    <dependency tag="netOut"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="znxIxID"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="sp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetpcu"/>
+    <dependency routine="HULIC" tag="fnprCvg"/>
+    <dependency tag="zgetnp"/>
+    <dependency routine="HULICNET" tag="%zLuEpm"/>
+    <dependency tag="zgetblu"/>
+    <dependency tag="getn"/>
+    <dependency tag="getn"/>
+    <dependency tag="zgetpcu"/>
+    <dependency routine="HULIC" tag="fngtPln"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency routine="HULIC" tag="fngtPlnD"/>
+    <dependency routine="HULIC" tag="fngtPln"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="getn"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="din"/>
+    <dependency tag="zIsConv"/>
+    <dependency routine="HULIC4" tag="fncvgLst"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="geti"/>
+    <dependency tag="getn"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="sp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="getidin"/>
+    <dependency tag="zoDT"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="catOut"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetblu"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="netOut"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="hugeti"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zIsConv"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="MCgetOwnPBS"/>
+    <dependency tag="zgetnp"/>
+    <dependency routine="HULIC" tag="fngtPln"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zoDT"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zoDT"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="sp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="getn"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zmaxunl"/>
+    <dependency tag="sp"/>
+    <dependency tag="zoDT"/>
+    <dependency routine="HULIC" tag="fngtPln"/>
+    <dependency tag="hugeti"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetpcu"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency routine="HULIC1" tag="fneffCvg"/>
+    <dependency tag="znxIxID"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="netOut"/>
+    <dependency tag="hugeti"/>
+    <dependency tag="fnocvgpt"/>
+    <dependency tag="zgetnp"/>
+    <dependency tag="znxIxID"/>
+    <tag name="HULIBFN"/>
+    <tag name="fngtPln"/>
+    <tag name="fngtPlnD"/>
+    <tag name="fnprCvg"/>
+    <tag name="DoesPlanSuppBillType"/>
+    <tag name="PlanBillTypeOnly"/>
+    <tag name="fncvgLst"/>
+    <tag name="FOVISIT"/>
+    <tag name="FOPATIENT"/>
+    <tag name="fneffCvg"/>
+    <tag name="fnGpPln"/>
+    <tag name="fnGpPlnD"/>
+    <tag name="fnisNet"/>
+    <tag name="fncvgDts"/>
+    <tag name="fnCvgFC"/>
+    <tag name="gtActFC"/>
+    <tag name="fngtPyr"/>
+    <tag name="fnHARcvgLst"/>
+    <tag name="gtcvgcxt"/>
+    <tag name="gtgrpmcr"/>
+    <tag name="chknet"/>
+    <tag name="isFOTrkOn"/>
+    <tag name="MCgetCvgSubLn"/>
+</routine>

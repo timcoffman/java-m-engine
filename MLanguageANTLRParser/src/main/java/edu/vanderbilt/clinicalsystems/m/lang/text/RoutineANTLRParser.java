@@ -6,19 +6,28 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 
 public class RoutineANTLRParser implements RoutineParser, CommandParser, ExpressionParser {
+	
+	private Optional<Collection<RoutineParseListener>> m_listeners = Optional.empty();
 	
 	public RoutineANTLRParser() {
 		
@@ -27,6 +36,12 @@ public class RoutineANTLRParser implements RoutineParser, CommandParser, Express
 	@Override public CommandParser commandParser() { return this; }
 	
 	@Override public ExpressionParser expressionParser()  { return this; }
+
+	@Override public void listen( RoutineParseListener listener ) {
+		if ( !m_listeners.isPresent() )
+			m_listeners = Optional.of( new ArrayList<RoutineParseListener>() ) ;
+		m_listeners.get().add(listener) ;
+	}
 
 	@Override
 	public Routine parse( String text ) {
@@ -81,10 +96,35 @@ public class RoutineANTLRParser implements RoutineParser, CommandParser, Express
 		return parseExpression( new ANTLRInputStream(text) ) ;
 	}
 
+	@Override
+	public MatchPattern parseMatchPattern(InputStream source) throws IOException {
+		return parseMatchPattern( new ANTLRInputStream(source) ) ;
+	}
+	@Override
+	public MatchPattern parseMatchPattern(Reader reader) throws IOException {
+		return parseMatchPattern( new ANTLRInputStream(reader) ) ;
+	}
+	
+	@Override
+	public MatchPattern parseMatchPattern(String text)  {
+		return parseMatchPattern( new ANTLRInputStream(text) ) ;
+	}
+	
 	private MumpsParser makeMumpsParser(ANTLRInputStream source) {
 		MumpsLexer lexer = new MumpsLexer(source) ;
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 		MumpsParser parser = new MumpsParser(tokens) ;
+		if ( ! m_listeners.map( Collection::isEmpty ).orElse(true) ) {
+			Collection<RoutineParseListener> listeners = m_listeners.get();
+			parser.addParseListener( new ParseTreeListener() {
+				@Override public void enterEveryRule(ParserRuleContext parserRuleContext) { /* nothing */ }
+				@Override public void exitEveryRule(ParserRuleContext parserRuleContext) { /* nothing */ }
+				@Override public void visitErrorNode(ErrorNode errorNode) { /* nothing */ }
+				@Override public void visitTerminal(TerminalNode terminalNode) {
+					listeners.forEach( (x)->x.parsingText(terminalNode.getText()) ) ;
+				}
+			});
+		}
 		return parser ;
 	}
 	
@@ -106,7 +146,12 @@ public class RoutineANTLRParser implements RoutineParser, CommandParser, Express
 	
 	private Expression parseExpression( ANTLRInputStream source ) {
 		MumpsParser parser = makeMumpsParser(source) ;
-		return parser.expression().result ;
+		return parser.completeExpression().result ;
 	}
 
+	private MatchPattern parseMatchPattern( ANTLRInputStream source ) {
+		MumpsParser parser = makeMumpsParser(source) ;
+		return parser.completeMatchPattern().result ;
+	}
+	
 }

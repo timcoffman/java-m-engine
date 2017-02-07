@@ -55,7 +55,7 @@ class RoutineJavaBuilderContextImpl implements RoutineJavaBuilderContext {
 		case DECIMAL:
 			return m_codeModel.DOUBLE ;
 		case INTEGER:
-			return m_codeModel.INT ;
+			return m_codeModel.LONG ;
 		case BOOLEAN:
 			return m_codeModel.BOOLEAN ;
 		case STRING:

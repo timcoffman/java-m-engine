@@ -50,6 +50,10 @@ public class ForLoopBuilder extends CommandJavaStatementBuilder {
 	@Override protected Builder<JBlock> analyze( CommandType commandType, LoopDefinition loopDefinition, Block innerBlock ) {
 		JavaExpression<?> start = expr(loopDefinition.start());
 		String loopSymbol = context().symbolForIdentifier( loopDefinition.destination().variableName() );
+		
+		if ( null != loopDefinition.step() )
+			m_outerSymbolUsage.usedAs( loopSymbol, Representation.NUMERIC);
+		
 		Supplier<Optional<Representation>> loopVarRep = m_outerSymbolUsage.impliedRepresentation(loopSymbol) ;
 
 		JavaExpression<?> loopStep = expr(loopDefinition.step()) ;

@@ -27,14 +27,39 @@ public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilde
 		m_methodContents = methodContents ;
 	}
 	
+	private RoutineJavaUnitBuilder( JavaMethodContents methodContents, RoutineJavaBuilderContext builderContext ) {
+		super( builderContext ) ;
+		m_methodContents = methodContents ;
+	}
+
+	public RoutineJavaUnitBuilder withMethodContents(JavaMethodContents javaMethodContents) {
+		return new RoutineJavaUnitBuilder( javaMethodContents, new RoutineJavaBuilderContextImpl(new JCodeModel(), env()) );
+	}
+	
 	public RoutineJavaUnitBuilder build( String fullyQualifiedPackageName, Routine routine ) throws Exception {
-		String className = routine.name().substring(0, 1).toUpperCase() + routine.name().substring(1).toLowerCase();
+		String symbol = context().symbolForIdentifier( routine.name() ); 
+		String className = symbol.substring(0, 1).toUpperCase() + symbol.substring(1);
 		final String fullyQualifiedName = null == fullyQualifiedPackageName || fullyQualifiedPackageName.isEmpty()
 				? className
 				: fullyQualifiedPackageName + "." + className
 				;
-		JDefinedClass definedClass = codeModel()._class( fullyQualifiedName, ClassType.CLASS ) ;
-		context().forEachListener( (el)->el.createdClass(definedClass, routine.name() ) ) ;
+		JDefinedClass definedClass ;
+		switch (m_methodContents) {
+		case EXECUTABLE:
+			definedClass = codeModel()._class( fullyQualifiedName, ClassType.CLASS ) ;
+			context().forEachListener( (el)->el.createdClass(definedClass, routine.name() ) ) ;
+			break ;
+		case IMPLEMENTATION:
+			definedClass = codeModel()._class( fullyQualifiedName + "Impl", ClassType.CLASS ) ;
+			definedClass._implements( context().codeModel()._class( fullyQualifiedName ) ) ;
+			context().forEachListener( (el)->el.createdClass(definedClass, routine.name() ) ) ;
+			break ;
+		case STUB:
+		default:
+			definedClass = codeModel()._class( fullyQualifiedName, ClassType.INTERFACE ) ;
+			context().forEachListener( (el)->el.createdClass(definedClass, routine.name() ) ) ;
+			break ;
+		}
 		
 		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context(), m_methodContents ) ;
 		classBuilder.analyze( routine, className ).build( definedClass );

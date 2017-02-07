@@ -37,6 +37,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableRefe
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Operation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
@@ -171,7 +172,17 @@ public class RoutineLinearWriter implements RoutineWriter {
 	@Override
 	public void write( Assignment assignment ) throws RoutineWriterException {
 		try {
-			assignment.destination().write(this) ;
+			if ( assignment.destinations().size() != 1 )
+				m_routineFormatter.openExpressionGroup(m_writer);
+			Iterator<? extends Element> i = assignment.destinations().iterator() ;
+			if ( i.hasNext() )
+				i.next().write(this) ;
+			while ( i.hasNext() ) {
+				m_routineFormatter.writeAssignmentDelimiter(m_writer);
+				i.next().write(this) ;
+			}
+			if ( assignment.destinations().size() != 1 )
+				m_routineFormatter.closeExpressionGroup(m_writer);
 			m_routineFormatter.writeAssignmentOperator(m_writer);
 			assignment.source().write(this) ;
 		} catch ( IOException ex ) {
@@ -531,6 +542,15 @@ public class RoutineLinearWriter implements RoutineWriter {
 		
 	}
 
+	@Override
+	public void write(MatchPattern matchPattern) throws RoutineWriterException {
+		try {
+			m_routineFormatter.writeMatchSequence( matchPattern.matchSequence(), m_writer ) ;
+		} catch ( IOException ex ) {
+			throw new RoutineWriterException(ex) ;
+		}
+	}
+	
 	@Override
 	public void write(Constant constant) throws RoutineWriterException {
 		try {

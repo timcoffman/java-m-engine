@@ -8,10 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 
+import edu.vanderbilt.clinicalsystems.m.core.annotation.InjectRoutine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
 public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
@@ -29,7 +31,7 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 	
 	public Builder<JDefinedClass> analyze(Routine routine, String className) {
 		SymbolUsage classSymbolUsage = SymbolUsage.createRoot() ;
-		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolUsage, context().classContext(className) ) ;
+		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolUsage, context().classContext(className), m_methodContents ) ;
 		
 		routine.tagNames().forEach( (tagName)->classSymbolUsage.declaredAs( methodNameForTag(routine, tagName) ) );
 		
@@ -45,6 +47,10 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		return (c)->build( classSymbolUsage, methodBuilders, routine, c )  ;
 	}
 
+	private static final java.util.regex.Pattern NON_SYMBOL_CHARACTER_PATTERN
+		= java.util.regex.Pattern.compile("[^$a-zA-Z0-9_]")
+		;
+	
 	private void build(SymbolUsage classSymbolUsage, Map<String,Builder<JMethod>> methodBuilders, Routine routine, JDefinedClass definedClass) {
 		System.out.println("") ;
 		for ( String symbol : classSymbolUsage.symbols() ) {
@@ -54,13 +60,19 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		Set<String> symbols = new HashSet<String>( classSymbolUsage.symbols() );
 		methodBuilders.keySet().forEach( (tagName)->symbols.remove( methodNameForTag(routine, tagName) ) );
 		
-		for ( String symbol : symbols ) {
-			
-			if ( methodBuilders.containsKey(symbol) ) continue ; // they'll be handled from methodBuilders
-			
-			// Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElseThrow( ()->new IllegalStateException("unresolvable field symbol") ) ;
-			Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElse( NATIVE ) ;
-			definedClass.field( JMod.PUBLIC + JMod.STATIC, context().typeFor(repr), symbol ) ;
+		if ( m_methodContents != JavaMethodContents.STUB ) {
+		
+			for ( String symbol : symbols ) {
+				
+				if ( methodBuilders.containsKey(symbol) ) continue ; // they'll be handled from methodBuilders
+				if ( methodBuilders.containsKey(symbol.split("[^$a-zA-Z0-9_]")[0] ) ) continue ; // they'll be handled from methodBuilders
+				if ( NON_SYMBOL_CHARACTER_PATTERN.matcher(symbol).find() ) continue ; // not handled by methodBuilders, but is an "external" method
+				
+				// Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElseThrow( ()->new IllegalStateException("unresolvable field symbol") ) ;
+				Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElse( NATIVE ) ;
+				JFieldVar field = definedClass.field( JMod.PUBLIC, context().typeFor(repr), symbol ) ;
+				field.annotate( InjectRoutine.class ) ;
+			}
 		}
 
 		methodBuilders.forEach( (tagName,methodBuilder)->{
@@ -72,17 +84,19 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 			
 			JMethod method ;
 			switch ( m_methodContents ) {
-			case STUB:
-				method = definedClass.method( JMod.PUBLIC + JMod.STATIC + JMod.NATIVE, returnType, methodName ) ;
-				break;
-			
-			case EXECUTABLE:
-			default:
-				method = definedClass.method( JMod.PUBLIC + JMod.STATIC, returnType, methodName ) ;
-				
-				methodBuilder.build( method ) ;
+			case IMPLEMENTATION:
+				method = definedClass.method( JMod.PUBLIC, returnType, methodName ) ;
+				method.annotate( Override.class ) ;
 				break ;
+			case EXECUTABLE:
+				method = definedClass.method( JMod.PUBLIC, returnType, methodName ) ;
+				break ;
+			default:
+			case STUB:
+				method = definedClass.method( JMod.NONE, returnType, methodName ) ;
+				break;
 			}
+			methodBuilder.build( method ) ;
 			context().forEachListener( (el)->el.createdMethod(definedClass, method, tagName ) ) ;
 
 		}) ;

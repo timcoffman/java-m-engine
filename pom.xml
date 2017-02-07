@@ -16,6 +16,7 @@
 		<module>MLanguageParser</module>
 		<module>MLanguageANTLRParser</module>
 		<module>EpicAnnotations</module>
+		<module>EpicResources</module>
 		<module>EpicAnnotationProcessing</module>
 		<module>EpicAnnotationJdkProcessing</module>
 		<!--

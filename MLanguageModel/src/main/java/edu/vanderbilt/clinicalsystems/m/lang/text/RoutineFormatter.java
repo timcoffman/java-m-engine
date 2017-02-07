@@ -9,6 +9,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
 import edu.vanderbilt.clinicalsystems.m.lang.Scope;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern.MatchSequence;
 
 public interface RoutineFormatter {
 	
@@ -49,6 +50,7 @@ public interface RoutineFormatter {
 	
 	void writeNoExpression( Writer writer ) throws IOException ;
 	void writeNumberConstant( String value, Writer writer ) throws IOException ;
+	void writeMatchSequence( MatchSequence matchSequence, Writer writer) throws IOException ;
 	void writeStringConstant( String value, Writer writer ) throws IOException ;
 	
 	void writeVariablePassedByReference( Scope scope, String variableName, Writer writer ) throws IOException ;

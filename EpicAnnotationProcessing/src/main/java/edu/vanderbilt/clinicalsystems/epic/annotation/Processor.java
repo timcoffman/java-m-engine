@@ -20,14 +20,11 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Generator;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineGenerator;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.RoutineDependency;
-import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.TaggedRoutineDependency;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.factory.RoutineToolsFactory;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
@@ -41,8 +38,11 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineWriterException;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class Processor extends AbstractProcessor {
 
+	private final RoutineTranslationInfoFactory m_routineTranslationInfoFactory;
+
 	public Processor() {
 		super() ;
+		m_routineTranslationInfoFactory = new RoutineTranslationInfoFactory();
 	}
 	
 	@Override
@@ -98,8 +98,8 @@ public class Processor extends AbstractProcessor {
 	
 	private void writeRoutineMetaFile( TypeElement annotatedType, RoutineTranslationInfo translation ) throws IOException {
 		String packageOfAnnotatedType = processingEnv.getElementUtils().getPackageOf(annotatedType).getQualifiedName().toString();
-		String routineName = RoutineTools.determineRoutineName( annotatedType ) ;
-		FileObject resourceFile = processingEnv.getFiler().createResource( StandardLocation.CLASS_OUTPUT, packageOfAnnotatedType, routineName + ".xml", annotatedType) ;
+		String resourceName = m_routineTranslationInfoFactory.resourceNameFor(translation);
+		FileObject resourceFile = processingEnv.getFiler().createResource( StandardLocation.CLASS_OUTPUT, packageOfAnnotatedType, resourceName, annotatedType) ;
 		processingEnv.getMessager().printMessage(Kind.NOTE, "writing " + resourceFile.toUri() );
 
 		System.out.println("************************************************************");
@@ -107,48 +107,12 @@ public class Processor extends AbstractProcessor {
 		System.out.println("********** writing    " + resourceFile.toUri() );
 		System.out.println("************************************************************");
 
-		try {
-			javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance() ;
-			javax.xml.parsers.DocumentBuilder documentBuilder = factory.newDocumentBuilder() ;
-			org.w3c.dom.Document doc = documentBuilder.newDocument() ;
-			org.w3c.dom.Element routineElement = doc.createElement("routine") ;
-			doc.appendChild(routineElement) ;
-			routineElement.setAttribute("name", translation.routine().name() );
-			
-			for ( RoutineDependency dependendency : translation.dependencies() ) {
-				org.w3c.dom.Element dependencyElement = doc.createElement("dependency") ;
-				dependencyElement.setAttribute("routine", dependendency.routineName() );
-				dependencyElement.setAttribute("class", dependendency.dependsOnType().getQualifiedName().toString() );
-				if ( dependendency instanceof TaggedRoutineDependency ) {
-					TaggedRoutineDependency tagDep = (TaggedRoutineDependency)dependendency ;
-					dependencyElement.setAttribute("tag", tagDep.tagName() );
-					dependencyElement.setAttribute("method", tagDep.dependsOnMethod().getSimpleName().toString() );
-				}
-				routineElement.appendChild(dependencyElement) ;
-			}
-			
-			for ( String tagName : translation.routine().tagNames() ) {
-				org.w3c.dom.Element tagElement = doc.createElement("tag") ;
-				tagElement.setAttribute("name", tagName );
-				routineElement.appendChild(tagElement) ;
-			}
-			
-			javax.xml.transform.TransformerFactory transformerFactory = javax.xml.transform.TransformerFactory.newInstance();
-			javax.xml.transform.Transformer transformer = transformerFactory.newTransformer();
-			transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
-			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-			try ( Writer writer = new BufferedWriter(resourceFile.openWriter()) ) {
-				transformer.transform(
-						new javax.xml.transform.dom.DOMSource(doc),
-						new javax.xml.transform.stream.StreamResult(writer)
-					);
-			}
-		} catch (ParserConfigurationException | TransformerException ex) {
-			ex.printStackTrace();
+		try ( Writer resourceWriter = resourceFile.openWriter() ) {
+			m_routineTranslationInfoFactory.write(translation, resourceWriter );
 		}
 		
 	}
-	
+
 	private void writeRoutineTree( TypeElement annotatedType, Routine routine ) throws IOException {
 		String packageOfAnnotatedType = processingEnv.getElementUtils().getPackageOf(annotatedType).getQualifiedName().toString();
 		String routineName = RoutineTools.determineRoutineName( annotatedType ) ;
@@ -189,18 +153,6 @@ public class Processor extends AbstractProcessor {
 			throw new UnsupportedOperationException("routine generation does not allow side-effects") ;
 		}
 	}
-
-	private class RoutineTranslationInfo {
-		private final Routine m_routine;
-		private final Set<RoutineDependency> m_dependencies = new HashSet<RoutineDependency>();
-		
-		public RoutineTranslationInfo(Routine routine, Collection<RoutineDependency> dependencies) {
-			m_routine = routine;
-			m_dependencies.addAll( dependencies ) ;
-		}
-		public Routine routine() { return m_routine ; }
-		public Set<RoutineDependency> dependencies() { return m_dependencies ; }
-	}
 	
 	private RoutineTranslationInfo generateRoutine( TypeElement annotatedType ) throws IOException {
 		RoutineTools routineTools = createRoutineTools( processingEnv, annotatedType );
@@ -212,6 +164,6 @@ public class Processor extends AbstractProcessor {
 			}
 		} ;
 		Routine routine = routineBuilder.generate( annotatedType, listener  ) ;
-		return new RoutineTranslationInfo( routine, dependencies ) ;
+		return m_routineTranslationInfoFactory.create( routine, dependencies ) ;
 	}
 }

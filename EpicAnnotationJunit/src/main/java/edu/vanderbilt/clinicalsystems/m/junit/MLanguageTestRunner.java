@@ -6,23 +6,20 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
 
 import org.junit.internal.runners.statements.Fail;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import org.xml.sax.SAXException;
 
+import edu.vanderbilt.clinicalsystems.epic.annotation.RoutineTranslationInfo;
+import edu.vanderbilt.clinicalsystems.epic.annotation.RoutineTranslationInfoFactory;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools.RoutineDependency;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.InjectRoutine;
 import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.engine.ErrorCode;
@@ -45,11 +42,13 @@ public class MLanguageTestRunner extends BlockJUnit4ClassRunner {
 
 	private final RoutineParserFactory m_parserFactory;
 	private final edu.vanderbilt.clinicalsystems.m.engine.virtual.Database m_db ;
+	private final RoutineTranslationInfoFactory m_routineTranslationInfoFactory ; 
 	private static ThreadLocal<edu.vanderbilt.clinicalsystems.m.engine.virtual.Connection> tl_currentConnection
 		= new ThreadLocal<edu.vanderbilt.clinicalsystems.m.engine.virtual.Connection>() ;
 	
 	public MLanguageTestRunner(Class<?> type) throws InitializationError {
 		super(type);
+		m_routineTranslationInfoFactory = new RoutineTranslationInfoFactory() ;
 		
 		if ( !type.isAnnotationPresent(RoutineUnit.class) )
 			throw new IllegalArgumentException( "test class " + type.getName() + " is run with " + MLanguageTestRunner.class.getSimpleName() + " but is not annotated with " + RoutineUnit.class.getName() ) ;
@@ -140,43 +139,15 @@ public class MLanguageTestRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 	
-	private Map<String,String> lookupDependencies( Class<?> type, String routineName, URL testClassMetaLocation ) {
-		Map<String,String> dependencies = new HashMap<String, String>() ;
-		try ( InputStream testClassMetaStream = testClassMetaLocation.openStream() ) {
-
-			javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance() ;
-			javax.xml.parsers.DocumentBuilder documentBuilder = factory.newDocumentBuilder() ;
-			org.w3c.dom.Document doc = documentBuilder.parse( testClassMetaStream ) ;
-			javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath() ;
-			org.w3c.dom.NodeList nodes = (org.w3c.dom.NodeList)xpath.evaluate("/routine/dependency", doc, javax.xml.xpath.XPathConstants.NODESET) ; ;
-			for ( int i = 0 ; i < nodes.getLength() ; ++i ) {
-				org.w3c.dom.Element dependencyElement = (org.w3c.dom.Element)nodes.item(i) ;
-				String dependsOnRoutineName = dependencyElement.getAttribute("routine") ;
-				String dependsOnClassName = dependencyElement.getAttribute("class") ;
-				dependencies.put( dependsOnRoutineName, dependsOnClassName ) ;
-			}
-				
-		} catch (ParserConfigurationException | SAXException | XPathExpressionException ex) {
-			throw new RuntimeException( ex );
-		} catch (IOException ex) {
-			throw new RuntimeException( ex );
-		}
-
-		return dependencies ;
-	}
-	
 	private void installDependencies( Class<?> type, String routineName, int transitiveDependencyLimit ) {
 //		if ( transitiveDependencyLimit < 1 )
 //			return ;
 
-		URL testClassMetaLocation = type.getResource( routineName + ".xml" ) ;
-		if ( null == testClassMetaLocation )
-			throw new RuntimeException( "missing resource \"" + routineName + ".xml\" for " + type.getName() ) ;
-		Map<String,String> dependencies = lookupDependencies( type, routineName, testClassMetaLocation );
+		RoutineTranslationInfo translation = m_routineTranslationInfoFactory.read( type, routineName ) ;
 		
-		for ( Map.Entry<String,String> entry : dependencies.entrySet() ) {
+		for ( RoutineDependency dependency : translation.dependencies() ) {
 			try {
-				install( Class.forName( entry.getValue()), entry.getKey(), transitiveDependencyLimit - 1  ) ;
+				install( Class.forName( dependency.dependsOnTypeName() ), dependency.dependsOnRoutineName(), transitiveDependencyLimit - 1  ) ;
 			} catch (ClassNotFoundException ex) {
 				ex.printStackTrace();
 			}

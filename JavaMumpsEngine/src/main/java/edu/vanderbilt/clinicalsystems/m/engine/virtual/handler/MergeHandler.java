@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.engine.virtual.handler;
 
 import edu.vanderbilt.clinicalsystems.m.engine.EngineException;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.CommandHandler;
+import edu.vanderbilt.clinicalsystems.m.engine.virtual.EvaluationResult;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.ExecutionFrame;
 import edu.vanderbilt.clinicalsystems.m.engine.virtual.Node;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
@@ -32,39 +33,50 @@ public class MergeHandler extends CommandHandler {
 	}
 	
 	private ExecutionResult apply( Assignment assignment ) {
-		return assignment.destination().visit( new Destination.Visitor<ExecutionResult>() {
-			
-			@Override public ExecutionResult visitElement(Element element) {
-				throw new UnsupportedOperationException(element.getClass().getSimpleName() + " not supported for merge") ;
-			}
-			
-			@Override public ExecutionResult visitVariableReference(VariableReference variable) {
-				try { return merge( frame().findNode( variable ), assignment.source() ) ; }
-				catch ( EngineException ex ) { return caughtError(ex) ; }
-			}
-
-			@Override public ExecutionResult visitBuiltinFunctionCall(BuiltinFunctionCall builtinFunctionCall) {
-				throw new UnsupportedOperationException(builtinFunctionCall.getClass().getSimpleName() + " not supported for merge") ;
-			}
-			
-		});
-	}
-	
-	private ExecutionResult merge( Node dstNode, Expression source ) {
-		return source.visit( new Expression.Visitor<ExecutionResult>() {
+		EvaluationResult source ;
+		try { source = frame().evaluate( assignment.source() ) ; }
+		catch ( EngineException ex ) { return caughtError(ex) ; }
+		
+		Node sourceNode = assignment.source().visit( new Expression.Visitor<Node>() {
 			
 			@Override
-			public ExecutionResult visitExpression(Expression expression) {
+			public Node visitExpression(Expression expression) {
 				throw new UnsupportedOperationException(expression.getClass().getSimpleName() + " not supported for merge") ;
 			}
 
 			@Override
-			public ExecutionResult visitVariableReference( VariableReference variable ) {
-				try { return merge( dstNode, frame().findNode( variable ) ) ; }
-				catch ( EngineException ex ) { return caughtError(ex) ; }
+			public Node visitVariableReference( VariableReference variable ) {
+				try { return frame().findNode( variable ) ; }
+				catch ( EngineException ex ) { caughtError(ex) ; return null ; }
 			}
 			
 		}) ;
+		if ( null == sourceNode )
+			return ExecutionResult.ERROR ;
+
+		
+		ExecutionResult result = ExecutionResult.CONTINUE ;
+		for ( Destination<?> destination : assignment.destinations() ) {
+			result = destination.visit( new Destination.Visitor<ExecutionResult>() {
+			
+				@Override public ExecutionResult visitElement(Element element) {
+					throw new UnsupportedOperationException(element.getClass().getSimpleName() + " not supported for merge") ;
+				}
+				
+				@Override public ExecutionResult visitVariableReference(VariableReference variable) {
+					try { return merge( frame().findNode( variable ), sourceNode ) ; }
+					catch ( EngineException ex ) { return caughtError(ex) ; }
+				}
+	
+				@Override public ExecutionResult visitBuiltinFunctionCall(BuiltinFunctionCall builtinFunctionCall) {
+					throw new UnsupportedOperationException(builtinFunctionCall.getClass().getSimpleName() + " not supported for merge") ;
+				}
+				
+			});
+			if ( result != ExecutionResult.CONTINUE )
+				break ;
+		}
+		return result ;
 	}
 
 	private ExecutionResult merge( Node dstNode, Node srcNode ) {

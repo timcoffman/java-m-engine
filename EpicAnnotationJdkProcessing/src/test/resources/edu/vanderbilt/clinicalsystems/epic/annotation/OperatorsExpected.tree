@@ -40,4 +40,10 @@ TAG: assignmentMinus( x )
 CMD: SET | x := x-7
 CMD: QUIT | x
 
+TAG: infixFollows( x )
+CMD: QUIT | x]"abc"
+
+TAG: infixNotFollows( x )
+CMD: QUIT | x']"abc"
+
 }

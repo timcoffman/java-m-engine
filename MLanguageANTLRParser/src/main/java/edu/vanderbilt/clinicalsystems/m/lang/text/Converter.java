@@ -1,6 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -20,6 +21,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.DeclarationList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.ExpressionList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutput;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
@@ -36,15 +38,20 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableRefe
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.FunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.PatternMatchCode;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.AssignmentListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.DeclarationListContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.DestinationListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.ExpressionContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.ExpressionListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.FormalArgumentListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.InputOutputListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.LoopDefinitionContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.MatchAtomListContext;
+import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.MatchAtomSequenceContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.ParameterListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.TaggedRoutineCallListContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.MumpsParser.VariableListContext;
@@ -64,11 +71,13 @@ public class Converter {
 	
 	public static final List<Expression> EMPTY_EXPRESSION_LIST = Collections.emptyList() ;
 	public static final List<Assignment> EMPTY_ASSIGNMENT_LIST = Collections.emptyList() ;
+	public static final List<Destination<?>> EMPTY_DESTINATION_LIST = Collections.emptyList() ;
 	public static final List<VariableReference> EMPTY_VARIABLE_LIST = Collections.emptyList() ;
 	public static final List<DirectVariableReference> EMPTY_DECLARATION_LIST = Collections.emptyList() ;
 	public static final List<TaggedRoutineCall> EMPTY_TAGGED_ROUTINE_CALL_LIST = Collections.emptyList() ;
 	public static final List<ParameterName> EMPTY_FORMAL_ARGUMENT_LIST = Collections.emptyList() ;
 	public static final List<InputOutput> EMPTY_INPUT_OUTPUT_LIST = Collections.emptyList() ;
+	public static final List<MatchPattern.Atom> EMPTY_MATCH_PATTERN_ATOM_LIST = Collections.emptyList() ;
 	
 	public List<Expression> asList( ExpressionListContext expressionListCtx ) {
 		if ( null == expressionListCtx )
@@ -106,6 +115,15 @@ public class Converter {
 				;
 	}
 	
+	public List<Destination<?>> asList( DestinationListContext destinationListCtx ) {
+		if ( null == destinationListCtx )
+			return EMPTY_DESTINATION_LIST ;
+		return StreamSupport.stream(destinationListCtx.destination().spliterator(), false)
+				.map( (a)->a.result )
+				.collect( Collectors.toList() )
+				;
+	}
+	
 	public List<VariableReference> asList( VariableListContext variableListCtx ) {
 		if ( null == variableListCtx )
 			return EMPTY_VARIABLE_LIST ;
@@ -137,6 +155,24 @@ public class Converter {
 		if ( null == inputOutputListCtx )
 			return EMPTY_INPUT_OUTPUT_LIST ;
 		return StreamSupport.stream(inputOutputListCtx.inputOutput().spliterator(), false)
+				.map( (a)->a.result )
+				.collect( Collectors.toList() )
+				;
+	}
+	
+	public List<MatchPattern.Atom> asList( MatchAtomListContext matchAtomListCtx ) {
+		if ( null == matchAtomListCtx )
+			return EMPTY_MATCH_PATTERN_ATOM_LIST ;
+		return StreamSupport.stream(matchAtomListCtx.matchAtom().spliterator(), false)
+				.map( (a)->a.result )
+				.collect( Collectors.toList() )
+				;
+	}
+	
+	public List<MatchPattern.Atom> asList( MatchAtomSequenceContext matchAtomSequenceCtx ) {
+		if ( null == matchAtomSequenceCtx )
+			return EMPTY_MATCH_PATTERN_ATOM_LIST ;
+		return StreamSupport.stream(matchAtomSequenceCtx.matchAtom().spliterator(), false)
 				.map( (a)->a.result )
 				.collect( Collectors.toList() )
 				;
@@ -221,6 +257,16 @@ public class Converter {
 	
 	public Argument argumentFrom( ExpressionContext expressionCtx ) {
 		return new ExpressionList( expressionCtx.result ) ;
+	}
+	
+	public EnumSet<PatternMatchCode> codeSetFrom( String codeLetters ) {
+		EnumSet<PatternMatchCode> codeSet = EnumSet.noneOf(PatternMatchCode.class) ;
+		for ( int i=0 ; i < codeLetters.length() ; ++i ) {
+			String codeLetter = codeLetters.substring(i, i+1) ;
+			PatternMatchCode code = PatternMatchCode.valueOfSymbol( codeLetter, Compatibility.EXTENSION ) ;
+			codeSet.add( code ) ;
+		}
+		return codeSet ;
 	}
 	
 }

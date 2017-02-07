@@ -84,6 +84,7 @@
 
 	<!-- bootstrap these repositories, so parent-pom can be found -->
 	<repositories>
+		<!--
 		<repository>
 			<id>vandy-snapshots-pro</id>
 			<name>Internal Snapshot Repository</name>
@@ -107,6 +108,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		-->
 	</repositories>
 
 	<dependencies>

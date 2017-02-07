@@ -30,6 +30,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.InvalidExpression;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 
@@ -75,6 +76,7 @@ public interface RoutineWriter {
 	void write( IndirectVariableReference variable) throws RoutineWriterException ;
 	void write( BuiltinVariableReference variable) throws RoutineWriterException ;
 	void write( BuiltinSystemVariableReference variable) throws RoutineWriterException ;
+	void write( MatchPattern matchPattern ) throws RoutineWriterException ;
 	void write( Constant constant ) throws RoutineWriterException ;
 
 	void write(TagReference tag) throws RoutineWriterException ;

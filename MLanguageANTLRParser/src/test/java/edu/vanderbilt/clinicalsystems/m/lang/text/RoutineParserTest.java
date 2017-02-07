@@ -21,8 +21,6 @@ import org.junit.Test;
 
 import edu.vanderbilt.clinicalsystems.m.lang.BuiltinFunction;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
-import edu.vanderbilt.clinicalsystems.m.lang.ParameterPassMethod;
-import edu.vanderbilt.clinicalsystems.m.lang.Scope;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Command;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Comment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.MultilineBlock;
@@ -31,19 +29,13 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Assignment;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.AssignmentList;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Destination;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.FormatCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutput;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.InputOutputList;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
-import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.BuiltinFunctionCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.ConditionalExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableReference;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.TagReference;
 
 public class RoutineParserTest {
 
@@ -101,21 +93,6 @@ public class RoutineParserTest {
 	}
 	
 	@Test
-	public void canParseMergeCommand() throws IOException {
-		final List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence( "MERGE @INDIRECT1=@INDIRECT2@(\"KEY1\",\"KEY2\")" ) ;
-		assertThat( commands.size(), equalTo(1) );
-		Command command = commands.get(0) ;
-		assertThat( command.commandType(), equalTo( CommandType.MERGE) );
-		assertThat( command.argument(), instanceOf( AssignmentList.class ) );
-		assertThat( ((AssignmentList)command.argument()).elements(), hasItem(
-				new Assignment(
-						Destination.wrap( new IndirectVariableReference( new DirectVariableReference(Scope.TRANSIENT, "INDIRECT1") ) ),
-						new IndirectVariableReference( new DirectVariableReference(ParameterPassMethod.BY_VALUE, Scope.TRANSIENT, "INDIRECT2"), Arrays.asList(Constant.from("KEY1"), Constant.from("KEY2")) )
-					)
-			) );
-	}
-	
-	@Test
 	public void canParseMultipleCommands() throws IOException {
 		final List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence( "WRITE \"Hello World!\" SET X=123 QUIT X" ) ;
 		assertThat( commands.size(), equalTo(3) );
@@ -128,20 +105,24 @@ public class RoutineParserTest {
 	}
 	
 	@Test
-	public void canParseTaggedRoutineCalls() throws IOException {
-		final List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence( "DO MYTAG^MYROUTINE(\"abc\")" ) ; 
-		assertThat( commands.size(), equalTo(1) );
-		Command command = commands.get(0) ;
-		assertThat( command.commandType(), equalTo( CommandType.DO ) );
-		assertThat( command.argument(), instanceOf( TaggedRoutineCallList.class ) );
-		assertThat( ((TaggedRoutineCallList)command.argument()).elements(), hasItem( new TaggedRoutineCall( new TagReference("MYTAG", "MYROUTINE"), Arrays.asList(Constant.from("abc"))) ) );
-	}
-	
-	@Test
 	public void canParseTwoCommands() throws IOException {
 		Reader r = new StringReader( "SET ^X=123 SET ^Y=456" ) ;
 		final List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence( r ) ;
 		assertThat( commands.size(), equalTo(2) );
+	}
+	
+	@Test
+	public void canParseSetCommand() throws IOException {
+		Reader r = new StringReader( "SET (A,B)=1" ) ;
+		final List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence( r ) ;
+		assertThat( commands.size(), equalTo(1) );
+		Command command = commands.get(0) ;
+		assertThat( command.commandType(), equalTo( CommandType.SET ) );
+		assertThat( command.argument(), instanceOf( AssignmentList.class ) );
+		AssignmentList assignments = (AssignmentList)command.argument() ;
+		assertThat( assignments.elements().iterator().hasNext(), equalTo(true) );
+		Assignment assignment = assignments.elements().iterator().next() ;
+		assertThat( assignment.destinations().size(), equalTo(2) ) ;
 	}
 	
 	private void printRoutine( Routine routine ) throws RoutineWriterException {
@@ -160,7 +141,7 @@ public class RoutineParserTest {
 		System.out.println("----------- End Routine -----------" ) ;
 	}
 	
-	@Test
+//	@Test
 	public void canParse() throws IOException, RoutineWriterException {
 		
 		try ( InputStream is = RoutineParserTest.class.getResourceAsStream("EALIBECF1.m") ) {

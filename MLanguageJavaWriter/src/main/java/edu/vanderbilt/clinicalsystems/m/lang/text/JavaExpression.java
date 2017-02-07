@@ -65,7 +65,7 @@ public class JavaExpression<T extends JExpression> {
 			case INTEGER:
 				return JavaInvocation.builder(context)
 						.on( this )
-						.invoke("toInt")
+						.invoke("toLong")
 						.acceptingNothing()
 						.build() ;
 			case NUMERIC:

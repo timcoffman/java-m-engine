@@ -2,6 +2,7 @@ package edu.vanderbilt.clinicalsystems.m.lang.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Argument;
@@ -46,6 +47,8 @@ public class Command implements RoutineElement {
 	}
 
 	public Command( Expression condition, CommandType commandType, Argument argument, Block block ) {
+		Objects.requireNonNull(commandType) ;
+		Objects.requireNonNull(argument) ;
 		m_condition = condition ;
 		m_commandType = commandType ;
 		m_argument = argument ;

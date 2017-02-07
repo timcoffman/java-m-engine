@@ -18,6 +18,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Block;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCall;
 import edu.vanderbilt.clinicalsystems.m.lang.model.argument.TaggedRoutineCallList;
+import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
@@ -25,6 +26,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
+import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaMethodBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
 
 public class ExecBuilder extends CommandJavaStatementBuilder {
@@ -75,12 +77,20 @@ public class ExecBuilder extends CommandJavaStatementBuilder {
 			/*******************************
 			 * find the actual method here *
 			 *******************************/
+			int position = 0 ;
+			for (Expression arg : taggedRoutineCall.arguments()) {
+				
+				String parameterExternalSymbol = RoutineJavaMethodBuilder.symbolForMethodParameterPosition( methodSymbol, position++ ) ;
+				m_outerSymbolUsage.usedAs( parameterExternalSymbol, expr(arg).representation() ) ;
+			}
+			
 			List<JavaExpression<?>> arguments = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
 			return (b)->{
 				JInvocation invocation = b.invoke( methodSymbol ) ;
 				arguments.forEach( (a)->invocation.arg(a.expr()));
 			} ;
 
+			
 		} else {
 			
 			Method method = env().methodFor(routineName, tagName ) ;

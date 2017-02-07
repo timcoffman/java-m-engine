@@ -68,6 +68,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1 ) ;
 		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1, Function<Representation,JavaExpression<?>> argument2 ) ;
 		JavaInvocationBuilder supplying( List<Function<Representation,JavaExpression<?>>> arguments ) ;
+		JavaInvocationBuilder as( Supplier<Optional<Representation>> representation ) ;
 		JavaInvocation build() ;
 		JavaInvocation build( JBlock block ) ;
 		JavaInvocationBuilder buildAnd( JBlock block );
@@ -145,6 +146,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		private List<Class<?>> m_parameterTypes = null ;
 		private JavaExpression<?> m_instance = null ;
 		private List<Function<Representation,JavaExpression<?>>> m_arguments = null ;
+		private Supplier<Optional<Representation>> m_asRepresentation = null;
 
 		private JavaInvocationBuilderImpl( RoutineJavaBuilderContext context) {
 			m_context = context;
@@ -222,11 +224,11 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 			if ( null == m_parameterTypes ) {
 				if ( null != m_numberOfParameters && m_numberOfParameters != arguments.size() )
 					throw new IllegalStateException( "number of parameters already specified with a different value") ;
-//				m_parameterTypes = arguments.stream()
-//						.map( (f)->f.apply( ??? ) )
-//						.map( (e)->e.type(m_context.env()) )
-//						.collect( Collectors.toList() )
-//						;
+				m_parameterTypes = arguments.stream()
+						.map( (f)->f.apply( Representation.NATIVE ) ) /* NATIVE is not right here */
+						.map( (e)->e.type(m_context.env()) )
+						.collect( Collectors.toList() )
+						;
 				m_numberOfParameters = arguments.size() ;
 			}
 			return this ;
@@ -244,6 +246,11 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				return findMethod(m_declaringClass, m_methodName, m_parameterTypes) ;
 		}
 		
+		@Override public JavaInvocationBuilder as( Supplier<Optional<Representation>> representation ) {
+			m_asRepresentation  = representation ;
+			return this ;
+		}
+
 		@Override public JavaInvocationBuilder buildAnd() {
 			JavaInvocation invocation = build();
 			return builder(m_context).on( determineMethod().getReturnType() ).on( invocation ) ;
@@ -261,7 +268,12 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				throw new IllegalArgumentException("missing both instance and declaring class") ;
 			}
 
-			Representation returningRepresentation = determineRepresentation( method.getReturnType() );
+			Supplier<Optional<Representation>> returningRepresentation ;
+			if ( null != m_asRepresentation )
+				returningRepresentation = m_asRepresentation ;
+			else
+				returningRepresentation = ()->Optional.of(determineRepresentation( method.getReturnType() ) );
+			
 			Representation additionalParametersRepresentation ;
 			List<Representation> parameterRepresentations ;
 			if (  method.isVarArgs() ) {

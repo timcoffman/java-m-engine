@@ -40,5 +40,11 @@ assignmentMinus(x);Expect S x=x-7 Q x
 	;Generated-From: int assignmentPlus(int)
 	SET x=x-7
 	QUIT x;;#eof#
+infixFollows(x);Expect Q x]"abc"
+	;Generated-From: boolean infixFollows(String)
+	QUIT x]"abc";;#eof#
+infixNotFollows(x);Expect Q x']"abc"
+	;Generated-From: boolean infixNotFollows(String)
+	QUIT x']"abc";;#eof#
 	;;#eor#
 

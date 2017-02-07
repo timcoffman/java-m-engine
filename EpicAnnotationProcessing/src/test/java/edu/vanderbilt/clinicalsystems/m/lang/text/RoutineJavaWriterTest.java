@@ -31,7 +31,7 @@ public class RoutineJavaWriterTest {
 		RoutineParserFactory routineParserFactory = serviceLoader.iterator().next();
 		RoutineParser routineParser = routineParserFactory.createRoutineParser();
 		
-		Routine routine = routineParser.parse(RoutineJavaWriterTest.class.getResource("INFERENCE.m"));
+		Routine routine = routineParser.parse(WebServiceRoutineWriterTest.class.getResource("INFERENCE.m"));
 
 		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder();
 		routineBuilder.env().additionalCompatibility( Compatibility.EXTENSION ) ;
@@ -39,7 +39,7 @@ public class RoutineJavaWriterTest {
 		Epic.useLibrariesIn(routineBuilder.env());
 
 		try {
-			routineBuilder.build(RoutineJavaWriterTest.class.getPackage().getName(), routine);
+			routineBuilder.build(WebServiceRoutineWriterTest.class.getPackage().getName(), routine);
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}
@@ -56,10 +56,10 @@ public class RoutineJavaWriterTest {
 			cw.close();
 		}
 	}
-
+	
 	@Test
 	public void canSerializeRoutine() throws Exception {
-		URL src = RoutineJavaWriterTest.class.getResource("EALIBECF1.m");
+		URL src = WebServiceRoutineWriterTest.class.getResource("EALIBECF1.m");
 		File dst = new File(src.toURI().resolve("EALIBECF1.ser"));
 
 		ServiceLoader<RoutineParserFactory> serviceLoader = ServiceLoader.load(RoutineParserFactory.class);
@@ -93,7 +93,7 @@ public class RoutineJavaWriterTest {
 			
 		} ;
 		Routine routine;
-		try (ObjectInputStream s = new ObjectInputStream( RoutineJavaWriterTest.class.getResourceAsStream("EALIBECF1.ser"))) {
+		try (ObjectInputStream s = new ObjectInputStream( WebServiceRoutineWriterTest.class.getResourceAsStream("EALIBECF1.ser"))) {
 			routine = (Routine) s.readObject();
 		}
 
@@ -105,7 +105,7 @@ public class RoutineJavaWriterTest {
 		Epic.useLibrariesIn(routineBuilder.env());
 
 		try {
-			routineBuilder.build(RoutineJavaWriterTest.class.getPackage().getName(), routine);
+			routineBuilder.build(WebServiceRoutineWriterTest.class.getPackage().getName(), routine);
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}

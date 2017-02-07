@@ -21,6 +21,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ExecBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ForLoopBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.GenericBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.IfElseBuilder;
+import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ParseBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ReturnBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.VariableBuilder;
 
@@ -68,6 +69,12 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 	}
 	
 	private void build( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, List<Builder<JBlock>> elementBuilders, JBlock block ) {
+		System.out.println( "") ;
+		System.out.println( "---- (...) {") ;
+		for ( String symbol : symbolUsage.symbols() ) {
+			System.out.println( "\t\"" + symbol + "\": " + symbolUsage.describe(symbol) ) ;
+		}
+		System.out.println( "} /* ---- */") ;
 		
 		for ( Builder<JBlock> elementBuilder : elementBuilders ) {
 			elementBuilder.build(block);
@@ -135,6 +142,9 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 			
 		case QUIT:
 			return new ReturnBuilder( context(), symbolUsage, expressionBuilder ) ;
+			
+		case EXECUTE:
+			return new ParseBuilder( context(), symbolUsage, expressionBuilder ) ;
 			
 		case USE:
 		default:
