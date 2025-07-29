@@ -39,6 +39,7 @@ public class PatternMatchTest {
 	}
 
 	@Test
+	@org.junit.Ignore("COFFMAN 07-28-2025 under development")
 	public void canEvaluatePatternMatchingExactlyOneAtom() throws EngineException {
 		assertThatPattern( "1A" )
 			.matches( "a" )

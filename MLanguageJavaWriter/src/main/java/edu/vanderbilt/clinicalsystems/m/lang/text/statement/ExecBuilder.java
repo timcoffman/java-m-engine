@@ -1,8 +1,9 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -22,23 +23,25 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
-import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaMethodBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodParameter;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationNode;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class ExecBuilder extends CommandJavaStatementBuilder {
 
-	private final SymbolUsage m_outerSymbolUsage;
+	private final SymbolScope m_outerSymbolScope;
 
-	public ExecBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public ExecBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
-		m_outerSymbolUsage = outerSymbolUsage ;
+		m_outerSymbolScope = outerSymbolScope ;
 	}
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, TaggedRoutineCallList taggedRoutineCallList, Block innerBlock ) {
+		// all DO and QUIT arguments may have CONDITIONS on them
 		if ( CommandType.DO == commandType ) {
 			
 			List<Builder<JBlock>> execBuilders = StreamSupport.stream(taggedRoutineCallList.elements().spliterator(),false)
@@ -47,7 +50,7 @@ public class ExecBuilder extends CommandJavaStatementBuilder {
 				;
 			return (b)->execBuilders.forEach( (e)->e.build(b) );
 		
-		} else if ( CommandType.GOTO == commandType ) {
+		} else if ( CommandType.GOTO == commandType ) { // TODO: should handle multiple TRCs, just like CommandType.DO
 			
 			Builder<JBlock> execBuilder = analyze( taggedRoutineCallList.elements().iterator().next() );
 			return (b)->{
@@ -71,48 +74,58 @@ public class ExecBuilder extends CommandJavaStatementBuilder {
 		} else {
 			tagName = taggedRoutineCall.tagReference().tagName() ; ; 
 		}
+		String symbol = context().symbolForIdentifier(tagName);
 		
-		String methodSymbol = context().symbolForIdentifier(tagName);
-		if ( outerClassName().equals( routineName ) ) {
+		SymbolScope classScope = m_outerSymbolScope.enclosingClass().getDeclarationScope() ;
+		int numberOfArguments = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),true).collect(Collectors.counting()).intValue() ;
+		Optional<MethodSymbol> methodSymbol = classScope.methodSymbolFor( symbol, numberOfArguments ) ;
+
+		List<JavaExpression<?>> parameters = new ArrayList<JavaExpression<?>>() ;
+		List<RepresentationNode> parameterRepresentationNodes = new ArrayList<RepresentationNode>() ;
+		for (Expression arg : taggedRoutineCall.arguments()) {
+			JavaExpression<?> expr = expr(arg) ;
+			parameters.add( expr ) ;
+			parameterRepresentationNodes.add( expr.representationNode() ) ;
+		}
+		
+		if ( null == routineName && methodSymbol.isPresent() ) {
+			/* unspecified library and found internal, or specified internal */
+			
 			/*******************************
 			 * find the actual method here *
 			 *******************************/
 			int position = 0 ;
-			for (Expression arg : taggedRoutineCall.arguments()) {
-				
-				String parameterExternalSymbol = RoutineJavaMethodBuilder.symbolForMethodParameterPosition( methodSymbol, position++ ) ;
-				m_outerSymbolUsage.usedAs( parameterExternalSymbol, expr(arg).representation() ) ;
+			for ( RepresentationNode representationNode : parameterRepresentationNodes ) {  
+				MethodParameter methodParameter = methodSymbol.get().parameter(position++) ;
+				methodParameter.isAssigned( representationNode );
 			}
 			
-			List<JavaExpression<?>> arguments = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
 			return (b)->{
-				JInvocation invocation = b.invoke( methodSymbol ) ;
-				arguments.forEach( (a)->invocation.arg(a.expr()));
+				JInvocation invocation = b.invoke( symbol ) ;
+				parameters.forEach( (a)->invocation.arg(a.expr()));
 			} ;
-
 			
 		} else {
 			
 			Method method = env().methodFor(routineName, tagName ) ;
 			if ( null != method ) {
 				
-				List<Function<Representation, JavaExpression<?>>> arguments = analyze( taggedRoutineCall.arguments() ) ;
+				List<JavaExpression<?>> arguments = analyze( taggedRoutineCall.arguments() ) ;
 				return JavaInvocation.builder(context())
 						.invoke(method)
 						.supplying( arguments )
 						::build ;
 				
 			} else {
-				List<JavaExpression<?>> arguments = StreamSupport.stream(taggedRoutineCall.arguments().spliterator(),false).map( this::expr ).collect( Collectors.toList() ) ;
 				if ( null != routineName )
 					return (b)->{
-						JInvocation invocation = b.staticInvoke( codeModel().ref( routineName ), methodSymbol ) ;
-						arguments.forEach( (a)->invocation.arg(a.expr()) );
+						JInvocation invocation = b.staticInvoke( codeModel().ref( routineName ), symbol ) ;
+						parameters.forEach( (a)->invocation.arg(a.expr()) );
 					} ;
 				else
 					return (b)->{
-						JInvocation invocation = b.invoke( methodSymbol ) ;
-						arguments.forEach( (a)->invocation.arg(a.expr()));
+						JInvocation invocation = b.invoke( symbol ) ;
+						parameters.forEach( (a)->invocation.arg(a.expr()));
 					} ;
 			}
 			
@@ -121,7 +134,7 @@ public class ExecBuilder extends CommandJavaStatementBuilder {
 	}
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, Nothing nothing, Block innerBlock ) {
-		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage ) ;
+		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolScope ) ;
 		Builder<JBlock> bodyBuilder = blockBuilder.analyze( innerBlock.elements().iterator() ) ;
 		return (b)->build(bodyBuilder, b);
 	}

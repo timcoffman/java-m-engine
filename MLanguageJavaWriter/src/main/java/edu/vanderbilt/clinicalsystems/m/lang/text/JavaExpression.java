@@ -4,7 +4,6 @@ import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.BOOLEAN;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.DECIMAL;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.INTEGER;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NUMERIC;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.util.Arrays;
@@ -15,42 +14,50 @@ import java.util.stream.Collectors;
 
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationNode;
 public class JavaExpression<T extends JExpression> {
 	
 	private final T m_expr ;
-	private final Supplier<Optional<Representation>> m_representation ; 
+	private final RepresentationNode m_representationNode ; 
 	
-	public static <T extends JExpression> JavaExpression<T> producingAny    ( T expr ) { return new JavaExpression<T>(expr, NATIVE.supplier() ) ;}
-	public static <T extends JExpression> JavaExpression<T> producingString ( T expr ) { return new JavaExpression<T>(expr, STRING.supplier() ) ;}
-	public static <T extends JExpression> JavaExpression<T> producingNumeric( T expr ) { return new JavaExpression<T>(expr, NUMERIC.supplier()) ;}
-	public static <T extends JExpression> JavaExpression<T> producingBoolean( T expr ) { return new JavaExpression<T>(expr, BOOLEAN.supplier()) ;}
-	public static <T extends JExpression> JavaExpression<T> producingDecimal( T expr ) { return new JavaExpression<T>(expr, DECIMAL.supplier()) ;}
-	public static <T extends JExpression> JavaExpression<T> producingInteger( T expr ) { return new JavaExpression<T>(expr, INTEGER.supplier()) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingAny    ( T expr ) { return new JavaExpression<T>(expr, NATIVE.supplier() ) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingString ( T expr ) { return new JavaExpression<T>(expr, STRING.supplier() ) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingNumeric( T expr ) { return new JavaExpression<T>(expr, NUMERIC.supplier()) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingBoolean( T expr ) { return new JavaExpression<T>(expr, BOOLEAN.supplier()) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingDecimal( T expr ) { return new JavaExpression<T>(expr, DECIMAL.supplier()) ;}
+//	public static <T extends JExpression> JavaExpression<T> producingInteger( T expr ) { return new JavaExpression<T>(expr, INTEGER.supplier()) ;}
 	
-	public JavaExpression( T expr ) {
-		this( expr, NATIVE.supplier() ) ;
-	}
-	public JavaExpression( T expr, Supplier<Optional<Representation>> representation ) {
+//	public JavaExpression( T expr ) {
+//		this( expr, NATIVE.supplier() ) ;
+//	}
+	public JavaExpression( T expr, RepresentationNode representationNode ) {
 		m_expr = expr ;
-		m_representation = representation ;
+		m_representationNode = representationNode ;
+	}
+
+	public RepresentationNode representationNode() {
+		return m_representationNode ;
 	}
 
 	public Supplier<Optional<Representation>> representation() {
-		return m_representation;
+		return ()->Optional.ofNullable( m_representationNode.representation() );
 	}
-
+	
 	public T expr() {
 		return m_expr ;
 	}
 	
 	public Class<?> type( RoutineJavaBuilderEnvironment env ) {
-		return env.typeFor( m_representation.get().orElse(NATIVE) ) ;
+		return env.typeFor( m_representationNode.representation() ) ;
 	}
 	
 	public JavaExpression<?> convert( Representation toRepresentation, RoutineJavaBuilderContext context ) {
-		Representation representation = m_representation.get().orElse(NATIVE);
+		Representation representation = m_representationNode.representation();
 		if ( representation == toRepresentation )
+			return this ;
+		
+		if ( null == representation )
 			return this ;
 		
 		switch (representation) {
@@ -92,7 +99,7 @@ public class JavaExpression<T extends JExpression> {
 					.on( String.class )
 					.invoke( "valueOf" )
 					.accepting( Double.TYPE )
-					.supplying( (r)->this )
+					.supplying( this )
 					.build() ;
 			case NUMERIC:
 			case DECIMAL:
@@ -139,16 +146,18 @@ public class JavaExpression<T extends JExpression> {
 			return NATIVE;
 	}
 	
-	public static <T extends JExpression> JavaExpression<T> from(T expr, Representation representation) {
-		return from( expr, representation.supplier() ) ;
+//	public static <T extends JExpression> JavaExpression<T> from(T expr, Representation representation) {
+//		return from( expr, representation.supplier() ) ;
+//	}
+	
+	public static <T extends JExpression> JavaExpression<T> from(T expr, RepresentationNode representation) {
+		return new JavaExpression<>(expr, representation) ;
 	}
 	
-	public static <T extends JExpression> JavaExpression<T> from(T expr, Supplier<Optional<Representation>> representation) {
-		return new JavaExpression<T>(expr, representation) ;
-	}
+//	public static JavaExpression<JVar> from(JVar variable, RoutineJavaBuilderContext context) {
+//		return new JavaExpression<JVar>(variable, determineRepresentation( variable.type(), context ).supplier() );
+//
+//	}
 	
-	public static JavaExpression<JVar> from(JVar variable, RoutineJavaBuilderContext context) {
-		return new JavaExpression<JVar>(variable, determineRepresentation( variable.type(), context ).supplier() );
-
-	}
+	public @Override String toString() { return m_representationNode.toString() + "|" + m_expr.toString(); }
 }

@@ -43,5 +43,39 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>convert-one-file</id>
+			<activation>
+				<property>
+					<name>convertFile</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.5.0</version>
+						<executions>
+							<execution>
+								<id>convert-one-file</id>
+								<goals>
+									<goal>java</goal>
+								</goals>
+								<phase>prepare-package</phase>
+								<configuration>
+									<mainClass>edu.vanderbilt.clinicalsystems.m.lang.text.Parse</mainClass>
+									<arguments>
+										<argument>${convertFile}</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

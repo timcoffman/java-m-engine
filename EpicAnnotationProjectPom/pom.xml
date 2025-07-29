@@ -3,8 +3,8 @@
 	<parent>
 		<groupId>edu.vanderbilt.clinicalsystems</groupId>
 		<artifactId>clinicalsystems-parent-pom</artifactId>
-		<version>01.00.10</version>
-		<relativePath />
+		<version>02.00.00</version>
+		<relativePath>../ClinicalSystemsParentPom</relativePath>
 	</parent>
 	<artifactId>EpicAnnotationProjectPom</artifactId>
 	<version>00.00.01-SNAPSHOT</version>
@@ -220,6 +220,11 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>EpicAnnotationJunit</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>GenerateJavaStubs</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		

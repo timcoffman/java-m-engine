@@ -21,55 +21,49 @@ public class LoopDefinitionParserTest {
 	@Test
 	public void canParseLoopDefinitionWithStartExpression() {
 		List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence("FOR i=1") ;
-		assertThat( commands, hasItem(
-				equalTo(
-					new Command( CommandType.FOR,
-							new LoopDefinition(
-								new DirectVariableReference(Scope.TRANSIENT, "i"),
-								Constant.from(1),
-								null,
-								null
-							),
-							new InlineBlock()
-					)
-				)
-			)) ;
+		Command expectedCommand =
+			new Command( CommandType.FOR,
+				new LoopDefinition(
+					new DirectVariableReference(Scope.TRANSIENT, "i"),
+					Constant.from(1),
+					null,
+					null
+				),
+				new InlineBlock()
+		);
+		assertThat( commands, hasItem( equalTo( expectedCommand ) )) ;
 	}
 	
 	@Test
 	public void canParseLoopDefinitionWithStartAndStepExpressions() {
 		List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence("FOR i=1:1") ;
-		assertThat( commands, hasItem(
-				equalTo(
-						new Command( CommandType.FOR,
-								new LoopDefinition(
-										new DirectVariableReference(Scope.TRANSIENT, "i"),
-										Constant.from(1),
-										Constant.from(1),
-										null
-										),
-										new InlineBlock()
-								)
-						)
-				)) ;
+		Command expectedCommand =
+			new Command( CommandType.FOR,
+				new LoopDefinition(
+						new DirectVariableReference(Scope.TRANSIENT, "i"),
+						Constant.from(1),
+						Constant.from(1),
+						null
+						),
+						new InlineBlock()
+				);
+		assertThat( commands, hasItem( equalTo( expectedCommand ) )) ;
 	}
 	
 	@Test
 	public void canParseLoopDefinitionWithStartAndStepAndStopExpressions() {
 		List<? extends Command> commands = new RoutineANTLRParser().parseCommandSequence("FOR i=1:1:10") ;
-		assertThat( commands, hasItem(
-				equalTo(
-						new Command( CommandType.FOR,
-								new LoopDefinition(
-										new DirectVariableReference(Scope.TRANSIENT, "i"),
-										Constant.from(1),
-										Constant.from(1),
-										Constant.from(10)
-										),
-										new InlineBlock()
-								)
-						)
-				)) ;
+		Command expectedCommand =
+			new Command( CommandType.FOR,
+				new LoopDefinition(
+						new DirectVariableReference(Scope.TRANSIENT, "i"),
+						Constant.from(1),
+						Constant.from(1),
+						Constant.from(10)
+						),
+						new InlineBlock()
+				);
+		assertThat( commands, hasItem( equalTo( expectedCommand ) )) ;
 	}
 	
 }

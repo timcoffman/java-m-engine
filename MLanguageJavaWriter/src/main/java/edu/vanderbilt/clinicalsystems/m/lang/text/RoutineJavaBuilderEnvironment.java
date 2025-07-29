@@ -11,6 +11,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInference;
 
 public interface RoutineJavaBuilderEnvironment {
 
@@ -18,6 +19,8 @@ public interface RoutineJavaBuilderEnvironment {
 		String namedLibrary( Class<?> environmentClass ) ;
 		String namedMethod( Method method ) ;
 	}
+
+	RepresentationInference representationInference();
 	
 	Class<?> valueClass() ;
 	Method methodFor(NativeValueTypes nativeValueType);

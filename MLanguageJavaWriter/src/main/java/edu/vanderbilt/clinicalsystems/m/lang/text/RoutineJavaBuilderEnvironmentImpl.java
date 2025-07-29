@@ -31,16 +31,21 @@ import edu.vanderbilt.clinicalsystems.m.lang.BuiltinVariable;
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.OperatorType;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInference;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInferenceKie;
 
 class RoutineJavaBuilderEnvironmentImpl implements RoutineJavaBuilderEnvironment {
 	
 	private final EnumSet<Compatibility> m_compatibility = EnumSet.of( Compatibility.ANSI_1995_X11_1 ) ;
 	private final List<Resolver> m_resolvers = new ArrayList<Resolver>() ;
-	
+
+	private final RepresentationInference m_representationInference = new RepresentationInferenceKie() ;
+
 	private Class<?> m_valueClass ;
 	private Map<String,Class<?>> m_libraries = new HashMap<String,Class<?>>();
 	private Map<String,Method> m_methods = new HashMap<String,Method>();
 
+	@Override public RepresentationInference representationInference() { return m_representationInference ; }
 	
 	@Override public Class<?> valueClass() { return m_valueClass; }
 

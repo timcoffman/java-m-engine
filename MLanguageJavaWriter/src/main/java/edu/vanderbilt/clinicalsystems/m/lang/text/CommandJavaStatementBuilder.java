@@ -4,7 +4,6 @@ import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeFun
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -175,11 +174,11 @@ public abstract class CommandJavaStatementBuilder extends RoutineJavaBuilder<Rou
 		return m_expressionBuilder.build(expression, representation);
 	}
 
-	protected Function<Representation,JavaExpression<?>> analyze( Expression expression ) {
-		return (r)->expr(expression,r) ;
+	protected JavaExpression<?> analyze( Expression expression ) {
+		return expr(expression) ;
 	}
 	
-	protected List<Function<Representation,JavaExpression<?>>> analyze( Iterable<Expression> expressions ) {
+	protected List<JavaExpression<?>> analyze( Iterable<Expression> expressions ) {
 		return StreamSupport.stream(expressions.spliterator(),false).map( this::analyze ).collect( Collectors.toList() ) ;
 	}
 
@@ -210,7 +209,7 @@ public abstract class CommandJavaStatementBuilder extends RoutineJavaBuilder<Rou
 				JavaInvocation.builder(context())
 					.on( t )
 					.invoke( env().methodFor(VALUE_INDEX) )
-					.supplying( (r)->k )
+					.supplying( k )
 					.build()
 			) ;
 		}

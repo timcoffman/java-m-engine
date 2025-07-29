@@ -6,7 +6,6 @@ import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.INTEGER;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,7 +25,6 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.PageFeedCommand;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
-import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
 public class GenericBuilder extends CommandJavaStatementBuilder {
@@ -36,7 +34,7 @@ public class GenericBuilder extends CommandJavaStatementBuilder {
 	}
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
-		List<Function<Representation,JavaExpression<?>>> arguments = analyze(expressionList.elements()) ;
+		List<JavaExpression<?>> arguments = analyze(expressionList.elements()) ;
 		return JavaInvocation.builder(context())
 				.invoke( env().methodFor(commandType) )
 				.supplying( arguments )
@@ -47,47 +45,47 @@ public class GenericBuilder extends CommandJavaStatementBuilder {
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, InputOutputList inputOutputList, Block innerBlock ) {
 		
-		List<Function<Representation,JavaExpression<?>>> arguments = StreamSupport.stream(inputOutputList.elements().spliterator(),false).map( (io)->{
-			return io.visit( new InputOutput.Visitor<Function<Representation,JavaExpression<?>>>() {
+		List<JavaExpression<?>> arguments = StreamSupport.stream(inputOutputList.elements().spliterator(),false).map( (io)->{
+			return io.visit( new InputOutput.Visitor<JavaExpression<?>>() {
 
 				@Override
-				public Function<Representation,JavaExpression<?>> visitInputOutput(InputOutput inputOutput) {
-					return (r)->JavaExpression.from( JExpr.lit(inputOutput.toString()), STRING ) ;
+				public JavaExpression<?> visitInputOutput(InputOutput inputOutput) {
+					return JavaExpression.from( JExpr.lit(inputOutput.toString()), env().representationInference().createConstantValue(inputOutput.toString(), STRING) ) ;
 				}
 				
 				@Override
-				public Function<Representation,JavaExpression<?>> visitCarriageReturnCommand( CarriageReturnCommand carriageReturnCommand ) {
-					return (r)->JavaInvocation.builder(context())
+				public JavaExpression<?> visitCarriageReturnCommand( CarriageReturnCommand carriageReturnCommand ) {
+					return JavaInvocation.builder(context())
 							.invoke(env().methodFor(NEWLINE))
 							.acceptingNothing()
 							.build() ;
 				}
 
 				@Override
-				public Function<Representation,JavaExpression<?>> visitPageFeedCommand( PageFeedCommand pageFeedCommand ) {
-					return (r)->JavaInvocation.builder(context())
+				public JavaExpression<?> visitPageFeedCommand( PageFeedCommand pageFeedCommand ) {
+					return JavaInvocation.builder(context())
 							.invoke(env().methodFor(PAGEFEED))
 							.acceptingNothing()
 							.build() ;
 				}
 
 				@Override
-				public Function<Representation,JavaExpression<?>> visitColumnCommand( ColumnCommand columnCommand ) {
-					JavaExpression<?> columnCount = JavaExpression.from( JExpr.lit(columnCommand.column()), INTEGER ) ;
-					return (r)->JavaInvocation.builder(context())
+				public JavaExpression<?> visitColumnCommand( ColumnCommand columnCommand ) {
+					JavaExpression<?> columnCount = JavaExpression.from( JExpr.lit(columnCommand.column()), env().representationInference().createConstantValue(columnCommand.column(), INTEGER) ) ;
+					return JavaInvocation.builder(context())
 							.invoke(env().methodFor(PAGEFEED))
-							.supplying( (dc)->columnCount )
+							.supplying( columnCount )
 							.build() ;
 				}
 
 				@Override
-				public Function<Representation,JavaExpression<?>> visitInputOutputVariable(InputOutputVariable inputOutputVariable) {
-					return (r)->expr( inputOutputVariable.variable(), r ) ;
+				public JavaExpression<?> visitInputOutputVariable(InputOutputVariable inputOutputVariable) {
+					return expr( inputOutputVariable.variable() ) ;
 				}
 
 				@Override
-				public Function<Representation,JavaExpression<?>> visitOutputExpression(OutputExpression outputExpression) {
-					return (r)->expr( outputExpression.expression(), r ) ; 
+				public JavaExpression<?> visitOutputExpression(OutputExpression outputExpression) {
+					return expr( outputExpression.expression() ) ; 
 				}
 				
 			} );

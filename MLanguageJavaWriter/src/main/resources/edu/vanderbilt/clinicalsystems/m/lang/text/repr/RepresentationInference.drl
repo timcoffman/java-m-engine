@@ -1,0 +1,265 @@
+package edu.vanderbilt.clinicalsystems.m.text.repr
+
+import edu.vanderbilt.clinicalsystems.m.lang.text.Representation ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInference ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationNode ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.ConstantValue ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.Symbol ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodParameter ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.OperationNode ;
+import edu.vanderbilt.clinicalsystems.m.text.repr.OperationNodeFact ;
+
+dialect "java"
+
+/* ============================== relations: variable assignment, comparison, method returns, etc. ============================== */
+
+declare OperationNodeFact extends OperationNode
+	system : RepresentationInference
+end
+
+declare VariableAssignment extends OperationNodeFact
+	variable : VariableSymbol @key
+	source : RepresentationNode @key
+end
+
+declare UsedAs extends OperationNodeFact
+	node : RepresentationNode @key
+	representation : Representation @key
+end
+
+declare Comparison extends OperationNodeFact
+	node : RepresentationNode @key
+	comparedTo : RepresentationNode @key
+end
+
+declare Choice extends OperationNodeFact
+	node : RepresentationNode @key
+	alternativeTo : RepresentationNode @key
+end
+
+declare Combination extends OperationNodeFact
+	node : RepresentationNode @key
+	withNode : RepresentationNode @key
+end
+
+declare Transformation extends OperationNodeFact
+	node : RepresentationNode @key
+	representation : Representation
+end
+
+declare MethodReturn
+	method : MethodSymbol @key
+	source : RepresentationNode @key
+end
+
+declare ScopeReturn
+	scope : SymbolScope @key
+	source : RepresentationNode @key
+end
+
+declare MethodParameterPassed
+	methodParameter : MethodParameter @key
+	source : RepresentationNode @key
+end
+
+/* ============================== results: minimum representation, definite representation ============================== */
+
+declare NodeMustRepresentAtLeast
+	node : RepresentationNode @key
+	representation : Representation @key
+end
+
+declare RepresentedAs
+	node : RepresentationNode @key
+	representation : Representation @key
+end
+
+/* ============================== inferences ============================== */
+
+rule ConstantHasRepresentationRule
+when
+	$c : ConstantValue( $r : representation )
+	if ( value == null || value == "" ) break[nullConstant] ;
+then
+	insertLogical( new RepresentedAs( $c, $r ) ) ;
+then[nullConstant]
+	// insert nothing, null is compatible with everything
+end
+
+rule NodeHasMinimumRepresentationRule
+when
+	$n := RepresentationNode()
+	UsedAs( $n := node, $r : representation )
+then
+	insertLogical( new NodeMustRepresentAtLeast( $n, $r ) ) ;
+end
+
+rule MethodSymbolHasMinimumRepresentationRule
+when
+	$m : MethodSymbol()
+then
+	insertLogical( new NodeMustRepresentAtLeast( $m, Representation.VOID ) ) ; // methods may return VOID
+end
+
+rule VariableSymbolHasMinimumRepresentationRule
+when
+	$v : VariableSymbol()
+then
+	insertLogical( new NodeMustRepresentAtLeast( $v, Representation.VOID ) ) ; // variables should represent at least BOOLEAN
+end
+
+rule OperationHasMinimumRepresentationRule
+when
+	$op : OperationNode()
+then
+	insertLogical( new NodeMustRepresentAtLeast( $op, Representation.VOID ) ) ; // operations should produce at least BOOLEAN
+end
+
+rule VariableAssignedSourceWithRepresentationRule
+when
+	VariableAssignment( $v := variable, $e := source )
+	and RepresentedAs( $e := node, $r := representation )
+then
+	insertLogical( new NodeMustRepresentAtLeast( $v, $r ) ) ;
+end
+
+rule MethodReturnSourceWithRepresentationRule
+when
+	MethodReturn( $m := method, $n := source )
+	and RepresentedAs( $n := node, $r := representation )
+then
+	insertLogical( new NodeMustRepresentAtLeast( $m, $r ) ) ;
+end
+
+rule MethodBodyScopeReturnPropagationRule
+when
+	$m : MethodSymbol( $s := bodyScope )   
+	and ScopeReturn( $s := scope, $e : source )
+then
+	insertLogical( new MethodReturn( $m, $e ) ) ;
+end
+
+rule ScopeReturnPropagationRule
+when
+	$inner : SymbolScope( $outer := enclosingScope )
+	and ScopeReturn( $inner := scope, $e : source )
+then
+	insertLogical( new ScopeReturn( $outer, $e ) ) ;
+end
+
+rule CombinationProductionRule
+when
+	$c := Combination( $lhs := node, $rhs := withNode )
+	RepresentedAs( $lhs := node, $r1 := representation )
+	RepresentedAs( $rhs := node, $r2 := representation )
+	if ( $r2.canRepresent($r1) ) break[rhs] ;
+then
+	insertLogical( new NodeMustRepresentAtLeast( $c, $r1 ) ) ;
+then[rhs]
+	insertLogical( new NodeMustRepresentAtLeast( $c, $r2 ) ) ;
+end
+
+/*
+ * e.g. $v must be at least a String
+ *      and there is no requirement that is must be at least something else that can represent a String
+ */
+
+rule InferNodeMinimumRepresentationRule
+when
+	$min : NodeMustRepresentAtLeast( $n := node, $r : representation )
+	and not NodeMustRepresentAtLeast( $n := node, representation.canRepresent($r), this != $min )
+then
+	insertLogical( new RepresentedAs( $n, $r ) ) ;
+end
+
+/* ============================== queries ============================== */
+
+query ScopeQuery ( SymbolScope $e )
+	symbolScope: SymbolScope( $e := enclosingScope )
+end
+
+query ScopeReturnsQuery ( SymbolScope $s )
+	scopeReturn: ScopeReturn( $s := scope )
+end
+
+query MethodReturnsQuery ( MethodSymbol $m )
+	methodReturn: MethodReturn( $m := method )
+end
+
+query NodeMustRepresentAtLeastsQuery ( RepresentationNode $n )
+	nodeMustRepresentAtLeast: NodeMustRepresentAtLeast( $n := node )
+end
+
+query NodeRepresentedAsQuery ( RepresentationNode $n )
+	representedAs: RepresentedAs( $n := node )
+end
+
+query VariableSymbolQuery ( SymbolScope $s, String $n )
+	symbol: VariableSymbol( $s := scope, $n := name  )
+end
+
+query MethodSymbolQuery ( SymbolScope $s, String $n, int $c )
+	symbol := MethodSymbol( $s := scope, $n := name  )
+	accumulate(
+		MethodParameter( symbol := method ) ;
+		$count : count() ;
+		$count == $c
+		)
+end
+
+query MethodSymbolIgnoringParametersQuery ( SymbolScope $s, String $n )
+	symbol: MethodSymbol( $s := scope, $n := name  )
+end
+
+query ClassSymbolQuery ( SymbolScope $s, String $n )
+	symbol: ClassSymbol( $s := scope, $n := name  )
+end
+
+query SymbolQuery ( SymbolScope $s, String $n )
+	symbol: Symbol( $s := scope, $n := name  )
+end
+
+query SymbolsQuery ( SymbolScope $s )
+	symbol: Symbol( $s := scope  )
+end
+
+query MethodParameterByNameQuery ( MethodSymbol $m, String $n )
+	methodParameter: MethodParameter( $m := method, $n := name )
+end
+
+query MethodParameterByPositionQuery ( MethodSymbol $m, int $p )
+	methodParameter: MethodParameter( $m := method, $p := position )
+end
+
+query ScopeEncloses ( SymbolScope $outer, SymbolScope $inner )
+	$inner := SymbolScope( $outer := enclosingScope ) 
+	or ( $inner := SymbolScope( $e := enclosingScope ) and ScopeEncloses( $outer, $e; ) )
+end
+
+query EnclosingMethodQuery ( SymbolScope $s )
+	methodSymbol: MethodSymbol( $s := bodyScope )
+	or ( methodSymbol: MethodSymbol( $b := bodyScope ) and ScopeEncloses( $b, $s; ) )
+end
+
+query EnclosingClassQuery ( SymbolScope $s )
+	classSymbol: ClassSymbol( $s := declarationScope )
+	or ( classSymbol: ClassSymbol( $d : declarationScope ) and ScopeEncloses( $d, $s; ) )
+end
+
+query RulesQuery ( RepresentationNode $n )
+	fact := Object()
+	fact := ( 
+		VariableAssignment( $n := variable )
+		or Comparison( $n := node ) or Comparison( $n := comparedTo )
+		or Choice( $n := node ) or Choice( $n := alternativeTo )
+		or Combination( $n := node ) or Combination( $n := withNode )
+		or Transformation( $n := node )
+		or MethodReturn( $n := method ) or MethodReturn( $n := source )
+		or MethodParameterPassed( $n := methodParameter ) or MethodParameterPassed( $n := source )
+		or NodeMustRepresentAtLeast( $n := node )
+		or RepresentedAs( $n := node )
+		)
+end

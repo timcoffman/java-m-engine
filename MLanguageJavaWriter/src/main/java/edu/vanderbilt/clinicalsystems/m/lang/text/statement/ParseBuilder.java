@@ -14,12 +14,12 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class ParseBuilder extends CommandJavaStatementBuilder {
 
 
-	public ParseBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public ParseBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
 	}
 	

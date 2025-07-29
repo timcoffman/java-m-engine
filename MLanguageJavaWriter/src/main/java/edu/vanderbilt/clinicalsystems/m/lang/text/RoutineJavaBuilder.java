@@ -13,7 +13,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.DirectVariableReference;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Expression;
-import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 
@@ -73,10 +73,10 @@ public class RoutineJavaBuilder<T extends RoutineJavaBuilderContext> {
 			return false ;
 	}
 		
-	protected void variableUsedAs( SymbolUsage symbolUsage, DirectVariableReference variable, Supplier<Optional<Representation>> expectedRepresentation ) {
-		symbolUsage.usedAs( symbolForVariable(variable), expectedRepresentation);
-		for ( Optional<VariableReference> parent = variable.parent() ; parent.isPresent() ; parent = parent.get().parent() )
-			symbolUsage.usedAs( symbolForVariable((DirectVariableReference)parent.get()), Representation.NATIVE );
+	protected void variableUsedAs( SymbolScope symbolScope, DirectVariableReference variable, Supplier<Optional<Representation>> expectedRepresentation ) {
+//		symbolUsage.usedAs( symbolForVariable(variable), expectedRepresentation);
+//		for ( Optional<VariableReference> parent = variable.parent() ; parent.isPresent() ; parent = parent.get().parent() )
+//			symbolUsage.usedAs( symbolForVariable((DirectVariableReference)parent.get()), Representation.NATIVE );
 	}
 	
 	protected String symbolForVariable( DirectVariableReference variable ) {

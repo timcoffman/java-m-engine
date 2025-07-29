@@ -13,22 +13,22 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class IfElseBuilder extends CommandJavaStatementBuilder {
 
-	private final SymbolUsage m_outerSymbolUsage ;
+	private final SymbolScope m_outerSymbolScope ;
 	
-	public IfElseBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public IfElseBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
-		m_outerSymbolUsage = outerSymbolUsage ;
+		m_outerSymbolScope = outerSymbolScope ;
 	}
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
 		expect( CommandType.IF, commandType, expressionList ) ;
 		JavaExpression<?> conditionalExpression = expr(expressionList.elements().iterator().next(), Representation.BOOLEAN );
 		
-		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage ) ;
+		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolScope ) ;
 		Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyze( innerBlock.elements().iterator() ) ;
 		return (b)->{
 			
@@ -39,7 +39,7 @@ public class IfElseBuilder extends CommandJavaStatementBuilder {
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, Nothing nothing, Block innerBlock ) {
 		expect( CommandType.ELSE, commandType, nothing ) ;
-		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolUsage ) ;
+		RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), m_outerSymbolScope ) ;
 		Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyze( innerBlock.elements().iterator() ) ;
 		return (b)->{
 

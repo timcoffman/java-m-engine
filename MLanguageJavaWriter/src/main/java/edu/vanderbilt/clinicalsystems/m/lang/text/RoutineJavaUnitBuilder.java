@@ -5,10 +5,12 @@ import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
 
 	private final JavaMethodContents m_methodContents ;
+	private final SymbolScope m_symbolScope ;
 
 	public RoutineJavaUnitBuilder() {
 		this( new JCodeModel() ) ;
@@ -25,11 +27,13 @@ public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilde
 	public RoutineJavaUnitBuilder( JCodeModel codeModel, JavaMethodContents methodContents ) {
 		super( new RoutineJavaBuilderContextImpl( codeModel ) ) ;
 		m_methodContents = methodContents ;
+		m_symbolScope = env().representationInference().createScope() ;
 	}
 	
 	private RoutineJavaUnitBuilder( JavaMethodContents methodContents, RoutineJavaBuilderContext builderContext ) {
 		super( builderContext ) ;
 		m_methodContents = methodContents ;
+		m_symbolScope = env().representationInference().createScope() ;
 	}
 
 	public RoutineJavaUnitBuilder withMethodContents(JavaMethodContents javaMethodContents) {
@@ -61,7 +65,8 @@ public class RoutineJavaUnitBuilder extends RoutineJavaBuilder<RoutineJavaBuilde
 			break ;
 		}
 		
-		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context(), m_methodContents ) ;
+		SymbolScope symbolScope = env().representationInference().createScope( m_symbolScope, "unit-scope:" + fullyQualifiedName + ":" + m_symbolScope.description() ) ;
+		RoutineJavaClassBuilder classBuilder = new RoutineJavaClassBuilder( context(), symbolScope, m_methodContents ) ;
 		classBuilder.analyze( routine, className ).build( definedClass );
 
 		return this ;

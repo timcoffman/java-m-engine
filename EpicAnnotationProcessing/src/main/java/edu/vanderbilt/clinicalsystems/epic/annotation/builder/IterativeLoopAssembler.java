@@ -74,6 +74,12 @@ public class IterativeLoopAssembler extends FlowAssembler<Ast.EnhancedForLoop>{
 				Expression target = methodInvocationNode.methodSelect().accept( new Ast.Interpreter<Expression,Listener>(tools()) {
 
 					@Override
+					public Expression visitIdentifier( Ast.Identifier identifierNode, Listener parameter) {
+						return tools().expressions().generate( identifierNode, parameter);
+//						return new DirectVariableReference( Scope.TRANSIENT, identifierNode.toString() );
+					}
+
+					@Override
 					public Expression visitMemberSelect( Ast.MemberSelect memberSelectNode, Listener parameter) {
 						return tools().expressions().generate( memberSelectNode.expression(), delegate ) ;
 					}

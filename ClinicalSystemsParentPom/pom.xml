@@ -1,0 +1,287 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>edu.vanderbilt.clinicalsystems</groupId>
+    <artifactId>clinicalsystems-parent-pom</artifactId>
+    <version>02.00.00</version>
+    <name>clinicalsystems-parent-pom</name>
+    <packaging>pom</packaging>
+
+    <scm>
+        <connection>scm:git:https://github.com/timcoffman/java-m-engine.git</connection>
+        <url>https://github.com/timcoffman/java-m-engine/blob/master/ClinicalsystemsParentPom</url>
+    </scm>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.8.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math</artifactId>
+                <version>2.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
+                <version>1.2</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-core</artifactId>
+                <version>2.0.5</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+
+      <pluginManagement>
+        <plugins>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.12</version>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>2.12</version>
+            <executions>
+              <execution>
+                <id>failsafe-integration-test</id>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>2.9.1</version>
+          </plugin>
+
+        </plugins>
+      </pluginManagement>
+
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.5.1</version>
+          <configuration>
+            <source>1.6</source>
+            <target>1.6</target>
+            <showWarnings>true</showWarnings>
+            <showDeprecation>true</showDeprecation>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.9.1</version>
+          <configuration>
+            <show>private</show>
+            <nohelp>true</nohelp>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.2.1</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.1</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <skipTests>${skip-integration-tests}</skipTests>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>buildnumber-maven-plugin</artifactId>
+          <version>1.0</version>
+          <executions>
+            <execution>
+              <phase>validate</phase>
+              <goals>
+                <goal>create</goal>
+              </goals>
+              
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.1</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                <packageName>${project.versioned-package}</packageName>
+              </manifest>
+              <manifestEntries>
+                <Implementation-Version>${project.version}-${buildNumber}</Implementation-Version>
+                <Implementation-Build>${buildNumber}</Implementation-Build>
+                <SCM-Revision>${buildNumber}</SCM-Revision>
+              </manifestEntries>
+            </archive>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <configuration>
+            <skip>${checkstyle.skip}</skip>
+            <failOnViolation>${checkstyle.strict}</failOnViolation>
+            <violationSeverity>error</violationSeverity>
+          </configuration>
+        </plugin>
+
+      </plugins>
+     </build>
+
+  <repositories>
+
+  </repositories>
+
+  <pluginRepositories>
+
+    <pluginRepository>
+      <id>vandy-releases-pro</id>
+      <name>Vanderbilt Internal Release Repository</name>
+      <url>https://nexus.mc.vanderbilt.edu/nexus/content/repositories/releases</url>
+    </pluginRepository>
+
+    <pluginRepository>
+      <id>third-party</id>
+      <name>Vanderbilt Vendor Internal Repository</name>
+      <url>http://repo.mc.vanderbilt.edu/nexus/content/repositories/thirdparty/</url>
+
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+
+
+    <pluginRepository>
+      <id>maven.java.net</id>
+      <name>Java.net Maven2 Repository</name>
+      <url>http://download.java.net/maven/2</url>
+    </pluginRepository>
+
+    <pluginRepository>
+      <id>thirdparty</id>
+      <name>Vanderbilt Vendor Internal Repository</name>
+      <url>https://nexus.mc.vanderbilt.edu/nexus/content/repositories/thirdparty</url>
+
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+
+  </pluginRepositories>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jersey-version>1.8</jersey-version>
+    <skip-integration-tests>true</skip-integration-tests>
+    <checkstyle.skip>false</checkstyle.skip>
+    <checkstyle.strict>true</checkstyle.strict>
+  </properties>
+
+  <distributionManagement>
+
+    <snapshotRepository>
+      <id>vandy-snapshots-pro</id>
+      <name>Vanderbilt Internal Snapshot Repository</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>https://nexus.app.vumc.org/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
+
+    <repository>
+      <id>vandy-releases-pro</id>
+      <name>Vanderbilt Internal Release Repository</name>
+      <uniqueVersion>false</uniqueVersion>
+      <url>https://nexus.app.vumc.org/nexus/content/repositories/releases</url>
+    </repository>
+
+  </distributionManagement>
+
+</project>

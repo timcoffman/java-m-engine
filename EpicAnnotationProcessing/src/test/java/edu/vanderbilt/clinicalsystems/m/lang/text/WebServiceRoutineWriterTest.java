@@ -14,7 +14,7 @@ import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilder.JavaMethodContents;
 
-public class WebServiceRoutineWriterTest {
+public class WebServiceRoutineWriterTest extends AbstractWriterTest {
 
 	@Test
 	public void canWriteJavaStubForLibrary() throws Exception {
@@ -35,11 +35,7 @@ public class WebServiceRoutineWriterTest {
 			ex.printStackTrace();
 		}
 		
-		File f = new File(
-				"/Users/timvanderbilt/Documents/Development/Epic/workspace-trunk/"
-						+ "EpicAnnotationProcessing/"
-						+ "src/test/java"
-				);
+		File f = makeTempFolder("canWriteJavaStubForLibrary");
 		CodeWriter cw = new FileCodeWriter(f);
 		try {
 			routineBuilder.codeModel().build(cw);
@@ -67,11 +63,7 @@ public class WebServiceRoutineWriterTest {
 			ex.printStackTrace();
 		}
 		
-		File f = new File(
-				"/Users/timvanderbilt/Documents/Development/Epic/workspace-trunk/"
-						+ "EpicAnnotationProcessing/"
-						+ "src/test/java"
-				);
+		File f = makeTempFolder("canWriteJavaForWebService");
 		CodeWriter cw = new FileCodeWriter(f);
 		try {
 			routineBuilder.codeModel().build(cw);

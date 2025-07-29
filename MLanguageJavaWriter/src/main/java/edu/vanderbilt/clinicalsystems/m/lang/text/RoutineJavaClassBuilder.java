@@ -1,11 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
-
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
@@ -15,14 +11,21 @@ import com.sun.codemodel.JType;
 
 import edu.vanderbilt.clinicalsystems.m.core.annotation.InjectRoutine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
+import edu.vanderbilt.clinicalsystems.m.text.repr.ClassSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.Symbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol;
 
 public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuilderContext> {
 	
-	private JavaMethodContents m_methodContents ; 
+	private final JavaMethodContents m_methodContents ;
+	private final SymbolScope m_outerSymbolScope ;
 	
-	public RoutineJavaClassBuilder( RoutineJavaBuilderContext builderContext, JavaMethodContents methodContents ) {
+	public RoutineJavaClassBuilder( RoutineJavaBuilderContext builderContext, SymbolScope outerSymbolScope, JavaMethodContents methodContents ) {
 		super(builderContext) ;
 		m_methodContents = methodContents ;
+		m_outerSymbolScope = outerSymbolScope ;
 	}
 	
 	private String methodNameForTag(Routine routine, String tagName) {
@@ -30,10 +33,14 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 	}
 	
 	public Builder<JDefinedClass> analyze(Routine routine, String className) {
-		SymbolUsage classSymbolUsage = SymbolUsage.createRoot() ;
-		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolUsage, context().classContext(className), m_methodContents ) ;
+		ClassSymbol classSymbol = env().representationInference().rootScope().createClass( className ) ;
+		SymbolScope classSymbolScope = classSymbol.getDeclarationScope() ;
 		
-		routine.tagNames().forEach( (tagName)->classSymbolUsage.declaredAs( methodNameForTag(routine, tagName) ) );
+		final RoutineJavaMethodBuilder methodBuilder = new RoutineJavaMethodBuilder( classSymbolScope, context().classContext(className), m_methodContents ) ;
+		
+		routine.tagNames().forEach( (tagName)->{
+				methodBuilder.declare( routine, tagName, methodNameForTag(routine, tagName) ) ;
+		} );
 		
 		Map<String,Builder<JMethod>> methodBuilders = new LinkedHashMap<String, RoutineJavaBuilder.Builder<JMethod>>() ; 
 		routine.tagNames().forEach( (tagName)->{
@@ -44,42 +51,33 @@ public class RoutineJavaClassBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 			
 		} );
 		
-		return (c)->build( classSymbolUsage, methodBuilders, routine, c )  ;
+		return (c)->build( classSymbolScope, methodBuilders, routine, c )  ;
 	}
-
-	private static final java.util.regex.Pattern NON_SYMBOL_CHARACTER_PATTERN
-		= java.util.regex.Pattern.compile("[^$a-zA-Z0-9_]")
-		;
-	
-	private void build(SymbolUsage classSymbolUsage, Map<String,Builder<JMethod>> methodBuilders, Routine routine, JDefinedClass definedClass) {
-		System.out.println("") ;
-		for ( String symbol : classSymbolUsage.symbols() ) {
-			System.out.println( "\"" + symbol + "\": " + classSymbolUsage.describe(symbol) ) ;
-		}
 		
-		Set<String> symbols = new HashSet<String>( classSymbolUsage.symbols() );
-		methodBuilders.keySet().forEach( (tagName)->symbols.remove( methodNameForTag(routine, tagName) ) );
+	private void build(SymbolScope classSymbolScope, Map<String,Builder<JMethod>> methodBuilders, Routine routine, JDefinedClass definedClass) {
+		System.out.println("") ;
+//		env().representationInference().print( classSymbolScope, System.out);
+		env().representationInference().print( System.out);
 		
 		if ( m_methodContents != JavaMethodContents.STUB ) {
 		
-			for ( String symbol : symbols ) {
+			for ( Symbol symbol : classSymbolScope.allSymbols() ) {
 				
-				if ( methodBuilders.containsKey(symbol) ) continue ; // they'll be handled from methodBuilders
-				if ( methodBuilders.containsKey(symbol.split("[^$a-zA-Z0-9_]")[0] ) ) continue ; // they'll be handled from methodBuilders
-				if ( NON_SYMBOL_CHARACTER_PATTERN.matcher(symbol).find() ) continue ; // not handled by methodBuilders, but is an "external" method
+				if ( symbol instanceof VariableSymbol ) {
 				
-				// Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElseThrow( ()->new IllegalStateException("unresolvable field symbol") ) ;
-				Representation repr = classSymbolUsage.impliedRepresentation(symbol).get().orElse( NATIVE ) ;
-				JFieldVar field = definedClass.field( JMod.PUBLIC, context().typeFor(repr), symbol ) ;
-				field.annotate( InjectRoutine.class ) ;
+					Representation repr = env().representationInference().representationFor(symbol) ;
+					JFieldVar field = definedClass.field( JMod.PUBLIC, context().typeFor(repr), symbol.getName() ) ;
+					field.annotate( InjectRoutine.class ) ;
+					
+				}
 			}
 		}
 
 		methodBuilders.forEach( (tagName,methodBuilder)->{
 			String methodName = methodNameForTag(routine, tagName) ;
 			
-//			Representation repr = classSymbolUsage.impliedRepresentation(methodName).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ;
-			Representation repr = classSymbolUsage.impliedRepresentation(methodName).get().orElse( NATIVE ) ;
+			MethodSymbol symbol = classSymbolScope.methodSymbolFor( methodName, -1 ).get() ;
+			Representation repr = symbol.representation() ;
 			JType returnType = context().typeFor( repr );
 			
 			JMethod method ;

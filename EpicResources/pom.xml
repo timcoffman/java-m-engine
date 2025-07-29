@@ -89,36 +89,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>MLanguageCore</artifactId>
+			<artifactId>GenerateJavaStubs</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>MLanguageModel</artifactId>
-		</dependency>
-		
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>EpicAnnotationProcessing</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>MLanguageJavaWriter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>MLanguageParser</artifactId>
-		</dependency>
-		
-		<dependency>
-		    <groupId>${project.groupId}</groupId>
-		    <artifactId>MLanguageANTLRParser</artifactId>
-		    <scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>EpicAnnotationJdkProcessing</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		
 	</dependencies>
 </project>

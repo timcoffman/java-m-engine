@@ -119,7 +119,7 @@ public class Converter {
 		if ( null == destinationListCtx )
 			return EMPTY_DESTINATION_LIST ;
 		return StreamSupport.stream(destinationListCtx.destination().spliterator(), false)
-				.map( (a)->a.result )
+				.map( (a)->(Destination<?>)a.result )
 				.collect( Collectors.toList() )
 				;
 	}

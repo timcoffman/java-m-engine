@@ -2,13 +2,9 @@ package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeCommandType.VALUE_ASSIGN;
 import static edu.vanderbilt.clinicalsystems.m.core.annotation.support.NativeCommandType.VALUE_CLEAR;
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.STRING;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -41,15 +37,17 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.JavaInvocation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInference.SymbolScopeSearchStrategy;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol;
 
 public class VariableBuilder extends CommandJavaStatementBuilder {
 
-	private final SymbolUsage m_symbolUsage ;
+	private final SymbolScope m_symbolScope ;
 	
-	public VariableBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public VariableBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
-		m_symbolUsage = symbolUsage ;
+		m_symbolScope = symbolScope ;
 	}
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, DeclarationList declarationList, Block innerBlock ) {
@@ -58,22 +56,20 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 		List<Builder<JBlock>> builders = StreamSupport.stream(declarationList.elements().spliterator(),false)
 			.map( DirectVariableReference::variableName )
 			.map( context()::symbolForIdentifier )
-			.peek( m_symbolUsage::declaredAs ) // without representation
 			.map( this::analyzeDeclaration )
 			.collect( Collectors.toList() ) ;
 		
 		return (b)->builders.forEach( (builder)->builder.build(b) );
 	}
 	
-	private Builder<JBlock> analyzeDeclaration( String symbol ) {
-		m_symbolUsage.declaredAs( symbol ) ;
+	private Builder<JBlock> analyzeDeclaration( String name ) {
+		VariableSymbol symbol = m_symbolScope.createVariable( name ) ;
 		
-		Supplier<Optional<Representation>> rep = m_symbolUsage.impliedRepresentation(symbol) ;
 		return (b)->{
-			Representation representation = rep.get().orElse(Representation.NATIVE);
+			Representation representation = symbol.representation();
 			JType type = context().typeFor( representation ) ;
 			JExpression initialValue = context().initialValueFor( representation ) ;
-			b.decl( JMod.NONE, type, symbol, initialValue );
+			b.decl( JMod.NONE, type, symbol.getName(), initialValue );
 		};
 	}
 	
@@ -111,9 +107,12 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 			
 			@Override
 			public Builder<JBlock> visitDirectVariableReference(DirectVariableReference variable) {
-				String symbol = context().symbolForIdentifier(variable.variableName());
-				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation(symbol) ;
-				JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol ), representation ) ;
+				String name = context().symbolForIdentifier(variable.variableName());
+				VariableSymbol symbol =
+						m_symbolScope.variableSymbolFor(name)
+						.orElseGet( ()->m_symbolScope.enclosingClass().getDeclarationScope().createVariable(name) )
+						;
+				JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol.getName() ), symbol ) ;
 				
 				KeyApplier keyApplier = keyApplier(variable) ;
 				if ( keyApplier.hasKeys() ) {
@@ -126,7 +125,8 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 				
 				return (b)->{
 					
-					switch ( representation.get().get() ) {
+					Representation representation = symbol.representation();
+					switch ( representation ) {
 					case NATIVE:
 						JavaExpression<?> target = applyKeys( variable, assignableTarget ) ;
 						JavaInvocation.builder(context())
@@ -135,7 +135,7 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 							.acceptingNothing()
 							.build( b );
 					default:
-						JExpression initialValue = context().initialValueFor( representation.get().get() ) ;
+						JExpression initialValue = context().initialValueFor( representation ) ;
 						b.assign( assignableTarget.expr() , initialValue ) ;
 					}
 					
@@ -149,7 +149,7 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 						.on(VariableContext.class)
 						.invoke( "lookup" )
 						.accepting( java.lang.String.class )
-						.supplying( (r)->expr(variable.variableNameProducer(), STRING) )
+						.supplying( expr(variable.variableNameProducer(), STRING) )
 						.build();
 				return JavaInvocation.builder(context())
 						.on( applyKeys( variable, target ) )
@@ -171,7 +171,8 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 			return unexpected(commandType, assignmentList) ;
 	}
 	
-	private Builder<JBlock> analyzeVariableAssignment( VariableReference variable, Expression source ) {
+	private Builder<JBlock> analyzeVariableAssignment( VariableReference variable, Expression s ) {
+		final JavaExpression<?> source = expr(s) ;
 		return variable.visit( new VariableReference.Visitor<Builder<JBlock> >() {
 
 			@Override
@@ -188,33 +189,43 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 				return JavaInvocation.builder(context())
 					.on( target )
 					.invoke( env().methodFor(VALUE_ASSIGN) )
-					.supplying( (r)->expr(source,r) )
+					.supplying( source )
 					::build
 					;
 			}
 			
 			@Override
 			public Builder<JBlock>  visitDirectVariableReference(DirectVariableReference variable) {
-				// fails to allow for assigning to indexed variable leaves
-				variableUsedAs(m_symbolUsage, variable, expr(source).representation()); // native repr
-				
-				String symbol = context().symbolForIdentifier(variable.variableName());
-				Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbol ) ;
-				
-				return (b)->{
-					JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol ), representation.get().orElse(Representation.NATIVE) ) ;
-					switch ( assignableTarget.representation().get().get() ) {
-					case NATIVE:
+				VariableSymbol symbol =
+						m_symbolScope.variableSymbolFor(variable.variableName(), SymbolScopeSearchStrategy.ENCLOSING )
+						.orElseGet( ()->m_symbolScope.createVariable(variable.variableName()) )
+						;
+				JavaExpression<? extends JAssignmentTarget> assignableTarget = JavaExpression.from( JExpr.ref( symbol.getName() ), symbol ) ;
+				if ( variable.parent().isPresent() ) {
+					/* it must be natively assigned*/
+					return (b)->{
 						JavaExpression<?> target = applyKeys( variable, assignableTarget ) ;
 						JavaInvocation.builder(context())
 							.on( target )
 							.invoke( env().methodFor(VALUE_ASSIGN) )
-							.supplying( (r)->expr(source,r) )
+							.supplying( source )
 							.build(b);
-					default:
-						b.assign( assignableTarget.expr() , expr(source).expr() ) ;
-					}
-				} ;
+						} ;
+				} else {
+					/* it might be directly assigned */
+					return (b)->{
+						switch ( assignableTarget.representationNode().representation() ) {
+						case NATIVE:
+							JavaInvocation.builder(context())
+								.on( assignableTarget )
+								.invoke( env().methodFor(VALUE_ASSIGN) )
+								.supplying( source )
+								.build(b);
+						default:
+							b.assign( assignableTarget.expr() , source.expr() ) ;
+						}
+					} ;
+				}
 			}
 			
 			@Override
@@ -224,13 +235,13 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 						.on(VariableContext.class)
 						.invoke( "lookup" )
 						.accepting( java.lang.String.class )
-						.supplying( (r)->expr(variable.variableNameProducer(), STRING) )
+						.supplying( expr(variable.variableNameProducer(), STRING) )
 						.build();
 				target = applyKeys( variable, target ) ;
 				return JavaInvocation.builder(context())
 						.on( target )
 						.invoke( env().methodFor(VALUE_ASSIGN) )
-						.supplying( (r)->expr(source,r) )
+						.supplying( source )
 						::build;
 			}
 			
@@ -258,10 +269,10 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 		} else {
 			DirectVariableReference tempVariable = new DirectVariableReference(Scope.TRANSIENT, MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME);
 			Builder<JBlock> tempAssignment ;
-			if ( m_symbolUsage.declared(MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME) ) {
+			if ( m_symbolScope.variableSymbolFor( tempVariable.variableName() ).isPresent() ) {
 				tempAssignment = analyzeAssignment( Destination.wrap( tempVariable ), source ) ;
 			} else {
-				tempAssignment = analyzeDeclaration( MULTIPLE_ASSIGNMENT_TEMP_VARIABLE_NAME ) ;
+				tempAssignment = analyzeDeclaration( tempVariable.variableName() ) ;
 			}
 			return assignment.destinations().stream()
 				.map( (destination)->analyzeAssignment( destination, source ) )
@@ -283,7 +294,7 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 			}
 
 			@Override public Builder<JBlock> visitBuiltinFunctionCall( BuiltinFunctionCall functionCall) {
-				List<Function<Representation, JavaExpression<?>>> arguments = analyze(functionCall.arguments());
+				List<JavaExpression<?>> arguments = analyze(functionCall.arguments());
 				
 				return (b)->
 					JavaInvocation.builder(context())
@@ -291,7 +302,7 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 						.supplying( arguments )
 						.buildAnd(b)
 							.invoke( env().methodForFunctionAssignment() )
-							.supplying( (r)->expr( source, r ) )
+							.supplying( expr( source ) )
 							.build();
 			}
 			
@@ -308,14 +319,15 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 			
 			@Override
 			public Builder<JBlock> visitDirectVariableReference(DirectVariableReference variable) {
-				String symbol = context().symbolForIdentifier(variable.variableName());
-				JavaExpression<?> target = JavaExpression.from( JExpr.ref( symbol ), NATIVE ) ;
+				String name = context().symbolForIdentifier(variable.variableName());
+				VariableSymbol symbol = m_symbolScope.variableSymbolFor(name).get() ;
+				JavaExpression<?> target = JavaExpression.from( JExpr.ref( symbol.getName() ), symbol ) ;
 					
 				target = applyKeys( variable, target ) ;
 				return JavaInvocation.builder(context())
 						.on( target )
 						.invoke( "merge" )
-						.supplying( (r)->expr(source,r) )
+						.supplying( expr(source) )
 						::build
 						;
 			}
@@ -326,13 +338,13 @@ public class VariableBuilder extends CommandJavaStatementBuilder {
 						.on(VariableContext.class)
 						.invoke( "lookup" )
 						.accepting( java.lang.String.class )
-						.supplying( (r)->expr(variable.variableNameProducer(), STRING) )
+						.supplying( expr(variable.variableNameProducer(), STRING) )
 						.build();
 				target = applyKeys( variable, target ) ;
 				return JavaInvocation.builder(context())
 						.on( target )
 						.invoke( env().methodFor(VALUE_ASSIGN) )
-						.supplying( (r)->expr(source,r) )
+						.supplying( expr(source) )
 						::build;
 			}
 			

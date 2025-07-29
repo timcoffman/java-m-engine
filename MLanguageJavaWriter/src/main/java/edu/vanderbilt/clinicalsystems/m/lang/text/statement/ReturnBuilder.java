@@ -1,7 +1,5 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.VOID;
-
 import com.sun.codemodel.JBlock;
 
 import edu.vanderbilt.clinicalsystems.m.lang.CommandType;
@@ -12,25 +10,25 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class ReturnBuilder extends CommandJavaStatementBuilder {
 
-	private final SymbolUsage m_symbolUsage;
+	private final SymbolScope m_symbolScope;
 
-	public ReturnBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public ReturnBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
-		m_symbolUsage = symbolUsage ;
+		m_symbolScope = symbolScope ;
 	}
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, ExpressionList expressionList, Block innerBlock ) {
 		JavaExpression<?> firstExpression = expr( expressionList.elements().iterator().next() );
-		m_symbolUsage.scopeReturns( firstExpression.representation() );
+		m_symbolScope.returns( firstExpression.representationNode() );
 		return (b)->b._return( firstExpression.expr() ) ;
 	}
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, Nothing nothing, Block innerBlock ) {
-		m_symbolUsage.scopeReturns( VOID.supplier() ) ;
+		// nothing // m_symbolScope.returns( VOID ) ;
 		return (b)->b._return() ;
 	}
 	

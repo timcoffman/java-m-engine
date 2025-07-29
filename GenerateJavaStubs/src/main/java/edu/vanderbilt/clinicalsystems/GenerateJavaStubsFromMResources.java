@@ -63,7 +63,10 @@ public class GenerateJavaStubsFromMResources {
 		String destinationJavaPath = args[0] ;
 		String sourceMPath = args[1] ;
 
-		new GenerateJavaStubsFromMResources().processAll( Paths.get(sourceMPath), Paths.get(destinationJavaPath) );
+		Path sourcePath = Paths.get(sourceMPath);
+		Path destinationPath = Paths.get(destinationJavaPath);
+		Files.createDirectories( destinationPath );
+		new GenerateJavaStubsFromMResources().processAll( sourcePath, destinationPath );
 	}
 	
 	private GenerateJavaStubsFromMResources() {
@@ -81,6 +84,7 @@ public class GenerateJavaStubsFromMResources {
 		Files.walk( sourcePath )
 			.filter( Files::isRegularFile )
 			.filter( (p)->p.getFileName().toString().endsWith(".m") )
+			.filter( (p)->p.getFileName().toString().startsWith("%Zefnlih") ) // TODO: temporary
 			.forEach( (p)->processOne(p, sourcePath, destinationPath) )
 			;
 	}
@@ -209,7 +213,7 @@ public class GenerateJavaStubsFromMResources {
 				
 			Routine routine = m_routineParser.parse(in) ;
 			RoutineTranslationInfoFactory routineTranslationInfoFactory = new RoutineTranslationInfoFactory() ;
-			Set<RoutineDependency> dependencies = new HashSet<RoutineDependency>();
+			Set<RoutineDependency> dependencies = new HashSet<>();
 			gatherDependencies( routine.root(), dependencies ) ;
 			RoutineTranslationInfo translation = routineTranslationInfoFactory.create(routine, dependencies) ;
 			

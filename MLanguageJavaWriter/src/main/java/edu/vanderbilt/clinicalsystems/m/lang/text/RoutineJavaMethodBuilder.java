@@ -1,51 +1,29 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NATIVE;
-
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JDocComment;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
-import com.sun.codemodel.JType;
 
 import edu.vanderbilt.clinicalsystems.m.lang.model.ParameterName;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 import edu.vanderbilt.clinicalsystems.m.lang.model.RoutineElement;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Tag;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol;
 
 public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	
-	public static class NamedCallableScopeSymbolUsage extends SymbolUsage {
-		private final String m_methodName ;
-		public NamedCallableScopeSymbolUsage(SymbolUsage parent, String methodName ) {
-			super(parent);
-			m_methodName = methodName ;
-		}
-
-		@Override public void scopeReturns(Supplier<Optional<Representation>> representation) {
-			parent()
-				.orElseThrow( ()->new IllegalStateException( "scope returned in root context" ) )
-				.usedAs( m_methodName, representation);
-		}
-
-		@Override public void scopeAccepts(int position, Supplier<Optional<Representation>> representation) {
-			parent()
-				.orElseThrow( ()->new IllegalStateException( "scope accepting in root context" ) )
-				.declaredAs( symbolForMethodParameterPosition(m_methodName,position), representation);
-		}
-	}
-
-	private final SymbolUsage m_classSymbolUsage ;
 	private final JavaMethodContents m_methodContents ;
+	private final SymbolScope m_outerSymbolScope ;
 	
-	public RoutineJavaMethodBuilder( SymbolUsage classSymbolUsage, RoutineJavaBuilderClassContext builderContext, JavaMethodContents methodContents ) {
+	public RoutineJavaMethodBuilder( SymbolScope outerSymbolScope, RoutineJavaBuilderClassContext builderContext, JavaMethodContents methodContents ) {
 		super(builderContext) ;
-		m_classSymbolUsage = classSymbolUsage ;
+		m_outerSymbolScope = outerSymbolScope ;
 		m_methodContents = methodContents ;
 	}
 	
@@ -78,43 +56,46 @@ public class RoutineJavaMethodBuilder extends RoutineJavaBuilder<RoutineJavaBuil
 		return methodName + "|" + String.format("%04d",position) ;
 	}
 	
-	public Builder<JMethod> analyze(Routine routine, String tagName, String methodName) {
-		SymbolUsage methodSymbolUsage = new NamedCallableScopeSymbolUsage(m_classSymbolUsage,methodName);
-		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), methodSymbolUsage ) ;
+	public MethodSymbol declare(Routine routine, String tagName, String methodName) {
+		MethodSymbol methodSymbol = env().representationInference().createMethodSymbol(m_outerSymbolScope, methodName) ;
 		
 		Iterator<RoutineElement> elementIterator = routine.findTagByName(tagName) ;
-
 		Tag tag = ((Tag)elementIterator.next()) ;
 		
 		int position = 0 ;
 		for ( ParameterName parameterName : tag.parameterNames() ) {
-			String symbol = context().symbolForIdentifier( parameterName.name() );
-			methodSymbolUsage.usedAsParameter( symbol ) ;
-			
-			String parameterPositionSymbol = symbolForMethodParameterPosition(methodName,position);
-			m_classSymbolUsage.usedAs( parameterPositionSymbol, ()->Optional.empty() );
-			methodSymbolUsage.usedAs( symbol, m_classSymbolUsage.impliedRepresentation(symbolForMethodParameterPosition(methodName,position)) );
+			methodSymbol.createParameter( position++, context().symbolForIdentifier( parameterName.name() ) ) ;
 		}
+		return methodSymbol ;
+	}
+	
+	public Builder<JMethod> analyze(Routine routine, String tagName, String methodName) {
+		MethodSymbol methodSymbol =
+			m_outerSymbolScope.methodSymbolFor(methodName, -1 )
+			.orElseThrow( ()->new IllegalStateException("method symbol \"" + methodName + "\" not found; use declare(...) prior to calling analyze(...)") )
+			;
+		
+		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), methodSymbol.getBodyScope() ) ;
+		
+		Iterator<RoutineElement> elementIterator = routine.findTagByName(tagName) ;
+		elementIterator.next() ;
 		
 		Builder<JBlock> bodyBuilder = blockBuilder.analyze( elementIterator ) ;
 
-		return (m)->build( methodSymbolUsage, routine, tagName, bodyBuilder, m ) ;
+		return (m)->build( methodSymbol, routine, tagName, bodyBuilder, m ) ;
 	}
 	
-	private void build( SymbolUsage methodSymbolUsage, Routine routine, String tagName, Builder<JBlock> bodyBuilder, JMethod method ) {
+	private void build( MethodSymbol methodSymbol, Routine routine, String tagName, Builder<JBlock> bodyBuilder, JMethod method ) {
+		SymbolScope methodSymbolScope = methodSymbol.getBodyScope() ;
 		buildComments( method.javadoc(), routine.findTagByName(tagName) ) ;
-		
-		RoutineJavaBlockBuilder blockBuilder = new RoutineJavaBlockBuilder( context(), methodSymbolUsage ) ;
 		
 		Iterator<RoutineElement> elementIterator = routine.findTagByName(tagName) ;
 		Tag tag = ((Tag)elementIterator.next()) ;
-		blockBuilder.analyze( elementIterator ) ;
-		
+
+		method.type( context().typeFor( methodSymbol.representation() ) );
 		for ( ParameterName parameterName : tag.parameterNames() ) {
-			String symbol = context().symbolForIdentifier( parameterName.name() );
-//			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElseThrow( ()->new IllegalStateException("unresolvable method symbol") ) ) ;
-			JType parameterType = context().typeFor( methodSymbolUsage.impliedRepresentation( symbol ).get().orElse( NATIVE ) ) ;
-			method.param( JMod.FINAL, parameterType, symbol ) ;
+			VariableSymbol symbol = methodSymbolScope.variableSymbolFor(context().symbolForIdentifier( parameterName.name() ) ).get() ;
+			method.param( JMod.FINAL, context().typeFor( symbol.representation() ), symbol.getName() ) ;
 		}
 		
 		switch ( m_methodContents ) {

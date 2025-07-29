@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -39,19 +40,26 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.expression.IndirectVariableRe
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.MatchPattern;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.UnaryOperation;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.VariableReference;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodParameter;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.OperationNode;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationInference.SymbolScopeSearchStrategy;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationNode;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol;
 
 public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
 	
-	private final SymbolUsage m_symbolUsage ;
+	private final SymbolScope m_outerSymbolScope ;
 	private final JavaExpression<?> m_nullExpr ;
 
-	public interface SymbolUsageListener {
+	public interface SymbolScopeListener {
 		void usedAs( String symbol, Supplier<Optional<Representation>> representation ) ;
 	}
 	
-	public RoutineJavaExpressionBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage symbolUsage ) {
+	public RoutineJavaExpressionBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope ) {
 		super(builderContext) ;
-		m_symbolUsage = symbolUsage ;
+		m_outerSymbolScope = outerSymbolScope ;
 		Method initialValueMethod = env().methodFor( NativeValueTypes.INITIAL_VALUE ) ;
 		m_nullExpr = JavaInvocation.builder(builderContext).invoke(initialValueMethod).acceptingNothing().build() ;
 	}
@@ -79,19 +87,20 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				throw new UnsupportedOperationException( "expression type \"" + expression.getClass() + "\" not supported" ) ;	
 			}
 			
+			private VariableSymbol findOrCreateVariableSymbol( SymbolScope scope, String name ) {
+				return
+					m_outerSymbolScope.variableSymbolFor(name,SymbolScopeSearchStrategy.ENCLOSING)
+					.orElseGet( ()->scope.createVariable(name) )
+					;
+			}
+			
 			@Override
 			public JavaExpression<?> visitDirectVariableReference( DirectVariableReference variable ) {
-				variableUsedAs(m_symbolUsage, variable, expectedRepresentation);
+				variableUsedAs(m_outerSymbolScope, variable, expectedRepresentation);
 				
-				String symbol = context().symbolForIdentifier(variable.variableName());
-				if ( variable.keys().iterator().hasNext() ) {
-					Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbolForVariable(variable) ) ;
-					JavaExpression<?> target = JavaExpression.from( JExpr.ref( symbol ), NATIVE.supplier() );
-					return applyKeys(variable, representation, target) ;
-				} else {
-					Supplier<Optional<Representation>> representation = m_symbolUsage.impliedRepresentation( symbol ) ;
-					return JavaExpression.from( JExpr.ref( symbol ), representation );
-				}
+				VariableSymbol symbol = findOrCreateVariableSymbol(m_outerSymbolScope, variable.variableName());
+				JavaExpression<?> target = JavaExpression.from( JExpr.ref( symbol.getName() ), symbol );
+				return applyKeys(variable, target) ;
 			}
 			
 			@Override
@@ -100,7 +109,7 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 						.on(VariableContext.class)
 						.invoke("lookup")
 						.accepting( java.lang.String.class )
-						.supplying( (r)->build( variable.variableNameProducer(), STRING ) ) 
+						.supplying( build( variable.variableNameProducer(), STRING ) ) 
 						.build() ;
 				return applyKeys(variable,target) ;
 			}
@@ -117,13 +126,13 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 			private JavaExpression<?> literalInteger( Constant constant ) {
 				long longValue = constant.toLong() ;
 				if ( longValue < Integer.MAX_VALUE && longValue > Integer.MIN_VALUE )
-					return JavaExpression.from( JExpr.lit( (int)constant.toLong() ), INTEGER );
+					return JavaExpression.from( JExpr.lit( (int)constant.toLong() ), env().representationInference().createConstantValue((int)constant.toLong(), INTEGER) );
 				else
-					return JavaExpression.from( JExpr.lit( constant.toLong() ), INTEGER );
+					return JavaExpression.from( JExpr.lit( constant.toLong() ), env().representationInference().createConstantValue(constant.toLong(), INTEGER) );
 			}
 			
 			private JavaExpression<?> literalDecimal( Constant constant ) {
-				return JavaExpression.from( JExpr.lit( constant.toDouble() ), DECIMAL );
+				return JavaExpression.from( JExpr.lit( constant.toDouble() ), env().representationInference().createConstantValue(constant.toDouble(), DECIMAL) );
 			}
 			
 			@Override
@@ -133,9 +142,9 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				
 				switch ( expectedRepresentation.get().orElse(NATIVE) ) {
 				case STRING:
-					return JavaExpression.from( JExpr.lit( constant.value() ), STRING );
+					return JavaExpression.from( JExpr.lit( constant.value() ), env().representationInference().createConstantValue(constant.value(), STRING) );
 				case BOOLEAN:
-					return JavaExpression.from( JExpr.lit( constant.toBoolean() ), BOOLEAN );
+					return JavaExpression.from( JExpr.lit( constant.toBoolean() ), env().representationInference().createConstantValue(constant.toBoolean(), BOOLEAN) );
 				case INTEGER:
 					return literalInteger( constant );
 				case DECIMAL:
@@ -148,32 +157,40 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 					}
 				case NATIVE:
 				default:
-					if ( constant.representsNull() )
-						return JavaExpression.from( JExpr._null(), ()->Optional.empty() );
-					else if ( constant.representsInteger() )
+					if ( constant.representsInteger() )
 						return literalInteger( constant );
 					else if ( constant.representsNumber() )
 						return literalDecimal( constant ); 
 					else
-						return JavaExpression.from( JExpr.lit( constant.value() ), STRING );
+						return JavaExpression.from( JExpr.lit( constant.value() ), env().representationInference().createConstantValue(constant.value(), STRING) );
 				}
 			}
 
 			@Override public JavaExpression<?> visitMatchPattern( MatchPattern matchPattern ) {
-				return JavaExpression.from( JExpr.lit( matchPattern.toString() ), STRING ); /* whoah, really? */
+				return JavaExpression.from( JExpr.lit( matchPattern.toString() ), env().representationInference().createConstantValue(matchPattern.toString(), STRING) ); /* whoah, really? */
 			}
 
 			private JavaExpression<?> buildOp( BinaryOperation operation, BiFunction<JExpression,JExpression,JExpression> f, Representation producingRep, Representation lhsRep, Representation rhsRep) {
 				JavaExpression<?> lhs = build( operation.leftHandSide(), lhsRep ) ;
 				JavaExpression<?> rhs = build( operation.rightHandSide(), rhsRep ) ;
 				JExpression expr = f.apply(lhs.expr(),rhs.expr()) ;
-				return JavaExpression.from(expr, producingRep) ;
+				JavaExpression<JExpression> result = JavaExpression.from(expr, lhs.representationNode().combinesWith( rhs.representationNode() ) );
+				if ( null != lhsRep ) {
+					lhs.representationNode().usedAs( lhsRep ) ;
+				}
+				if ( null != rhsRep ) {
+					rhs.representationNode().usedAs( rhsRep ) ;
+				}
+				if ( null != producingRep ) {
+					result.representationNode().usedAs( producingRep ) ;
+				}
+				return result ;
 			}
 			
 			private JavaExpression<?> buildOp( UnaryOperation operation, Function<JExpression,JExpression> f, Representation producingRep, Representation operandRep) {
 				JavaExpression<?> operand = build( operation.operand(), operandRep ) ;
 				JExpression expr = f.apply(operand.expr()) ;
-				return JavaExpression.from(expr, producingRep) ;
+				return JavaExpression.from(expr, operand.representationNode().transformedInto( producingRep ) ) ;
 			}
 			
 			private JavaExpression<?> buildIndirection( Expression operand ) {
@@ -181,7 +198,7 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 						.on(VariableContext.class)
 						.invoke("lookup")
 						.accepting( java.lang.String.class )
-						.supplying( (r)->build( operand, STRING ) ) 
+						.supplying( build( operand, STRING ) )
 						.build() ;
 				return target ;
 			}
@@ -252,38 +269,46 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				}
 				String symbol = context().symbolForIdentifier(tagName);
 				
+				SymbolScope classScope = m_outerSymbolScope.enclosingClass().getDeclarationScope() ;
+				int numberOfArguments = StreamSupport.stream(functionCall.arguments().spliterator(),true).collect(Collectors.counting()).intValue() ;
+				Optional<MethodSymbol> methodSymbol = classScope.methodSymbolFor( symbol, numberOfArguments ) ;
+
+				List<JavaExpression<?>> parameters = new ArrayList<>() ;
+				List<RepresentationNode> parameterRepresentationNodes = new ArrayList<>() ;
+				for (Expression arg : functionCall.arguments()) {
+					JavaExpression<?> expr = build(arg) ;
+					parameters.add( expr ) ;
+					parameterRepresentationNodes.add( expr.representationNode() ) ;
+				}
+				
 				JavaInvocation invocation ;
-				if ( (null == routineName && m_symbolUsage.declared(symbol,true) || context().outerClassName().equals( context().symbolForIdentifier(routineName) ) ) ) {
+				if ( null == routineName && methodSymbol.isPresent() ) {
 					/* unspecified library and found internal, or specified internal */
 					
-					List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-					m_symbolUsage.usedAs(symbol, expectedRepresentation);
-					Supplier<Optional<Representation>> returningRepresentation = m_symbolUsage.impliedRepresentation(symbol) ;
-					invocation = new JavaInvocation( JExpr.invoke( symbol ), returningRepresentation, parameterRepresentations, null, context() );
+					int position = 0 ;
+					for ( RepresentationNode representationNode : parameterRepresentationNodes ) {  
+						MethodParameter methodParameter = methodSymbol.get().parameter(position++) ;
+						methodParameter.isAssigned( representationNode );
+					}
+					invocation = new JavaInvocation( JExpr.invoke( symbol ), methodSymbol.get(), parameterRepresentationNodes, null, context() );
 					
 				} else {
 					/* expected external */
 					
 					Method method = env().methodFor(routineName, tagName ) ;
 					if ( null != method ) {
-						invocation = JavaInvocation.builder(context()).invoke(method).build();
+						invocation = JavaInvocation.builder(context()).invoke(method).accepting(numberOfArguments).build();
 					} else if ( null != routineName ) {
-						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-						invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( symbol ), NATIVE, parameterRepresentations, null, context() );
+						invocation = new JavaInvocation( codeModel().ref( routineName ).staticInvoke( symbol ), env().representationInference().createUnknownNode(), parameterRepresentationNodes, null, context() );
 					} else {
-						List<Representation> parameterRepresentations = StreamSupport.stream(functionCall.arguments().spliterator(),false).map( (expr)->NATIVE ).collect( Collectors.toList() ) ;
-						invocation = new JavaInvocation( JExpr.invoke( symbol ), NATIVE, parameterRepresentations, null, context() );
+						invocation = new JavaInvocation( JExpr.invoke( symbol ), env().representationInference().createUnknownNode(), parameterRepresentationNodes, null, context() );
 					}
 					
 				}
+
+				for (JavaExpression<?> parameter : parameters)
+					invocation.appendArgument( parameter ) ;
 				
-				int position = 0 ;
-				for (Expression arg : functionCall.arguments()) {
-					invocation.appendArgument( (r)->build(arg,r) ) ;
-					
-					String parameterExternalSymbol = RoutineJavaMethodBuilder.symbolForMethodParameterPosition( symbol, position++ ) ;
-					m_symbolUsage.usedAs( parameterExternalSymbol, build(arg).representation() ) ;
-				}
 				return invocation ;
 			}
 			
@@ -310,14 +335,14 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				.accepting( numberOfParameters )
 				.build();
 		for (Expression arg : arguments)
-			invocation.appendArgument( (r)->build(arg,r) ) ;
+			invocation.appendArgument( build(arg) ) ;
 		return invocation ;
 	}
 	
 	private JavaInvocation builtinExpr( OperatorType symbol, JavaExpression<?> argument1, JavaExpression<?> argument2 ) {
 		return JavaInvocation.builder(context())
 				.invoke( env().methodFor( symbol ) )
-				.supplying( (r)->argument1, (r)->argument2 )
+				.supplying( argument1, argument2 )
 				.build();
 	}
 	
@@ -335,31 +360,20 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 				JavaExpression<?> testExpression = build( conditional.condition(), BOOLEAN );
 				JavaExpression<?> trueResult = build(conditional.expression());
 				JavaExpression<?> falseResult = conditionalExpr(expressionIterator);
-				Supplier<Optional<Representation>> trueRep = trueResult.representation();
-				Supplier<Optional<Representation>> falseRep = falseResult.representation();
-				Supplier<Optional<Representation>> representation = ()->trueRep.get().flatMap(
-						(t)->falseRep.get().flatMap(
-							(f)->Optional.of(t.commonRepresentation(f)
-							)
-						)
-					);
-				return JavaExpression.from( JOp.cond( testExpression.expr(), trueResult.expr(), falseResult.expr() ), representation );
+				OperationNode operationNode = trueResult.representationNode().or( falseResult.representationNode() ) ;
+				return JavaExpression.from( JOp.cond( testExpression.expr(), trueResult.expr(), falseResult.expr() ), operationNode );
 			}
 			
 			
 		}) ;
 	}
 
-	public KeyApplier keyApplier( VariableReference variable, Supplier<Optional<Representation>> asRepresentation ) {
-		return new KeyApplierImpl(variable, asRepresentation) ;
+	public KeyApplier keyApplier( VariableReference variable) {
+		return new KeyApplierImpl(variable) ;
 	}
 
 	public JavaExpression<?> applyKeys( VariableReference variable, JavaExpression<?> target ) {
-		return applyKeys(variable,null,target) ;
-	}
-	
-	public JavaExpression<?> applyKeys( VariableReference variable, Supplier<Optional<Representation>> asRepresentation, JavaExpression<?> target ) {
-		return keyApplier(variable,asRepresentation).apply(target) ;
+		return keyApplier(variable).apply(target) ;
 	}
 	
 	public interface KeyApplier {
@@ -369,21 +383,19 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 	
 	private static class KeySpec {
 		private final JavaExpression<?> m_key ;
-		private final Supplier<Optional<Representation>> m_asRepresentation ;
-		public KeySpec(JavaExpression<?> key, Supplier<Optional<Representation>> asRepresentation) { m_key = key; m_asRepresentation = asRepresentation; }
+		public KeySpec(JavaExpression<?> key) { Objects.requireNonNull(key); m_key = key; }
 		public JavaExpression<?> key() { return m_key; }
-		public Supplier<Optional<Representation>> asRepresentation() { return m_asRepresentation; }
+		public @Override String toString() { return "[" + m_key.toString() + "]"; } 
 	}
 	
 	private class KeyApplierImpl implements KeyApplier {
-		private final List<KeySpec> m_keySpecs = new ArrayList<KeySpec>();
-		public KeyApplierImpl( VariableReference variable, Supplier<Optional<Representation>> asRepresentation ) {
+		private final List<KeySpec> m_keySpecs = new ArrayList<>();
+		public KeyApplierImpl( VariableReference variable ) {
 			Iterator<Expression> i = variable.keys().iterator() ;
 			while ( i.hasNext() ) {
 				Expression expression = i.next();
 				m_keySpecs.add( new KeySpec(
-						build(expression,STRING),
-						i.hasNext() ? NATIVE.supplier() : asRepresentation // final key produces the given representation
+						build(expression,STRING)
 				)) ;
 			}
 		}
@@ -391,13 +403,15 @@ public class RoutineJavaExpressionBuilder extends RoutineJavaBuilder<RoutineJava
 		public boolean hasKeys() { return !m_keySpecs.isEmpty() ; }
 		@Override
 		public JavaExpression<?> apply( JavaExpression<?> target ) {
+			if ( hasKeys() ) {
+				target.representationNode().usedAs(NATIVE);
+			}
 			for ( KeySpec keySpec : m_keySpecs )
 				target = JavaInvocation.builder(context())
 					.on( target )
 					.invoke( env().methodFor(VALUE_INDEX) )
 					.accepting( String.class )
-					.supplying( (r)->keySpec.key() )
-					.as( keySpec.asRepresentation() )
+					.supplying( keySpec.key() )
 					.build()
 					;
 			return target ;

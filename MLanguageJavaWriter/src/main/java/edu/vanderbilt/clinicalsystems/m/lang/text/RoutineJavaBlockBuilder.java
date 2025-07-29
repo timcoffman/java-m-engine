@@ -24,21 +24,22 @@ import edu.vanderbilt.clinicalsystems.m.lang.text.statement.IfElseBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ParseBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.ReturnBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.statement.VariableBuilder;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
 
 public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuilderClassContext> {
-	private final SymbolUsage m_outerSymbolUsage ; 
+	private final SymbolScope m_outerSymbolScope ; 
 	
-	public RoutineJavaBlockBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage ) {
+	public RoutineJavaBlockBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope ) {
 		super(builderContext) ;
-		m_outerSymbolUsage = outerSymbolUsage ;
+		m_outerSymbolScope = outerSymbolScope ;
 	}
 
 	public Builder<JBlock> analyze( Iterator<RoutineElement> elementIterator ) {
-		SymbolUsage symbolUsage = new SymbolUsage(m_outerSymbolUsage) ;
+		SymbolScope symbolScope = env().representationInference().createScope( m_outerSymbolScope, "block-scope:" + m_outerSymbolScope.description() );
 		
-		RoutineJavaExpressionBuilder expressionBuilder = new RoutineJavaExpressionBuilder( context(), symbolUsage ) ;
+		RoutineJavaExpressionBuilder expressionBuilder = new RoutineJavaExpressionBuilder( context(), symbolScope ) ;
 
-		List<Builder<JBlock>> elementBuilders = new ArrayList<RoutineJavaBuilder.Builder<JBlock>>();
+		List<Builder<JBlock>> elementBuilders = new ArrayList<>();
 		
 		while ( elementIterator.hasNext() ) {
 			RoutineElement element = elementIterator.next();
@@ -53,7 +54,7 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 				
 			} else if ( element instanceof Command ) {
 				
-				elementBuilders.add( analyzeCommand( symbolUsage, expressionBuilder, (Command)element ) );
+				elementBuilders.add( analyzeCommand( symbolScope, expressionBuilder, (Command)element ) );
 				
 			} else {
 				
@@ -65,16 +66,13 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 				break ;
 		}
 		
-		return (b)->build( symbolUsage, expressionBuilder, elementBuilders, b ) ;
+		return (b)->build( symbolScope, expressionBuilder, elementBuilders, b ) ;
 	}
-	
-	private void build( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, List<Builder<JBlock>> elementBuilders, JBlock block ) {
+
+	private void build( SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder, List<Builder<JBlock>> elementBuilders, JBlock block ) {
 		System.out.println( "") ;
-		System.out.println( "---- (...) {") ;
-		for ( String symbol : symbolUsage.symbols() ) {
-			System.out.println( "\t\"" + symbol + "\": " + symbolUsage.describe(symbol) ) ;
-		}
-		System.out.println( "} /* ---- */") ;
+//		env().representationInference().print( symbolScope, System.out);
+//		env().representationInference().print( System.out);
 		
 		for ( Builder<JBlock> elementBuilder : elementBuilders ) {
 			elementBuilder.build(block);
@@ -101,13 +99,13 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		/* no comment */
 	}	
 	
-	public Builder<JBlock> analyzeCommand( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, Command command ) {
-		Builder<JBlock> blockBuilder = analyzeCommand( symbolUsage, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
+	public Builder<JBlock> analyzeCommand( SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder, Command command ) {
+		Builder<JBlock> blockBuilder = analyzeCommand( symbolScope, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
 		
 		Expression condition = command.condition();
 		if ( null != condition ) {
-			RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), symbolUsage ) ;
-			Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyzeCommand( symbolUsage, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
+			RoutineJavaBlockBuilder conditionalBlockBuilder = new RoutineJavaBlockBuilder( context(), symbolScope ) ;
+			Builder<JBlock> conditionalBuilder = conditionalBlockBuilder.analyzeCommand( symbolScope, expressionBuilder, command.commandType(), command.argument(), command.block() ) ;
 			
 			return (b)->{
 				conditionalBuilder.build(b);
@@ -122,29 +120,29 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		
 	}	
 	
-	private CommandJavaStatementBuilder createStatementBuilder( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType ) {
+	private CommandJavaStatementBuilder createStatementBuilder( SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType ) {
 		switch ( commandType ) {
 		case DO:
 		case GOTO:
-			return new ExecBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new ExecBuilder( context(), symbolScope, expressionBuilder ) ;
 		case FOR:
-			return new ForLoopBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new ForLoopBuilder( context(), symbolScope, expressionBuilder ) ;
 		
 		case IF:
 		case ELSE:
-			return new IfElseBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new IfElseBuilder( context(), symbolScope, expressionBuilder ) ;
 			
 		case SET:
 		case MERGE:
 		case NEW:
 		case KILL:
-			return new VariableBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new VariableBuilder( context(), symbolScope, expressionBuilder ) ;
 			
 		case QUIT:
-			return new ReturnBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new ReturnBuilder( context(), symbolScope, expressionBuilder ) ;
 			
 		case EXECUTE:
-			return new ParseBuilder( context(), symbolUsage, expressionBuilder ) ;
+			return new ParseBuilder( context(), symbolScope, expressionBuilder ) ;
 			
 		case USE:
 		default:
@@ -153,8 +151,8 @@ public class RoutineJavaBlockBuilder extends RoutineJavaBuilder<RoutineJavaBuild
 		}
 	}
 	
-	public Builder<JBlock> analyzeCommand( SymbolUsage symbolUsage, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType, Argument argument, Block innerBlock ) {
-		CommandJavaStatementBuilder statementBuilder = createStatementBuilder( symbolUsage, expressionBuilder, commandType ) ;
+	public Builder<JBlock> analyzeCommand( SymbolScope symbolScope, RoutineJavaExpressionBuilder expressionBuilder, CommandType commandType, Argument argument, Block innerBlock ) {
+		CommandJavaStatementBuilder statementBuilder = createStatementBuilder( symbolScope, expressionBuilder, commandType ) ;
 		return statementBuilder.analyze(commandType, argument, innerBlock);
 	}
 	

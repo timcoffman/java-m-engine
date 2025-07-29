@@ -1,6 +1,7 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,40 +15,46 @@ import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JInvocation;
 
+import edu.vanderbilt.clinicalsystems.m.text.repr.ClassSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodParameter;
+import edu.vanderbilt.clinicalsystems.m.text.repr.MethodSymbol;
+import edu.vanderbilt.clinicalsystems.m.text.repr.RepresentationNode;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+
 public class JavaInvocation extends JavaExpression<JInvocation> {
 
 	private final RoutineJavaBuilderContext m_context ;
-	private final List<Representation> m_parameterRepresentations = new ArrayList<Representation>() ;
-	private final Representation m_additionalParametersRepresentation ;
-	private final List<JavaExpression<?>> m_arguments = new ArrayList<JavaExpression<?>>() ;
+	private final List<RepresentationNode> m_parameterRepresentationNodes = new ArrayList<>() ;
+	private final RepresentationNode m_additionalParametersRepresentationNode ;
+	private final List<JavaExpression<?>> m_arguments = new ArrayList<>() ;
 	
-	public JavaInvocation( JInvocation expr, Supplier<Optional<Representation>> returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
-		super( expr, returningRepresentation ) ;
-		m_parameterRepresentations.addAll( parameterRepresentations ) ;
-		m_additionalParametersRepresentation = additionalParametersRepresentation ;
+	public JavaInvocation( JInvocation expr, RepresentationNode returningRepresentationNode, List<RepresentationNode> parameterRepresentationNodes, RepresentationNode additionalParametersRepresentationNode, RoutineJavaBuilderContext context ) {
+		super( expr, returningRepresentationNode ) ;
+		m_parameterRepresentationNodes.addAll( parameterRepresentationNodes ) ;
+		m_additionalParametersRepresentationNode = additionalParametersRepresentationNode ;
 		m_context = context ;
 	}
 	
-	public JavaInvocation( JInvocation expr, Representation returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
-		this( expr, returningRepresentation.supplier(), parameterRepresentations, additionalParametersRepresentation, context ) ;
-	}
+//	public JavaInvocation( JInvocation expr, Representation returningRepresentation, List<Representation> parameterRepresentations, Representation additionalParametersRepresentation, RoutineJavaBuilderContext context ) {
+//		this( expr, returningRepresentation.supplier(), parameterRepresentations, additionalParametersRepresentation, context ) ;
+//	}
 	
 	public JavaInvocationBuilder chain() {
 		return builder(m_context).on( this ) ;
 	}
 	
-	public JavaInvocation appendArgument( Function<Representation,JavaExpression<?>> f ) {
+	public JavaInvocation appendArgument( Function<RepresentationNode,JavaExpression<?>> f ) {
 		int position = m_arguments.size() ;
-		Representation rep ;
-		if ( position < m_parameterRepresentations.size() ) {
-			rep = m_parameterRepresentations.get(position) ;
-		} else if ( null != m_additionalParametersRepresentation ) {
-			rep = m_additionalParametersRepresentation ;
+		RepresentationNode rep ;
+		if ( position < m_parameterRepresentationNodes.size() ) {
+			rep = m_parameterRepresentationNodes.get(position) ;
+		} else if ( null != m_additionalParametersRepresentationNode ) {
+			rep = m_additionalParametersRepresentationNode ;
 		} else {
-			throw new IllegalArgumentException( "attempt to add argument to invocation that only accepts " + m_parameterRepresentations.size() + " parameters") ;
+			throw new IllegalArgumentException( "attempt to add argument to invocation that only accepts " + m_parameterRepresentationNodes.size() + " parameters") ;
 		}
 		JavaExpression<?> arg = f.apply(rep); // acquire it, expecting rep
-		JavaExpression<?> convertedArg = arg.convert(rep,m_context);
+		JavaExpression<?> convertedArg = arg.convert(rep.representation(),m_context);
 		m_arguments.add( convertedArg ) ; // convert to rep (if not already)
 		expr().arg( convertedArg.expr() ) ;
 		return this ;
@@ -65,9 +72,8 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		JavaInvocationBuilder accepting( int argumentCount ) ;
 		JavaInvocationBuilder accepting( Class<?> ... parameterTypes ) ;
 		JavaInvocationBuilder acceptingNothing() ;
-		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1 ) ;
-		JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1, Function<Representation,JavaExpression<?>> argument2 ) ;
-		JavaInvocationBuilder supplying( List<Function<Representation,JavaExpression<?>>> arguments ) ;
+		JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) ;
+		JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) ;
 		JavaInvocationBuilder as( Supplier<Optional<Representation>> representation ) ;
 		JavaInvocation build() ;
 		JavaInvocation build( JBlock block ) ;
@@ -145,7 +151,7 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		private Integer m_numberOfParameters = null ;
 		private List<Class<?>> m_parameterTypes = null ;
 		private JavaExpression<?> m_instance = null ;
-		private List<Function<Representation,JavaExpression<?>>> m_arguments = null ;
+		private List<JavaExpression<?>> m_arguments = null ;
 		private Supplier<Optional<Representation>> m_asRepresentation = null;
 
 		private JavaInvocationBuilderImpl( RoutineJavaBuilderContext context) {
@@ -193,44 +199,42 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		}
 
 		@Override public JavaInvocationBuilder accepting( int numberOfParameters ) {
-			if ( null != m_numberOfParameters )
-				throw new IllegalStateException( "number of parameters already specified") ;
-			m_numberOfParameters = numberOfParameters ;
+			numberOfParameters( numberOfParameters ) ;
 			return this ;
 		}
 		
 		@Override public JavaInvocationBuilder accepting( Class<?> ... parameterTypes ) {
 			if ( null != m_parameterTypes )
 				throw new IllegalStateException( "parameter types already specified") ;
-			if ( null != m_numberOfParameters && m_numberOfParameters != parameterTypes.length )
-				throw new IllegalStateException( "number of parameters already specified with a different value") ;
-			m_parameterTypes = Arrays.asList(parameterTypes) ;
-			m_numberOfParameters = m_parameterTypes.size();
+			m_parameterTypes = Arrays.asList( parameterTypes ) ;
+			numberOfParameters( m_parameterTypes.size() ) ;
 			return this ;
 		}
 
-		@Override public JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1 ) {
-			return supplying( Arrays.asList( argument1 ) );
+		@Override public JavaInvocationBuilder supplying( JavaExpression<?> ... arguments ) {
+			return supplying( Arrays.asList( arguments ) );
 		}
 		
-		@Override public JavaInvocationBuilder supplying( Function<Representation,JavaExpression<?>> argument1, Function<Representation,JavaExpression<?>> argument2 ) {
-			return supplying( Arrays.asList( argument1, argument2 ) );
+		private void numberOfParameters( int numberOfParameters ) {
+			if ( null != m_numberOfParameters && m_numberOfParameters != numberOfParameters )
+				throw new IllegalStateException( "number of parameters already specified with a different value") ;
+				
+			if ( null != m_parameterTypes && m_parameterTypes.size() != numberOfParameters )
+				throw new IllegalStateException( "parameter types already specified with a different number of parameters") ;
+				
+			m_numberOfParameters = numberOfParameters ;
 		}
 		
-		@Override public JavaInvocationBuilder supplying( List<Function<Representation,JavaExpression<?>>> arguments ) {
+		@Override public JavaInvocationBuilder supplying( List<JavaExpression<?>> arguments ) {
 			if ( null != m_arguments )
 				throw new IllegalStateException( "arguments already specified") ;
-			m_arguments = new ArrayList<Function<Representation,JavaExpression<?>>>( arguments ) ;
-			if ( null == m_parameterTypes ) {
-				if ( null != m_numberOfParameters && m_numberOfParameters != arguments.size() )
-					throw new IllegalStateException( "number of parameters already specified with a different value") ;
-				m_parameterTypes = arguments.stream()
-						.map( (f)->f.apply( Representation.NATIVE ) ) /* NATIVE is not right here */
-						.map( (e)->e.type(m_context.env()) )
-						.collect( Collectors.toList() )
-						;
-				m_numberOfParameters = arguments.size() ;
+			m_arguments = new ArrayList<>( arguments ) ;
+			int position = 0 ;
+			for ( JavaExpression<?> expr : m_arguments ) {
+//				MethodParameter methodParameter = null;
+//				methodParameter.isAssigned( expr.representationNode() ) ;
 			}
+			numberOfParameters( m_arguments.size() ) ;
 			return this ;
 		}
 		
@@ -256,8 +260,40 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 			return builder(m_context).on( determineMethod().getReturnType() ).on( invocation ) ;
 		}
 		
+		private MethodSymbol importMethod( Method method ) {
+			SymbolScope rootScope = m_context.env().representationInference().rootScope() ;
+			ClassSymbol classSymbol =
+				rootScope.classSymbolFor( method.getDeclaringClass().getName() )
+				.orElseGet( ()->rootScope.createClass( method.getDeclaringClass().getName() ) )
+				;
+			MethodSymbol methodSymbol =
+				classSymbol.getDeclarationScope().methodSymbolFor( method.getName(), method.getParameterTypes().length )
+				.orElseGet( ()->{
+					MethodSymbol symbol = classSymbol.getDeclarationScope().createMethod( method.getName() ) ;
+					symbol.declaredAs( determineRepresentation( method.getReturnType() ) );
+					int position = 0 ;
+					for ( Parameter parameter : method.getParameters() ) {
+						MethodParameter methodParameter = symbol.createParameter(position++, parameter.getName()) ;
+						methodParameter.declaredAs( determineRepresentation( parameter.getType() ) );
+					}
+					return symbol ;
+				} )
+				;
+			return methodSymbol ;
+		}
+		
 		@Override public JavaInvocation build() {
+			if ( null == m_parameterTypes && null != m_arguments ) {
+				m_parameterTypes = m_arguments.stream()
+					.map( JavaExpression::representationNode )
+					.map( RepresentationNode::representation )
+					.map( m_context.env()::typeFor )
+					.collect( Collectors.toList() )
+					;
+			}
 			Method method = determineMethod() ;
+			
+			MethodSymbol methodSymbol = importMethod( method ) ; 
 			
 			JInvocation invocation ;
 			if ( null != m_instance ) {
@@ -267,29 +303,33 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 			} else {
 				throw new IllegalArgumentException("missing both instance and declaring class") ;
 			}
-
-			Supplier<Optional<Representation>> returningRepresentation ;
-			if ( null != m_asRepresentation )
-				returningRepresentation = m_asRepresentation ;
-			else
-				returningRepresentation = ()->Optional.of(determineRepresentation( method.getReturnType() ) );
 			
-			Representation additionalParametersRepresentation ;
-			List<Representation> parameterRepresentations ;
-			if (  method.isVarArgs() ) {
-				List<Class<?>> parameterTypes = new ArrayList<Class<?>>( Arrays.asList(method.getParameterTypes()) );
-				Class<?> additionalParametersType = parameterTypes.remove( parameterTypes.size()-1 ).getComponentType() ; 
-
-				parameterRepresentations = determineRepresentations( parameterTypes ) ;
-				additionalParametersRepresentation = determineRepresentation( additionalParametersType ) ;
+			RepresentationNode additionalParametersRepresentation ;
+			List<RepresentationNode> parameterRepresentations = new ArrayList<>();
+			if ( method.isVarArgs() ) {
+				for ( int position = 0 ; position < method.getParameterTypes().length-1 ; ++position )
+					parameterRepresentations.add( methodSymbol.parameter(position) ) ;
+				additionalParametersRepresentation = methodSymbol.parameter( method.getParameterTypes().length-1 );
 			} else {
-				parameterRepresentations = determineRepresentations( method.getParameterTypes() ) ;
+				for ( int position = 0 ; position < method.getParameterTypes().length ; ++position )
+					parameterRepresentations.add( methodSymbol.parameter(position) ) ;
 				additionalParametersRepresentation = null ;
 			}
 			
-			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, m_context );
-			if ( null != m_arguments )
-				m_arguments.forEach( result::appendArgument ) ;
+			
+			
+			JavaInvocation result = new JavaInvocation( invocation, methodSymbol, parameterRepresentations, additionalParametersRepresentation, m_context );
+			if ( null != m_arguments ) {
+				int position = 0 ;
+				for (JavaExpression<?> arg : m_arguments) {
+					MethodParameter methodParameter = methodSymbol.parameter(position) ;
+					methodParameter.isAssigned( arg.representationNode() );
+					result.appendArgument( arg ) ;
+					
+					if ( position < method.getParameterTypes().length-1 )
+						++position ;
+				}
+			}
 			return result ;
 		}
 
@@ -299,7 +339,17 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 		}
 		
 		@Override public JavaInvocation build( JBlock block ) {
+			if ( null == m_parameterTypes && null != m_arguments ) {
+				m_parameterTypes = m_arguments.stream()
+					.map( JavaExpression::representationNode )
+					.map( RepresentationNode::representation )
+					.map( m_context.env()::typeFor )
+					.collect( Collectors.toList() )
+					;
+			}
 			Method method = determineMethod();
+
+			MethodSymbol methodSymbol = importMethod( method ) ; 
 			
 			JInvocation invocation ;
 			if ( null != m_instance ) {
@@ -310,23 +360,30 @@ public class JavaInvocation extends JavaExpression<JInvocation> {
 				throw new IllegalArgumentException("missing both instance and declaring class") ;
 			}
 
-			Representation returningRepresentation = determineRepresentation( method.getReturnType() );
-			Representation additionalParametersRepresentation ;
-			List<Representation> parameterRepresentations ;
-			if (  method.isVarArgs() ) {
-				List<Class<?>> parameterTypes = new ArrayList<Class<?>>( Arrays.asList(method.getParameterTypes()) );
-				Class<?> additionalParametersType = parameterTypes.remove( parameterTypes.size()-1 ).getComponentType() ; 
-
-				parameterRepresentations = determineRepresentations( parameterTypes ) ;
-				additionalParametersRepresentation = determineRepresentation( additionalParametersType ) ;
+			RepresentationNode additionalParametersRepresentation ;
+			List<RepresentationNode> parameterRepresentations = new ArrayList<>();
+			if ( method.isVarArgs() ) {
+				for ( int position = 0 ; position < method.getParameterTypes().length-1 ; ++position )
+					parameterRepresentations.add( methodSymbol.parameter(position) ) ;
+				additionalParametersRepresentation = methodSymbol.parameter( method.getParameterTypes().length-1 );
 			} else {
-				parameterRepresentations = determineRepresentations( method.getParameterTypes() ) ;
+				for ( int position = 0 ; position < method.getParameterTypes().length ; ++position )
+					parameterRepresentations.add( methodSymbol.parameter(position) ) ;
 				additionalParametersRepresentation = null ;
 			}
 			
-			JavaInvocation result = new JavaInvocation( invocation, returningRepresentation, parameterRepresentations, additionalParametersRepresentation, m_context );
-			if ( null != m_arguments )
-				m_arguments.forEach( result::appendArgument ) ;
+			JavaInvocation result = new JavaInvocation( invocation, methodSymbol, parameterRepresentations, additionalParametersRepresentation, m_context );
+			if ( null != m_arguments ) {
+				int position = 0 ;
+				for (JavaExpression<?> arg : m_arguments) {
+					MethodParameter methodParameter = methodSymbol.parameter(position) ;
+					methodParameter.isAssigned( arg.representationNode() ) ;
+					result.appendArgument( arg ) ;
+					
+					if ( position < method.getParameterTypes().length-1 )
+						++position ;
+				}
+			}
 			return result ;
 		}
 	}

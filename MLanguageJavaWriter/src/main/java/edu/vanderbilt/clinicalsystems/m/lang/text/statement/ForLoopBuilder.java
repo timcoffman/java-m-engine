@@ -1,10 +1,8 @@
 package edu.vanderbilt.clinicalsystems.m.lang.text.statement;
 
-import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.BOOLEAN;
 import static edu.vanderbilt.clinicalsystems.m.lang.text.Representation.NUMERIC;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JExpr;
@@ -21,20 +19,21 @@ import edu.vanderbilt.clinicalsystems.m.lang.model.argument.Nothing;
 import edu.vanderbilt.clinicalsystems.m.lang.model.expression.Constant;
 import edu.vanderbilt.clinicalsystems.m.lang.text.CommandJavaStatementBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.JavaExpression;
-import edu.vanderbilt.clinicalsystems.m.lang.text.Representation;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBlockBuilder;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaBuilderClassContext;
 import edu.vanderbilt.clinicalsystems.m.lang.text.RoutineJavaExpressionBuilder;
-import edu.vanderbilt.clinicalsystems.m.lang.text.SymbolUsage;
+import edu.vanderbilt.clinicalsystems.m.text.repr.OperationNode;
+import edu.vanderbilt.clinicalsystems.m.text.repr.SymbolScope;
+import edu.vanderbilt.clinicalsystems.m.text.repr.VariableSymbol;
 public class ForLoopBuilder extends CommandJavaStatementBuilder {
 
 	private final RoutineJavaBlockBuilder m_blockBuilder;
-	private final SymbolUsage m_outerSymbolUsage ;
+	private final SymbolScope m_outerSymbolScope ;
 
-	public ForLoopBuilder( RoutineJavaBuilderClassContext builderContext, SymbolUsage outerSymbolUsage, RoutineJavaExpressionBuilder expressionBuilder ) {
+	public ForLoopBuilder( RoutineJavaBuilderClassContext builderContext, SymbolScope outerSymbolScope, RoutineJavaExpressionBuilder expressionBuilder ) {
 		super( builderContext, expressionBuilder ) ;
-		m_blockBuilder = new RoutineJavaBlockBuilder( context(), outerSymbolUsage );
-		m_outerSymbolUsage = outerSymbolUsage ;
+		m_blockBuilder = new RoutineJavaBlockBuilder( context(), outerSymbolScope );
+		m_outerSymbolScope = outerSymbolScope ;
 	}
 
 	@Override protected Builder<JBlock> analyze( CommandType commandType, Nothing nothing, Block innerBlock ) {
@@ -49,14 +48,12 @@ public class ForLoopBuilder extends CommandJavaStatementBuilder {
 	
 	@Override protected Builder<JBlock> analyze( CommandType commandType, LoopDefinition loopDefinition, Block innerBlock ) {
 		JavaExpression<?> start = expr(loopDefinition.start());
-		String loopSymbol = context().symbolForIdentifier( loopDefinition.destination().variableName() );
+		String loopVarName = context().symbolForIdentifier( loopDefinition.destination().variableName() );
+		VariableSymbol loopSymbol = m_outerSymbolScope.createVariable(loopVarName) ;
 		
-		if ( null != loopDefinition.step() )
-			m_outerSymbolUsage.usedAs( loopSymbol, Representation.NUMERIC);
-		
-		Supplier<Optional<Representation>> loopVarRep = m_outerSymbolUsage.impliedRepresentation(loopSymbol) ;
-
 		JavaExpression<?> loopStep = expr(loopDefinition.step()) ;
+		if ( null != loopDefinition.step() )
+			loopSymbol.isAssigned( loopStep.representationNode() );
 		
 		Optional<JavaExpression<?>> loopStop = Optional.ofNullable(loopDefinition.stop()).map( (e)->expr(e,NUMERIC) ) ;
 
@@ -65,10 +62,11 @@ public class ForLoopBuilder extends CommandJavaStatementBuilder {
 			
 			JForLoop loop = b._for() ;
 			
-			JavaExpression<JVar> loopVar = new JavaExpression<JVar>( loop.init( context().typeFor(loopVarRep.get().get()), loopSymbol, start.expr() ), loopVarRep ) ;
+			JavaExpression<JVar> loopVar = new JavaExpression<JVar>( loop.init( context().typeFor(loopSymbol.representation()), loopSymbol.getName(), start.expr() ), loopSymbol ) ;
 			
 			if ( loopStop.isPresent() ) {
-				loop.test( new JavaExpression<JExpression>( JOp.gte( loopVar.expr(), loopStop.get().expr() ), BOOLEAN.supplier() ).expr() ) ;
+				OperationNode comparisonNode = loopSymbol.isComparedWith( loopStop.get().representationNode() ) ;
+				loop.test( new JavaExpression<JExpression>( JOp.gte( loopVar.expr(), loopStop.get().expr() ), comparisonNode ).expr() ) ;
 			}
 
 			if ( loopStep.expr() instanceof Constant && ((Constant)loopStep.expr()).representsNumber(1) )

@@ -1,5 +1,6 @@
 package edu.vanderbilt.clinicalsystems.epic.annotation.builder.factory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,7 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.dom.*;
 
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast;
-import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Visitor;
+import edu.vanderbilt.clinicalsystems.epic.annotation.builder.Ast.Variable;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.ElementInterpreter;
 import edu.vanderbilt.clinicalsystems.epic.annotation.builder.RoutineTools;
 
@@ -525,6 +526,9 @@ public class RoutineJdtTools extends RoutineTools {
 	}
 	private class EnhancedForStatementImpl extends ASTNodeWrapper<EnhancedForStatement> implements Ast.EnhancedForLoop {
 		public EnhancedForStatementImpl(EnhancedForStatement node) { super(node) ; }
+		@Override public Ast.VariableDeclarationsStatement variable() { return wrap( m_astNode.getParameter() ) ; }
+		@Override public Ast.Expression expression() { return wrap( m_astNode.getExpression() ) ; }
+		@Override public Ast.Statement statement() { return wrap( m_astNode.getBody() ) ; }
 	}
 //	private class EnumConstantDeclarationImpl extends ASTNodeWrapper<EnumConstantDeclaration> implements Ast.EnumConstantDeclaration {
 //		public EnumConstantDeclarationImpl(EnumConstantDeclaration node) { super(node) ; }
@@ -577,7 +581,7 @@ public class RoutineJdtTools extends RoutineTools {
 			else
 				return wrap( (Expression)m_astNode.extendedOperands().get(m_extendedOperandLevel) ) ;
 		}
-		@Override public <R, P> R accept(Visitor<R, P> visitor, P parameter) {
+		@Override public <R, P> R accept(Ast.Visitor<R, P> visitor, P parameter) {
 			return visitor.visitBinary( this, parameter) ;
 		}
 		@Override public Ast.Binary.OperationType operationType() {
@@ -755,11 +759,12 @@ public class RoutineJdtTools extends RoutineTools {
 //	private class SingleMemberAnnotationImpl extends ASTNodeWrapper<SingleMemberAnnotation> implements Ast.SingleMemberAnnotation {
 //		public SingleMemberAnnotationImpl(SingleMemberAnnotation node) { super(node) ; }
 //	}
-	private class SingleVariableDeclarationImpl extends ASTNodeWrapper<SingleVariableDeclaration> implements Ast.Variable {
-		public SingleVariableDeclarationImpl(SingleVariableDeclaration node) { super(node) ; }
+	private class SingleVariableDeclarationImpl extends ASTNodeWrapper<SingleVariableDeclaration> implements Ast.Variable, Ast.VariableDeclarationsStatement {
+		public SingleVariableDeclarationImpl(SingleVariableDeclaration node) { super(node); }
 		@Override public Ast.Expression initializer() { return wrap( m_astNode.getInitializer() ) ; }
 		@Override public Ast.Name name() { return wrap( m_astNode.getName().getFullyQualifiedName() ) ; }
 		@Override public TypeMirror type() { return elements().getTypeElement( m_astNode.getType().resolveBinding().getQualifiedName() ).asType() ; }
+		@Override public List<? extends Variable> variables() { return Collections.singletonList(this) ; }
 	}
 	private class StringLiteralImpl extends LiteralWrapper<StringLiteral> {
 		public StringLiteralImpl(StringLiteral node) { super(node) ; }
@@ -956,7 +961,7 @@ public class RoutineJdtTools extends RoutineTools {
 	private Ast.Identifier wrap( SimpleName node ) { return node == null ? null : new SimpleNameImpl( node ) ; }
 //	private Ast.SimpleType wrap( SimpleType node ) { return node == null ? null : new SimpleTypeImpl( node ) ; }
 //	private Ast.SingleMemberAnnotation wrap( SingleMemberAnnotation node ) { return node == null ? null : new SingleMemberAnnotationImpl( node ) ; }
-	private Ast.Variable wrap( SingleVariableDeclaration node ) { return node == null ? null : new SingleVariableDeclarationImpl( node ) ; }
+	private Ast.VariableDeclarationsStatement wrap( SingleVariableDeclaration node ) { return node == null ? null : new SingleVariableDeclarationImpl( node ) ; }
 	private Ast.Literal wrap( StringLiteral node ) { return node == null ? null : new StringLiteralImpl( node ) ; }
 //	private Ast.SuperConstructorInvocation wrap( SuperConstructorInvocation node ) { return node == null ? null : new SuperConstructorInvocationImpl( node ) ; }
 //	private Ast.SuperFieldAccess wrap( SuperFieldAccess node ) { return node == null ? null : new SuperFieldAccessImpl( node ) ; }

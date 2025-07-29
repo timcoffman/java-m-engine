@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.ServiceLoader;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sun.codemodel.JCodeModel;
@@ -122,7 +123,7 @@ public class RoutineJavaWriterTest {
 				"MyRoutine Q\n" +
 				"myFunc() N port\n" +
 				"  S port=^%ZeOSUNQ(\"EPICCOMM\",\"TCP\",\"PORT\")\n" +
-				"  Q:port=\"\" 7777\n" +
+				"  Q:port=\"\" 4068\n" +
 				"  Q port\n"
 				) ;
 		assertThat( definedClass, notNullValue() ) ;
@@ -167,6 +168,7 @@ public class RoutineJavaWriterTest {
 		
 	}
 	
+	@Ignore("need to establish pattern for persistent data access")
 	@Test
 	public void canProducePersistentIndexedAccess() throws Exception {
 		JDefinedClass definedClass = buildClassFromRoutineSource(

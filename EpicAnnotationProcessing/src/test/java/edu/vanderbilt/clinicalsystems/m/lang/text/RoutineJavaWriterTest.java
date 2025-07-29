@@ -23,7 +23,7 @@ import edu.vanderbilt.clinicalsystems.m.core.annotation.RoutineUnit;
 import edu.vanderbilt.clinicalsystems.m.lang.Compatibility;
 import edu.vanderbilt.clinicalsystems.m.lang.model.Routine;
 
-public class RoutineJavaWriterTest {
+public class RoutineJavaWriterTest extends AbstractWriterTest {
 
 	@Test
 	public void canInferTypes() throws Exception {
@@ -44,11 +44,7 @@ public class RoutineJavaWriterTest {
 			ex.printStackTrace();
 		}
 
-		File f = new File(
-				"/Users/timvanderbilt/Documents/Development/Epic/workspace-trunk/"
-				+ "EpicAnnotationProcessing/"
-				+ "src/test/java"
-			);
+		File f = makeTempFolder("canInferTypes");
 		CodeWriter cw = new FileCodeWriter(f);
 		try {
 			routineBuilder.codeModel().build(cw);
@@ -60,7 +56,7 @@ public class RoutineJavaWriterTest {
 	@Test
 	public void canSerializeRoutine() throws Exception {
 		URL src = WebServiceRoutineWriterTest.class.getResource("EALIBECF1.m");
-		File dst = new File(src.toURI().resolve("EALIBECF1.ser"));
+		File dst = new File( makeTempFolder("canSerializeRoutine"), "EALIBECF1.ser" );
 
 		ServiceLoader<RoutineParserFactory> serviceLoader = ServiceLoader.load(RoutineParserFactory.class);
 		RoutineParserFactory routineParserFactory = serviceLoader.iterator().next();
@@ -98,7 +94,7 @@ public class RoutineJavaWriterTest {
 		}
 
 		RoutineJavaUnitBuilder routineBuilder = new RoutineJavaUnitBuilder( RoutineJavaUnitBuilder.JavaMethodContents.STUB );
-		routineBuilder.context().listen( new WeakReference<RoutineJavaBuilderContext.EventListener>(listener) );
+		routineBuilder.context().listen( new WeakReference<>(listener) );
 		
 		routineBuilder.env().additionalCompatibility( Compatibility.EXTENSION ) ;
 		Core.useLibrariesIn(routineBuilder.env());
@@ -115,11 +111,7 @@ public class RoutineJavaWriterTest {
 		// System.out.println( baos.toString("UTF-8") ) ;
 		// assertThat( baos.toString("UTF-8"), not(equalTo("")) ) ;
 
-		File f = new File(
-				"/Users/timvanderbilt/Documents/Development/Epic/workspace-trunk/"
-				+ "EpicAnnotationProcessing/"
-				+ "src/test/java"
-			);
+		File f = makeTempFolder("canWriteEpicClass");
 		CodeWriter cw = new FileCodeWriter(f);
 		try {
 			routineBuilder.codeModel().build(cw);

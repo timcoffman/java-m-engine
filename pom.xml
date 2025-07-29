@@ -5,6 +5,7 @@
 	<version>00.00.01-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
+		<module>ClinicalSystemsParentPom</module>
 		<module>EpicAnnotationProjectPom</module>
 		
 		<module>OpenMumpsEngine</module>
@@ -16,7 +17,7 @@
 		<module>MLanguageParser</module>
 		<module>MLanguageANTLRParser</module>
 		<module>EpicAnnotations</module>
-		<module>EpicResources</module>
+		<module>GenerateJavaStubs</module>
 		<module>EpicAnnotationProcessing</module>
 		<module>EpicAnnotationJdkProcessing</module>
 		<!--
@@ -102,6 +103,16 @@
 	</distributionManagement>
 	
 	<profiles>
+	    <profile>
+	    	<activation>
+				<property>
+					<name>epic-resources</name>
+  				</property>
+  	    	</activation>
+			<modules>
+				<module>EpicResources</module>
+			</modules>
+	    </profile>
 		<profile>
 			<id>coverage</id>
 			<reporting>
