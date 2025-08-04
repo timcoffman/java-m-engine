@@ -8,7 +8,6 @@
 		<module>ClinicalSystemsParentPom</module>
 		<module>EpicAnnotationProjectPom</module>
 		
-		<module>OpenMumpsEngine</module>
 		<module>JavaMumpsEngine</module>
 		<module>MLanguageEngine</module>
 		<module>MLanguageCore</module>
@@ -104,6 +103,7 @@
 	
 	<profiles>
 	    <profile>
+		<id>build-epic-resources</id>
 	    	<activation>
 				<property>
 					<name>epic-resources</name>
@@ -111,6 +111,17 @@
   	    	</activation>
 			<modules>
 				<module>EpicResources</module>
+			</modules>
+	    </profile>
+	    <profile>
+		<id>build-open-mumpes-engine</id>
+	    	<activation>
+				<property>
+					<name>open-mumps-engine</name>
+  				</property>
+  	    	</activation>
+			<modules>
+				<module>OpenMumpsEngine</module>
 			</modules>
 	    </profile>
 		<profile>
